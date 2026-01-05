@@ -1,0 +1,192 @@
+version: '3'
+
+includes:
+  docs:
+    taskfile: ./taskfiles/Taskfile-docs.yml
+    dir: .
+  env:
+    taskfile: ./taskfiles/Taskfile-env.yml
+    dir: .
+  format:
+    taskfile: ./taskfiles/Taskfile-format.yml
+    dir: .
+  git:
+    taskfile: ./taskfiles/Taskfile-git.yml
+    dir: .
+  lint:
+    taskfile: ./taskfiles/Taskfile-lint.yml
+    dir: .
+  metrics:
+    taskfile: ./taskfiles/Taskfile-metrics.yml
+    dir: .
+  release:
+    taskfile: ./taskfiles/Taskfile-release.yml
+    dir: .
+  test:
+    taskfile: ./taskfiles/Taskfile-test.yml
+    dir: .
+  version:
+    taskfile: ./taskfiles/Taskfile-version.yml
+    dir: .
+  
+vars:
+  # Application name derived from pyproject.toml (hyphens replaced with underscores for Python module name)
+  APP_NAME:
+    sh: python3 -c "import tomllib; f = open('pyproject.toml', 'rb'); data = tomllib.load(f); f.close(); print(data['project']['name'].replace('-', '_'))"
+  
+  # Source code directory
+  SRC: src/
+  
+  # Root tests directory
+  TESTS: tests/
+  
+  # Test directories to include in normal test runs (excludes performance, benchmarks, etc.)
+  # Include directories here even if they don't exist yet (e.g., tests/integration/)
+  POSSIBLE_TEST_CORES: tests/unit/ tests/functional/ tests/integration/ tests/e2e/
+  
+  # Subset of POSSIBLE_TEST_CORES that actually exist on disk (auto-detected)
+  TESTS_CORE:
+    sh: |
+      possible="{{.POSSIBLE_TEST_CORES}}"
+      existing=""
+      for dir in $possible; do
+        if [ -d "$dir" ]; then
+          existing="$existing$dir "
+        fi
+      done
+      echo "$existing" | sed 's/[[:space:]]*$//'
+  
+  # Test timeout in seconds
+  TEST_TIMEOUT: 30
+  
+  # Development scripts
+  SCRIPTS: scripts/
+
+  # All Python versions from .python-versions file (space-separated)
+  PYTHON_VERSIONS:
+    sh: cat .python-versions | grep -v '^$' | tr '\n' ' ' | sed 's/[[:space:]]*$//'
+  
+  # Current Python version from .python-version file
+  PYTHON_VERSION:
+    sh: cat .python-version | head -n1
+
+  # Global emoji replacements dictionary - single source of truth
+  # Format: "emoji:replacement emoji:replacement ..."
+  # Used by both lint:emoji (keys) and fix:emoji (full mapping)
+  EMOJI_REPLACEMENTS_MAP: '✅:PASS ❌:FAIL ⚠️:WARNING 🔍:SEARCH 📦:PACKAGE 🐧:LINUX 🚀:DEPLOY 🎯:TARGET 🏆:SUCCESS 🎉:COMPLETE 📊:REPORT 🧪:TEST 🔴:HIGH 🟡:MEDIUM 🟢:LOW 📚:DOCS 🌍:SERVER 🏗️:BUILD 📈:BUMP 📝:COMMIT 🐍:PYTHON 📋:LIST ✓:DONE 📁:FOLDER 🌐:NETWORK 🎭:MOCK ⚡:EXECUTE 📤:STDOUT 📥:STDERR 💥:EXCEPTION 🔧:VERSION 📄:FILE 🌳:TREE 🏁:COMPLETE 🔒:LOCK 🔓:UNLOCK 🐛:BUG 🛠️:TOOLS 🚨:0'
+
+tasks:
+  # === Default ===
+  default:
+    desc: Show available tasks
+    cmds:
+      - echo "Available tasks:"
+      - task --list --sort none
+    silent: true
+
+  # === Quality Checks ===
+  check:
+    desc: Run all code quality checks including end-to-end tests
+    summary: Runs formatting, linting, complexity checks, and all tests
+    deps:
+      - env:clean:bytecodes
+    cmds:
+      - task: lint:fix:emoji
+      - task: format
+      - task: lint
+      - task: metrics:complexity
+      - task: test:parallel
+
+  # === Build ===
+  build:
+    desc: Build distribution packages
+    summary: Creates wheel and source distribution packages in dist/
+    deps:
+      - env:clean
+    cmds:
+      - echo "🏗️  Building distribution packages..."
+      - uv build {{.CLI_ARGS}}
+      - echo "✅ Build complete! Packages created in dist/"
+      - ls -la dist/
+    silent: true
+
+  make:
+    desc: Complete build pipeline - run all checks, build, docs, and show version
+    summary: Full CI/CD pipeline - quality checks, build packages, generate docs
+    cmds:
+      - echo "🚀 Starting build pipeline..."
+      - task: check
+      - task: build
+      - task: docs:build
+      - task: version:current
+      - echo "✅ Build pipeline completed successfully! Ready to push to GitHub 🎉"
+    silent: true
+
+  # === CI/CD Pipeline ===
+  ci:
+    desc: Run GitHub CI build locally using scripts/ci-local.sh.  This is the same pipeline that runs on GitHub Actions.
+    summary: Simulates GitHub Actions CI pipeline locally for testing
+    cmds:
+      - bash scripts/ci-local.sh
+
+    # === Deploy ===
+  deploy:local:
+    desc: Install the built package locally using pipxu (or pipx fallback)
+    summary: Builds and installs the package locally for testing
+    aliases:
+      - deploy
+    deps:
+      - build
+    cmds:
+      - echo "🚀 Installing locally with pipxu (or pipx fallback)..."
+      - |
+          if command -v pipxu >/dev/null 2>&1; then
+            pipxu install --force dist/*.whl
+          else
+            pipx install --force dist/*.whl
+          fi
+      - echo "✅ Successfully deployed  {{.APP_NAME}} v$(task version) locally!"
+    silent: true
+
+  # === Running ===
+  run:
+    desc: Run the application
+    summary: Executes the application with optional CLI arguments
+    cmds:
+      - uv run python -m {{.APP_NAME}} {{.CLI_ARGS}}
+
+
+  # === Help ===
+  help:
+    desc: Show available tasks from a namespace (defaults to main)
+    summary: Displays tasks from the given namespace (defaults to main)
+    cmd: taskfile-help namespace {{.CLI_ARGS}}
+    silent: true  # Suppress task command echo
+
+  help:*:
+    desc: Show available tasks for "all" or the given namespace or for "?" list available namespaces
+    summary: |
+      Displays tasks for "all" or the given namespace or list available namespaces if "?" is specified
+      help:<namespace>    - Displays tasks from the given namespace
+      help:all            - Displays tasks from all Taskfiles
+      help:?              - Lists available namespaces
+    vars:
+      NAMESPACE: '{{index .MATCH 0}}'
+    cmd: taskfile-help namespace {{.NAMESPACE}}
+    silent: true  # Suppress task command echo
+
+  # === Search ===
+  search:
+    desc: Search for tasks
+    summary: Search for tasks in all Taskfiles
+    cmd: taskfile-help search {{.CLI_ARGS}}
+    silent: true  # Suppress task command echo
+
+  search:*:
+    desc: Search for tasks
+    summary: Search for tasks in all Taskfiles
+    vars:
+      PATTERN: '{{index .MATCH 0}}'
+    cmd: taskfile-help search {{.PATTERN}}
+    silent: true  # Suppress task command echo
+    

@@ -1,0 +1,153 @@
+version: '3'
+
+tasks:
+
+  # `task release` is equivalent to `task release:prepare`
+  # intentionally not using a desc:, instead the prepare: task has the description and indicates it is the default task
+  default:
+    cmds:
+      - task: prepare
+    silent: true
+
+  # === Release Management ===
+
+  prepare:
+    desc: Prepare and build a release, run after version:bump (default release task)
+    summary: Validates readiness, runs tests, updates CHANGELOG, builds packages
+    vars:
+      NEW_VERSION:
+        sh: task version:pyproject
+    cmds:
+      - echo "🔍 Verifying release readiness..."
+      - |
+        # Check for uncommitted changes
+        if [ -n "$(git status --porcelain)" ]; then
+          echo "❌ Error: There are uncommitted changes. Please commit or stash them first."
+          git status --short
+          exit 1
+        fi
+        echo "✅ Working directory is clean"
+      - |
+        # Check if version has changed from last release
+        CURRENT_VERSION=$(task version:pyproject)
+        LAST_TAG=$(git describe --tags --abbrev=0 2>/dev/null || echo "v0.0.0")
+        LAST_VERSION=${LAST_TAG#v}
+        
+        if [ "$CURRENT_VERSION" = "$LAST_VERSION" ]; then
+          echo "❌ Error: Version $CURRENT_VERSION matches last release $LAST_TAG"
+          echo "💡 Run 'task version:bump' first to bump the version"
+          exit 1
+        fi
+        echo "✅ Version changed: $LAST_VERSION → $CURRENT_VERSION"
+      - |
+        # Check CHANGELOG has unreleased content
+        if ! grep -q "## \[Unreleased\]" CHANGELOG.md; then
+          echo "❌ Error: No [Unreleased] section found in CHANGELOG.md"
+          exit 1
+        fi
+        
+        if ! grep -A 5 "## \[Unreleased\]" CHANGELOG.md | grep -q "^- \|^### "; then
+          echo "❌ Error: [Unreleased] section is empty"
+          echo "💡 Commit your changes first to auto-update CHANGELOG"
+          exit 1
+        fi
+        
+        # Show what will be released
+        echo "📋 Changes to be released:"
+        echo "----------------------------------------"
+        awk '/## \[Unreleased\]/,/^## \[[0-9]/ {if (/^## \[[0-9]/) exit; print}' CHANGELOG.md | head -30
+        echo "----------------------------------------"
+      - echo "🧪 Running full test suite..."
+      - task: :make
+      - echo "✅ All tests passed!"
+      - |
+        # Check if test documentation was regenerated and needs to be committed
+        if [ -n "$(git status --porcelain docs/tests.md)" ]; then
+          echo "❌ Error: Test documentation (docs/tests.md) has changed"
+          echo "💡 The test suite regenerated docs/tests.md with updated test counts or descriptions"
+          echo "📝 Please commit the changes and re-run 'task release:prepare'"
+          echo ""
+          echo "Changed file:"
+          git status --short docs/tests.md
+          exit 1
+        fi
+        echo "✅ Test documentation is up to date"
+      - echo "📝 Preparing CHANGELOG for release..."
+      - |
+        TODAY=$(date +%Y-%m-%d)
+        
+        # Move [Unreleased] content to new version section
+        # Add empty [Unreleased] section for future development
+        sed -i.bak "s/## \[Unreleased\]/## [Unreleased]\n\n### Added\n\n### Changed\n\n### Fixed\n\n## [{{.NEW_VERSION}}] - $TODAY/" CHANGELOG.md
+        
+        rm CHANGELOG.md.bak
+        echo "✅ CHANGELOG.md prepared for v{{.NEW_VERSION}}"
+      - echo "📝 Committing release preparation..."
+      - |
+        git add pyproject.toml CHANGELOG.md
+        git commit -m "chore: prepare release v{{.NEW_VERSION}}" --no-verify
+        echo "✅ Committed release preparation for v{{.NEW_VERSION}}"
+      - echo "🏗️  Building release package..."
+      - task: :build
+      - |
+        # Commit uv.lock if it was changed by the build
+        if [ -n "$(git status --porcelain uv.lock)" ]; then
+          git add uv.lock
+          git commit -m "chore: update uv.lock for v{{.NEW_VERSION}}" --no-verify
+          echo "✅ Committed updated uv.lock"
+        fi
+      - |
+        echo "✅ Release v{{.NEW_VERSION}} ready!"
+        echo "📌 Next steps:"
+        echo "   • Tag release: task release:tag"
+        echo "   • Or continue development (changes will go to next release)"
+    silent: true
+
+  tag:
+    desc: Create and push a git tag for the current version
+    summary: |
+      Creates a git tag and pushes it to origin.
+      This triggers GitHub Actions to:
+      - Build the package
+      - Run tests
+      - Create a GitHub release with assets
+      - Publish to PyPI automatically
+    vars:
+      DEFAULT_BRANCH:
+        sh: git symbolic-ref refs/remotes/origin/HEAD | sed 's@^refs/remotes/origin/@@'
+      VERSION:
+        sh: task version:pyproject
+    cmds:
+      - echo "Pushing changes to {{.DEFAULT_BRANCH}}..."
+      - git push origin {{.DEFAULT_BRANCH}}
+      - echo "Creating tag v{{.VERSION}}..."
+      - git tag "v{{.VERSION}}"
+      - git push origin "v{{.VERSION}}"
+      - echo "✅ Tag v{{.VERSION}} created and pushed to origin!"
+      - echo ""
+      - echo "🤖 GitHub Actions will now:"
+      - echo "   1. Build the package"
+      - echo "   2. Run tests"
+      - echo "   3. Create GitHub release with assets"
+      - echo "   4. Publish to PyPI"
+      - echo ""
+      - echo "Monitor progress at https://github.com/royw/appimage-updater/actions"
+    silent: true
+
+  pypi-test:
+    desc: Test PyPI upload
+    summary: Uploads the package to PyPI for testing
+    cmds:
+      - echo "Uploading package to PyPI for testing..."
+      - twine upload --repository testpypi dist/*
+      - echo "✅ Package uploaded to PyPI for testing!"
+    silent: true
+
+  pypi:
+    desc: PyPI upload
+    summary: Uploads the package to PyPI
+    cmds:
+      - echo "Uploading package to PyPI..."
+      - twine upload dist/*
+      - echo "✅ Package uploaded to PyPI!"
+    silent: true

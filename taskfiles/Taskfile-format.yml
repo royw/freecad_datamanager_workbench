@@ -1,0 +1,53 @@
+version: '3'
+
+tasks:
+
+  # `task format` is equivalent to `task format:all`
+  # intentionally not using a desc:, instead the all: task has the description and indicates it is the default task
+  default:
+    cmds:
+      - task: all
+    silent: true
+
+  # === Code Formatting ===
+
+  all:
+    desc: Format code with ruff (including import sorting) and format markdown files with mdformat (default format task)
+    summary: Formats both source code and markdown files
+    deps:
+      - task: src
+      - task: markdown
+
+  src:
+    desc: Format source code with ruff (including import sorting)
+    summary: Fixes imports and formats Python code in src/
+    cmds:
+      - uv run ruff check --fix --select I {{.CLI_ARGS | default .SRC}}  # Fix import sorting
+      - uv run ruff format {{.CLI_ARGS | default .SRC}}  # Format code
+
+  markdown:
+    desc: Format markdown files with mdformat
+    summary: Formats markdown files with consistent style
+    cmds:
+      - cmd: |
+          if ! command -v mdformat &> /dev/null; then
+            uv tool install mdformat
+          fi
+        silent: true
+      - sed -i 's/[[:space:]]*$//' {{.CLI_ARGS | default "*.md docs/*.md"}}
+      - mdformat {{.CLI_ARGS | default "*.md docs/*.md"}}
+
+  tests:
+    desc: Format tests with ruff (including import sorting)
+    summary: Fixes imports and formats Python code in tests/
+    deps:
+      - :lint:fix:tests
+    cmds:
+      - uv run ruff format {{.CLI_ARGS | default .TESTS}}  # Format code
+
+  scripts:
+    desc: Format scripts with ruff (including import sorting)
+    cmds:
+      - uv run ruff check --fix --select I {{.CLI_ARGS | default .SCRIPTS}}  # Fix import sorting
+      - uv run ruff format {{.CLI_ARGS | default .SCRIPTS}}  # Format code
+    silent: true

@@ -1,0 +1,106 @@
+version: '3'
+
+tasks:
+
+  # `task test` is equivalent to `task test:sequential`
+  # intentionally not using a desc:, instead the sequential: task has the description and indicates it is the default task
+  default:
+    cmds:
+      - task: sequential
+    silent: true
+
+  # === Testing ===
+  _check:
+    desc: Internal task to check for misplaced config.json in apps directory
+    internal: true
+    cmds:
+      - cmd: |
+          if [ -f ~/.config/appimage-updater/apps/config.json ]; then
+            echo "ERROR: Found config.json in apps/ directory!"
+            echo "This file should be at ~/.config/appimage-updater/config.json, not in apps/"
+            echo "A test is writing to the real config directory instead of using temp directories."
+            echo "Please remove it with: rm ~/.config/appimage-updater/apps/config.json"
+            exit 1
+          fi
+        silent: true
+
+  sequential:
+    desc: Run tests with pytest (sequential) without coverage (default test task)
+    summary: Runs all core tests (unit, functional, integration, e2e) without coverage for speed
+    cmds:
+      - uv run pytest --timeout {{.TEST_TIMEOUT}} --no-cov {{.TEST_CORE}} {{.CLI_ARGS}}
+
+  parallel:
+    desc: Run tests with pytest (parallel) without coverage
+    summary: Runs all core tests (unit, functional, integration, e2e) without coverage for speed
+    cmds:
+      - uv run pytest --timeout {{.TEST_TIMEOUT}} -n 4 --no-cov {{.TEST_CORE}} {{.CLI_ARGS}}
+
+
+  unit:
+    desc: Run unit tests only without coverage
+    summary: Runs tests/unit/ without coverage for speed
+    cmds:
+      - uv run pytest --timeout {{.TEST_TIMEOUT}} --no-cov tests/unit/ {{.CLI_ARGS}}
+
+  functional:
+    desc: Run functional tests only without coverage
+    summary: Runs tests/functional/ without coverage for speed
+    cmds:
+      - uv run pytest --timeout {{.TEST_TIMEOUT}} --no-cov tests/functional/ {{.CLI_ARGS}}
+
+  integration:
+    desc: Run integration tests only without coverage
+    summary: Runs tests/integration/ without coverage for speed
+    cmds:
+      - uv run pytest --timeout {{.TEST_TIMEOUT}} --no-cov tests/integration/ {{.CLI_ARGS}}
+
+  e2e:
+    desc: Run end-to-end tests to validate core functionality (serially for test isolation) without coverage
+    summary: Runs tests/e2e/ with verbose output, no coverage
+    cmds:
+      - bash -c 'set -o pipefail; uv run pytest --timeout {{.TEST_TIMEOUT}} tests/e2e/ -v --tb=short --color=yes 2>&1 | grep -Pv "^src/\S+\s+\d+\s+\d+\s+\d+%$"'
+      - task: _check
+
+  pattern-matching:
+    desc: Test pattern matching functionality specifically without coverage
+    summary: Runs pattern matching tests without coverage for speed
+    cmds:
+      - uv run pytest --timeout {{.TEST_TIMEOUT}} tests/e2e/test_pattern_matching.py -v
+      - task: _check
+      - uv run pytest --timeout {{.TEST_TIMEOUT}} tests/unit/test_intelligent_pattern_generation.py -v
+      - task: _check
+
+  regression:
+    desc: Run regression tests to validate fixed issues (uses network) without coverage
+    summary: Runs regression tests without coverage for speed
+    cmds:
+      # do not use timeout here as it will cause the test to fail
+      - uv run pytest tests/regression/ -v --tb=short --color=yes --no-cov
+      - task: _check
+      - echo "✅ Regression tests passed - fixed issues remain resolved!"
+    silent: true
+
+  all:
+    desc: Run all tests against all Python versions with coverage
+    summary: Tests against multiple Python versions using uv with coverage reporting
+    cmds:
+      - echo "🐍 Running tests against all Python versions..."
+      - for:
+          var: PYTHON_VERSIONS
+          split: ' '
+        cmd: |
+          echo "📋 Testing with Python {{.ITEM}}"
+          bash -c 'set -o pipefail; uv run --python {{.ITEM}} pytest --timeout {{.TEST_TIMEOUT}} {{.TEST_CORE}} --cov=src/{{.APP_NAME}} --tb=short --color=yes 2>&1 | grep -Pv "^src/\S+\s+\d+\s+\d+\s+\d+%$"'
+      - task: env:sync
+      - echo "✅ All Python versions tested successfully!"
+    silent: true
+
+  coverage:
+    desc: Run all tests with detailed coverage reporting (XML, HTML, terminal)
+    summary: Generates comprehensive coverage reports in multiple formats
+    cmds:
+      - uv run pytest --timeout {{.TEST_TIMEOUT}} {{.TEST_CORE}} --cov=src/{{.APP_NAME}} --cov-report=xml --cov-report=term-missing --cov-report=html:htmlcov
+      - task: _check
+      - echo "📊 Coverage report saved to htmlcov/index.html"
+    silent: true

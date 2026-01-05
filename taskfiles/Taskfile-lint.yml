@@ -1,0 +1,322 @@
+version: '3'
+
+tasks:
+
+  # `task lint` is equivalent to `task lint:src`
+  # intentionally not using a desc:, instead the src: task has the description and indicates it is the default task
+  default:
+    cmds:
+      - task: src
+    silent: true
+
+  # === Internal Helpers ===
+
+  _check_tmp:
+    desc: Internal task to check for hardcoded /tmp/ paths
+    internal: true
+    cmds:
+      - cmd: |
+          echo "Checking for hardcoded /tmp/ paths..."
+          TMP_FOUND=0
+          TMP_COUNT=0
+          SEARCH_PATH="{{.SEARCH_PATH}}"
+          
+          # Search for "/tmp/" in all Python files and count occurrences
+          # grep returns exit code 1 if no matches found, so we use || true to prevent script failure
+          TMP_RESULTS=$(grep -rn --include="*.py" '"/tmp/' $SEARCH_PATH 2>/dev/null || true)
+          if [ -n "$TMP_RESULTS" ]; then
+            echo "$TMP_RESULTS"
+            TMP_COUNT=$(echo "$TMP_RESULTS" | wc -l)
+            echo "FAIL Hardcoded /tmp/ paths found - use tmp_path fixture instead"
+            TMP_FOUND=1
+          fi
+          
+          if [ $TMP_FOUND -eq 0 ]; then
+            echo "PASS No hardcoded /tmp/ paths found"
+            exit 0
+          else
+            echo "FAIL Lint failed - $TMP_COUNT hardcoded /tmp/ paths found"
+            echo "Fix: Replace hardcoded /tmp/ paths with pytest's tmp_path fixture"
+            exit 1
+          fi
+        silent: true
+
+  # === Linting ===
+
+  src:
+    desc: Run all linting tasks on src/ (default lint task)
+    summary: Runs ruff, mypy, deadcode, and package checks on src/
+    cmds:
+      - task: fix
+      - task: ruff
+      - task: mypy
+      - task: markdown
+      - task: emoji
+      - task: deadcode
+      - task: packages
+      - task: _check_tmp
+        vars:
+          SEARCH_PATH: "{{.SRC}}"
+
+  tests:
+    desc: Run linting on core tests with ruff and check for hardcoded /tmp/ paths
+    summary: Runs ruff, mypy on tests/ and checks for /tmp/ usage
+    cmds:
+      - uv run ruff check --fix --select I {{.CLI_ARGS | default .TESTS_CORE}}
+      - uv run mypy {{.CLI_ARGS | default .TESTS_CORE}}
+      - task: _check_tmp
+        vars:
+          SEARCH_PATH: "{{.TESTS}}"
+
+  ruff:
+    desc: Run linting with ruff
+    summary: Checks code style, imports, and common issues
+    cmds:
+      - uv run ruff check {{.CLI_ARGS | default .SRC}}
+
+  mypy:
+    desc: Run type checking with mypy
+    summary: Validates type hints and catches type errors
+    cmds:
+      - uv run mypy {{.CLI_ARGS | default .SRC}}
+
+  mypy:tests:
+    desc: Run type checking with mypy
+    summary: Validates type hints and catches type errors
+    cmds:
+      - uv run mypy {{.CLI_ARGS | default .TESTS}}
+
+  fix:
+    desc: Automatically fix linting issues in src/ with ruff
+    summary: Auto-fixes import sorting and safe issues in src/
+    cmds:
+      - uv run ruff check --fix --select I {{.CLI_ARGS | default .SRC}}
+
+  fix:tests:
+    desc: Automatically fix linting issues in tests/ with ruff
+    summary: Auto-fixes import sorting and safe issues in tests/
+    cmds:
+      - uv run ruff check --fix --select I {{.CLI_ARGS | default .TESTS}}
+
+  scripts:
+    desc: Run linting with ruff and check for hardcoded /tmp/ paths
+    cmds:
+      - uv run ruff check --fix --select I {{.CLI_ARGS | default .SCRIPTS}}
+      - uv run mypy {{.CLI_ARGS | default .SCRIPTS}}
+      - task: _check_tmp
+        vars:
+          SEARCH_PATH: "{{.SCRIPTS}}"
+
+  markdown:
+    desc: Lint markdown files with pymarkdownlnt
+    summary: Checks markdown formatting and style issues
+    cmds:
+      - cmd: |
+          if ! command -v pymarkdownlnt &> /dev/null; then
+            uv tool install pymarkdownlnt
+          fi
+        silent: true
+      - uv run pymarkdownlnt --config .pymarkdown.json scan {{.CLI_ARGS | default "*.md docs/*.md"}} || true
+
+  deadcode:
+    desc: Find dead (unreachable/unused) code with deadcode (config in pyproject.toml)
+    summary: Detects unused functions, classes, and imports
+    cmds:
+      - echo "Checking deadcode..."
+      - uv run deadcode {{.CLI_ARGS | default .SRC}}
+    silent: true
+
+  packages:
+    desc: Verify that __init__.py files only contain docstrings (no code)
+    summary: Ensures __init__.py files follow project conventions
+    cmds:
+      - cmd: |
+          echo "Checking __init__.py files for code violations..."
+          VIOLATIONS=0
+          
+          # Find all __init__.py files in src/
+          while IFS= read -r file; do
+            # Skip if file doesn't exist or is empty
+            if [ ! -f "$file" ] || [ ! -s "$file" ]; then
+              continue
+            fi
+            
+            # Use Python to check if file contains only docstrings and comments
+            if ! python3 << PYTHON_SCRIPT
+          import ast
+          import sys
+          
+          try:
+              with open('$file', 'r') as f:
+                  content = f.read()
+              
+              # Parse the file
+              tree = ast.parse(content)
+              
+              # Check if there are any statements other than docstrings
+              has_code = False
+              for node in tree.body:
+                  # Allow module docstrings (Expr node with a Constant value)
+                  if isinstance(node, ast.Expr) and isinstance(node.value, ast.Constant):
+                      continue
+                  # Everything else is considered code
+                  has_code = True
+                  break
+              
+              if has_code:
+                  print(f"FAIL: $file contains code beyond docstrings", file=sys.stderr)
+                  sys.exit(1)
+              
+              sys.exit(0)
+          except SyntaxError as e:
+              print(f"ERROR: $file has syntax error: {e}", file=sys.stderr)
+              sys.exit(1)
+          PYTHON_SCRIPT
+            then
+              VIOLATIONS=$((VIOLATIONS + 1))
+            fi
+          done < <(find src -name "__init__.py" -type f)
+          
+          if [ $VIOLATIONS -eq 0 ]; then
+            echo "PASS All __init__.py files are clean (docstrings only)"
+          else
+            echo "FAIL Found $VIOLATIONS __init__.py file(s) with code violations"
+            exit 1
+          fi
+        silent: true
+
+  duplication:
+    desc: Check for duplicate code using pylint
+    summary: Finds similar code blocks that could be refactored
+    cmds:
+      - echo "Checking for code duplication..."
+      - uv run pylint --disable=all --enable=duplicate-code {{.CLI_ARGS | default .SRC}}
+    silent: true
+
+  pylint:
+    desc: Run pylint with pytest-friendly settings
+    summary: Lints code with pylint, suppressing pytest fixture warnings for tests
+    cmds:
+      - echo "Running pylint..."
+      - |
+        if [ "{{.CLI_ARGS | default .SRC}}" = "tests/" ]; then
+          echo "Running pylint on tests with pytest-friendly settings..."
+          uv run pylint --disable=redefined-outer-name {{.CLI_ARGS | default .SRC}}
+        else
+          echo "Running pylint on source code..."
+          uv run pylint {{.CLI_ARGS | default .SRC}}
+        fi
+    silent: true
+
+  emoji:
+    desc: Search for emojis in source code, docs, and configuration files
+    cmds:
+      - cmd: |
+          echo "SEARCH Searching for emojis in codebase..."
+          EMOJI_FOUND=0
+          
+          # Extract emoji keys from global EMOJI_REPLACEMENTS_MAP
+          EMOJI_MAP='{{.EMOJI_REPLACEMENTS_MAP}}'
+          
+          # Extract just the emojis (keys before the colon)
+          EMOJI_LIST=$(echo "$EMOJI_MAP" | tr ' ' '\n' | cut -d':' -f1)
+          
+          # Search in source code
+          if echo "$EMOJI_LIST" | xargs -I {} grep -rn --include="*.py" -F {} src/ 2>/dev/null; then
+            echo "FAIL Emojis found in source code (src/)"
+            EMOJI_FOUND=1
+          fi
+          
+          # Search in tests
+          if echo "$EMOJI_LIST" | xargs -I {} grep -rn --include="*.py" -F {} tests/ 2>/dev/null; then
+            echo "FAIL Emojis found in tests (tests/)"
+            EMOJI_FOUND=1
+          fi
+          
+          # Search in docs
+          if echo "$EMOJI_LIST" | xargs -I {} grep -rn --include="*.md" -F {} docs/ 2>/dev/null; then
+            echo "FAIL Emojis found in documentation (docs/)"
+            EMOJI_FOUND=1
+          fi
+          
+          # Search in README.md
+          if echo "$EMOJI_LIST" | xargs -I {} grep -rn -F {} README.md 2>/dev/null; then
+            echo "FAIL Emojis found in README.md"
+            EMOJI_FOUND=1
+          fi
+          
+          # Search in mkdocs.yml
+          if echo "$EMOJI_LIST" | xargs -I {} grep -rn -F {} mkdocs.yml 2>/dev/null; then
+            echo "FAIL Emojis found in mkdocs.yml"
+            EMOJI_FOUND=1
+          fi
+          
+          if [ $EMOJI_FOUND -eq 0 ]; then
+            echo "PASS No emojis found in codebase"
+          else
+            echo "FAIL Emoji check failed - emojis found in codebase"
+            exit 1
+          fi
+        silent: true
+
+  fix:emoji:
+    desc: Remove emojis from markdown and test files (*.md, docs/*.md, tests/*.py)
+    cmds:
+      - cmd: |
+          python3 << 'PYTHON_SCRIPT'
+          import os
+          import glob
+          from pathlib import Path
+          
+          # Build emoji replacements map from Taskfile variable
+          EMOJI_MAP = '{{.EMOJI_REPLACEMENTS_MAP}}'
+          
+          # Parse the map into a dictionary
+          replacements = {}
+          for pair in EMOJI_MAP.split():
+              if ':' in pair:
+                  emoji, replacement = pair.split(':', 1)
+                  replacements[emoji] = replacement
+          
+          print("Removing emojis from markdown and test files...")
+          
+          def process_file(filepath):
+              """Process a single file and replace emojis."""
+              try:
+                  with open(filepath, 'r', encoding='utf-8') as f:
+                      content = f.read()
+                  
+                  original_content = content
+                  
+                  # Apply all emoji replacements
+                  for emoji, replacement in replacements.items():
+                      content = content.replace(emoji, replacement)
+                  
+                  # Only write if content changed
+                  if content != original_content:
+                      with open(filepath, 'w', encoding='utf-8') as f:
+                          f.write(content)
+                      print(f"  - Emojis removed from {filepath}")
+              except Exception as e:
+                  print(f"  ! Error processing {filepath}: {e}")
+          
+          print("Processing markdown files...")
+          # Process markdown files in project root (max depth 1)
+          for md_file in glob.glob("*.md"):
+              process_file(md_file)
+          
+          # Process markdown files in docs/ directory
+          if os.path.isdir("docs"):
+              for md_file in Path("docs").rglob("*.md"):
+                  process_file(str(md_file))
+          
+          print("Processing test Python files...")
+          # Process all test python files (including subdirectories)
+          if os.path.isdir("tests"):
+              for py_file in Path("tests").rglob("*.py"):
+                  process_file(str(py_file))
+          
+          print("Emoji removal complete!")
+          PYTHON_SCRIPT
+        silent: true
+

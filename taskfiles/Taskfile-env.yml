@@ -1,0 +1,91 @@
+version: '3'
+
+tasks:
+
+  # `task env` is equivalent to `task env:check`
+  # intentionally not using a desc:, instead the check: task has the description and indicates it is the default task
+  default:
+    cmds:
+      - task: check
+    silent: true
+
+  # === Setup and Environment ===
+
+  check:
+    desc: Verify development environment setup (default env task)
+    summary: Checks versions of required tools (python3, uv, task)
+    cmds:
+      - echo "Checking Prerequisite versions..."
+      - uv --version
+      - uv run python --version
+      - git --version
+      - |
+          if command -v pipxu >/dev/null 2>&1; then
+            pipxu --version
+          else
+            pipx --version
+          fi
+      - pymarkdownlnt version
+      - |
+          if command -v designer6 >/dev/null 2>&1; then
+            designer6_path="$(command -v designer6)"
+            if command -v readlink >/dev/null 2>&1; then
+              designer6_realpath="$(readlink -f "$designer6_path" 2>/dev/null || echo "$designer6_path")"
+            else
+              designer6_realpath="$designer6_path"
+            fi
+
+            if [ -x "$designer6_realpath" ]; then
+              echo "designer6 is available: $designer6_path -> $designer6_realpath"
+            else
+              echo "designer6 found but is not executable: $designer6_path -> $designer6_realpath"
+              exit 1
+            fi
+          else
+            echo "designer6 is not found on PATH"
+            exit 1
+          fi
+    silent: true
+
+  install:
+    desc: Install project dependencies (first-time setup) into .venv/
+    summary: First-time setup - checks environment and syncs dependencies
+    deps:
+      - check
+      - sync
+    silent: true
+
+  sync:
+    desc: Sync project dependencies with uv into .venv/
+    summary: Updates dependencies from pyproject.toml into .venv/
+    cmds:
+      - uv sync --group dev
+    silent: true
+
+  resync:
+    desc: Resync project dependencies by first deleting .venv/ and then syncing with uv into .venv/
+    summary: Clean reinstall - removes .venv/ and syncs fresh
+    cmds:
+      - rm -rf .venv/
+      - task: sync
+    silent: true
+
+  clean:
+    desc: Clean up generated files
+    summary: Removes __pycache__, .pyc, .pytest_cache, .ruff_cache, dist/
+    cmds:
+      - find . -type d -name "__pycache__" -exec rm -rf {} +
+      - find . -type f -name "*.pyc" -delete
+      - rm -rf .mypy_cache/
+      - rm -rf .pytest_cache/
+      - rm -rf dist/
+      - rm -rf build/
+      - rm -rf site/
+    silent: true
+
+  clean:bytecodes:
+    desc: Clean up bytecodes
+    summary: Removes __pycache__, .pyc
+    cmds:
+      - find . -type d -name "__pycache__" -exec rm -rf {} +
+      - find . -type f -name "*.pyc" -delete

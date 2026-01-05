@@ -1,0 +1,31 @@
+version: '3'
+
+tasks:
+
+  # === Git hooks ===
+
+  # Intentionally not using a default: task for git hooks
+
+  hooks:install:
+    desc: Install git hooks from .githooks/ directory
+    summary: Configures git to use custom hooks for commit validation
+    cmds:
+      - git config core.hooksPath .githooks
+      - chmod +x .githooks/*
+      - echo "✅ Git hooks installed! Hooks will run automatically on commits."
+    silent: true
+
+  hooks:uninstall:
+    desc: Uninstall git hooks (revert to default .git/hooks/)
+    summary: Reverts to default git hooks directory
+    cmds:
+      - git config --unset core.hooksPath
+      - echo "✅ Git hooks uninstalled. Using default .git/hooks/ directory."
+    silent: true
+
+  hooks:test:
+    desc: Test the post-commit hook manually
+    summary: Runs post-commit hook to verify CHANGELOG updates
+    cmds:
+      - .githooks/post-commit
+    silent: true
