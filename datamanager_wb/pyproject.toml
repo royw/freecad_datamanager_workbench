@@ -1,0 +1,31 @@
+# References: 
+# https://packaging.python.org/en/latest/specifications/declaring-project-metadata/
+# https://packaging.python.org/en/latest/guides/packaging-namespace-packages/#native-namespace-packages
+# https://packaging.python.org/en/latest/guides/single-sourcing-package-version/
+# https://setuptools.pypa.io/en/latest/userguide/pyproject_config.html
+
+[build-system]
+requires = ["setuptools"]
+build-backend = "setuptools.build_meta"
+
+[project]
+name = "freecad.datamanager_wb"
+dynamic = ["version"]
+description = "Manages FreeCAD varsets and aliases"
+readme = "README.md"
+license = {file = "LICENSE"}
+maintainers = [
+    {name = "Roy Wright", email = "roy@wright.org"},
+]
+requires-python = ">=3.8"
+dependencies = ["'numpy',"]
+
+[project.urls]
+source = "https://github.com/royw/freecad_datamanager_workbench"
+
+[tool.setuptools]
+packages = ["freecad", "freecad.datamanager_wb"]
+include-package-data = true
+
+[tool.setuptools.dynamic]
+version = {attr = "freecad.datamanager_wb.version.__version__"}
