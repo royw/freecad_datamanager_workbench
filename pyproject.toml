@@ -1,7 +1,30 @@
+[build-system]
+requires = ["hatchling"]
+build-backend = "hatchling.build"
+
 [project]
 name = "freecad-workbench-datamanager"
 version = "0.1.0"
-description = "Add your description here"
+description = "A FreeCAD workbench for managing varsets and aliases"
 readme = "README.md"
-requires-python = ">=3.13"
+license = "MIT"
+requires-python = ">=3.10"
+authors = [
+    { name = "Roy Wright", email = "roy@wright.org" }
+]
+
 dependencies = []
+
+[dependency-groups]
+dev = [
+    "pyside6>=6.10.1",
+]
+
+[project.urls]
+Homepage = "https://github.com/royw/freecad_datamanager_wb"
+Documentation = "https://royw.github.io/freecad_datamanager_wb/"
+Repository = "https://github.com/royw/freecad_datamanager_wb"
+Issues = "https://github.com/royw/freecad_datamanager_wb/issues"
+Changelog = "https://github.com/royw/freecad_datamanager_wb/blob/main/CHANGELOG.md"
+
+
