@@ -7,18 +7,48 @@ name = "freecad-workbench-datamanager"
 version = "0.1.0"
 description = "A FreeCAD workbench for managing varsets and aliases"
 readme = "README.md"
-license = "MIT"
-requires-python = ">=3.10"
+license = { text = "LGPL-2.0-or-later" }
+requires-python = ">=3.12"
 authors = [
     { name = "Roy Wright", email = "roy@wright.org" }
 ]
 
-dependencies = []
+dependencies = [
+    "pcpp>=1.30",
+]
 
 [dependency-groups]
 dev = [
+    "clang>=21.1.7",
+    "deadcode>=2.4.0",
+    "decorator>=5.2.1",
+    "joblib>=1.5.3",
+    "mkdocs>=1.6.1",
+    "mkdocs-gen-files>=0.5.0",
+    "mkdocs-git-revision-date-localized-plugin>=1.4.7",
+    "mkdocs-git-revision-date-plugin>=0.3.2",
+    "mkdocs-literate-nav>=0.6.2",
+    "mkdocs-material>=9.6.18",
+    "mkdocs-mermaid2-plugin>=1.2.2",
+    "mkdocstrings[python]>=0.30.0",
+    "more-itertools>=10.8.0",
+    "mypy>=1.17.1",
+    "pylint>=3.3.8",
     "pyside6>=6.10.1",
+    "python-dotenv>=1.0.0",
+    "pytest>=8.4.1",
+    "pytest-cov>=6.2.1",
+    "pytest-timeout>=2.4.0",
+    "pytest-xdist>=3.8.0",
+    "radon>=6.0.1",
+    "ruff>=0.12.11",
+    "taskfile-help>=0.4.1",
+    "version-bumper>=0.1.2",
+
 ]
+
+[tool.hatch.build.targets.wheel]
+packages = ["datamanager_wb/freecad/datamanager_wb"]
 
 [project.urls]
 Homepage = "https://github.com/royw/freecad_datamanager_wb"
@@ -27,4 +57,264 @@ Repository = "https://github.com/royw/freecad_datamanager_wb"
 Issues = "https://github.com/royw/freecad_datamanager_wb/issues"
 Changelog = "https://github.com/royw/freecad_datamanager_wb/blob/main/CHANGELOG.md"
 
+[tool.mypy]
+python_version = "3.12"
+strict = true
+warn_return_any = true
+warn_unused_configs = true
+disallow_untyped_defs = true
+disallow_incomplete_defs = true
+check_untyped_defs = true
+disallow_untyped_decorators = true
+no_implicit_optional = true
+warn_redundant_casts = true
+warn_unused_ignores = true
+warn_no_return = true
+warn_unreachable = true
+strict_equality = true
+# Allow multiple conftest.py files in different test directories
+explicit_package_bases = true
+# Additional strictness for better type safety
+disallow_any_generics = true
+disallow_subclassing_any = true
+# Enable additional error codes for better checking
+enable_error_code = ["misc", "type-arg", "assignment"]
 
+[tool.pylint.main]
+# Analyse all Python files in src/ and tests/
+py-version = "3.12"
+# Use multiple processes to speed up Pylint
+jobs = 0
+# Load the Pylint configuration from pyproject.toml
+init-hook = "import sys; sys.path.append('src')"
+
+[tool.pylint.basic]
+# Good variable names which should always be accepted, separated by a comma
+good-names = ["i", "j", "k", "ex", "Run", "_", "e", "f", "fp", "fh"]
+# Bad variable names which should always be refused, separated by a comma
+bad-names = ["foo", "bar", "baz", "toto", "tutu", "tata"]
+# Regular expression which should only match function or class names that do not require a docstring
+no-docstring-rgx = "^_"
+# Minimum line length for functions/classes that require docstrings, -1 = no limit
+docstring-min-length = -1
+
+[tool.pylint.format]
+# Maximum number of characters on a single line
+max-line-length = 120
+# String used as indentation unit. This is usually "    " (4 spaces) or "\t" (1 tab)
+indent-string = "    "
+# Number of spaces of indentation required inside a hanging or continued line
+indent-after-paren = 4
+# Expected format of line ending, e.g. empty (any line ending), LF, or CRLF
+expected-line-ending-format = "LF"
+
+[tool.pylint.messages_control]
+# Disable specific messages
+disable = [
+    "raw-checker-failed",
+    "bad-inline-option",
+    "locally-disabled",
+    "file-ignored",
+    "suppressed-message",
+    "useless-suppression",
+    "deprecated-pragma",
+    "use-symbolic-message-instead",
+    # Project-specific disables
+    "missing-module-docstring",  # We don't require module docstrings
+    "missing-class-docstring",   # We don't require class docstrings
+    "missing-function-docstring", # We don't require function docstrings
+    "too-few-public-methods",    # Not always applicable
+    "too-many-public-methods",   # Not always applicable
+    "too-many-instance-attributes", # Sometimes necessary
+    "too-many-arguments",        # Sometimes necessary
+    "too-many-locals",           # Sometimes necessary
+    "too-many-branches",         # Sometimes necessary
+    "too-many-statements",       # Sometimes necessary
+    "invalid-name",              # Handled by Ruff's N naming rules
+    "line-too-long",             # Handled by Ruff's E501
+    "import-error",              # Handled by MyPy
+    "no-member",                 # Sometimes false positives
+    "not-callable",              # Sometimes false positives
+    "c-extension-no-member",     # C extension issues
+]
+# Enable specific messages that are disabled by default
+enable = [
+    "useless-suppression",
+    "use-symbolic-message-instead",
+]
+
+[tool.pylint.design]
+# Maximum number of arguments for function / method
+max-args = 7
+# Maximum number of locals for function / method body
+max-locals = 15
+# Maximum number of return / branch / function / statements inside function / method body
+max-returns = 6
+max-branches = 12
+max-statements = 50
+# Maximum number of parents for a class (see R0901)
+max-parents = 7
+# Maximum number of attributes for a class (see R0902)
+max-attributes = 7
+# Minimum number of public methods for a class (see R0903)
+min-public-methods = 2
+# Maximum number of public methods for a class (see R0904)
+max-public-methods = 20
+
+[tool.pylint.typecheck]
+# List of decorators that produce context managers, thus are allowed to be called in a 'with' statement
+generated-members = ""
+
+[tool.pylint.variables]
+# Tells whether unused global variables should be treated as a violation
+allow-global-unused-variables = true
+# A regular expression matching the name of dummy variables (i.e. expected to not be used)
+dummy-variables-rgx = "^(_|dummy_|unused_)"
+# Argument names that match this expression will be ignored. Default to name with leading underscore
+ignored-argument-names = "_.*"
+
+[tool.pylint.similarities]
+# Minimum lines number of a similarity
+min-similarity-lines = 4
+# Ignore comments when computing similarities
+ignore-comments = true
+# Ignore docstrings when computing similarities
+ignore-docstrings = true
+# Ignore imports when computing similarities
+ignore-imports = true
+
+[tool.pylint.spelling]
+# Spelling dictionary name. Available dictionaries: none. To make it work, install the python-enchant package
+spelling-dict = ""
+# List of comma separated words that should not be checked
+spelling-ignore-words = ""
+# A path to a file that contains the private dictionary; one word per line
+spelling-private-dict-file = ""
+
+[tool.pylint.imports]
+# Deprecated modules which should not be used, separated by a comma
+deprecated-modules = ""
+
+[tool.pylint.exceptions]
+# Exceptions that will emit a warning when being caught. Defaults to "Exception"
+overgeneral-exceptions = ["builtins.Exception"]
+
+[tool.pylint.logging]
+# Logging modules to check that the string format arguments are in logging function parameter format
+logging-modules = ["logging"]
+
+[tool.pylint.miscellaneous]
+# List of note tags to take in consideration, separated by a comma
+notes = ["FIXME", "XXX", "TODO"]
+
+[tool.ruff]
+target-version = "py312"
+line-length = 120
+
+[tool.ruff.format]
+docstring-code-format = true
+docstring-code-line-length = 80
+
+[tool.ruff.lint]
+select = [
+    "E",    # pycodestyle errors
+    "W",    # pycodestyle warnings
+    "F",    # pyflakes
+    "I",    # isort
+    "B",    # flake8-bugbear
+    "C4",   # flake8-comprehensions
+    "UP",   # pyupgrade
+    "N",    # pep8-naming
+    "S",    # flake8-bandit
+    "T20",  # flake8-print
+    "SIM",  # flake8-simplify
+    "C901", # mccabe complexity
+    "E402", # Module level import not at top of file
+    "TID",  # flake8-tidy-imports (detects banned imports and import style issues)
+    "PLC",  # Pylint convention
+]
+ignore = [
+    "S101",  # Use of assert detected
+    "TID252", # Prefer absolute imports over relative imports (we'll fix this separately)
+]
+per-file-ignores = { "tests/*" = ["S101", "T201", "C901", "E501", "F541"] }
+
+[tool.ruff.lint.mccabe]
+max-complexity = 10
+
+[tool.ruff.lint.isort]
+# Configure ruff's built-in isort to match project preferences
+known-first-party = ["appimage_updater"]
+section-order = ["future", "standard-library", "third-party", "first-party", "local-folder"]
+lines-after-imports = 2
+force-single-line = false
+combine-as-imports = true
+force-sort-within-sections = true
+
+[tool.ruff.lint.flake8-tidy-imports]
+# Ban function-level imports - all imports should be at module level
+ban-relative-imports = "all"
+
+
+[tool.pytest.ini_options]
+testpaths = ["tests/unit", "tests/functional"]
+python_files = ["test_*.py"]
+python_classes = ["Test*"]
+python_functions = ["test_*"]
+addopts = [
+    # Coverage is controlled per-task in Taskfile
+]
+markers = [
+    "slow: marks tests as slow (deselect with '-m not slow')",
+]
+
+[tool.coverage.run]
+source = ["src"]
+omit = ["tests/*"]
+parallel = false
+concurrency = ["thread"]
+
+[tool.coverage.paths]
+source = ["src/", "*/site-packages/"]
+
+[tool.coverage.report]
+exclude_lines = [
+    "pragma: no cover",
+    "def __repr__",
+    "raise AssertionError",
+    "raise NotImplementedError",
+    "if __name__ == .__main__.:",
+]
+
+[tool.deadcode]
+# Functions/methods to ignore - used in testing infrastructure or by decorators
+ignore-names = [
+    # CLI commands (decorated with @app.command)
+    "main",
+]
+
+# Decorators that indicate a function is used
+ignore-if-decorated-with = [
+    # "@app.command",
+]
+
+[tool.dev-metrics]
+# Paths for metrics calculation
+src-paths = "src"
+tests-paths = "tests"
+# Tool paths (can be overridden for custom installations)
+radon-path = ["uv", "run", "radon"]
+pylint-path = ["uv", "run", "pylint"]
+pytest-path = ["uv", "run", "pytest"]
+# Test file configuration
+test-pattern = "test_*.py"
+# Filter to specific test type subdirectory
+test-type = [
+    "unit",
+    "functional",
+    "integration",
+    "e2e"
+]
+package = "datamanager_wb"  # Optional: auto-detected from src/ directory or project name
+# Optional: files to exclude from untested report
+excluded-files = ["__init__.py", "__main__.py", "_version.py"]
