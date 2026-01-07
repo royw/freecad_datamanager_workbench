@@ -11,15 +11,18 @@ FreeCAD generally discovers available workbenches only during startup. After add
 You can find the user `Mod/` directory in a few ways:
 
 1. **In FreeCAD**
+
    - Open `Edit` -> `Preferences` -> `General` -> `Macro`.
    - Note the macro path shown there; the user `Mod/` directory is typically adjacent to it.
 
-2. **Common Linux default**
+1. **Common Linux default**
+
    - FreeCAD stores per-version user data under `~/.local/share/FreeCAD/<version>/`.
    - For example:
      - `~/.local/share/FreeCAD/v1-2/Mod`
 
-3. **Search your home directory**
+1. **Search your home directory**
+
    - If you’re unsure which version directory is active:
      - `find ~/.local/share/FreeCAD -maxdepth 3 -type d -name Mod`
 
@@ -47,8 +50,8 @@ importlib.reload(datamanager_wb)
 Notes:
 
 1. Reloading is useful for pure-Python changes, but it is not a full substitute for restarting FreeCAD.
-2. FreeCAD’s workbench discovery and command registration are primarily done at startup; if you add/remove the workbench (e.g. create/remove the `Mod/` symlink), you still need to restart.
-3. GUI objects, registered commands, and existing Qt widgets may keep references to old classes/functions; after a reload you may need to close/re-open the panel or restart FreeCAD if you see inconsistent behavior.
+1. FreeCAD’s workbench discovery and command registration are primarily done at startup; if you add/remove the workbench (e.g. create/remove the `Mod/` symlink), you still need to restart.
+1. GUI objects, registered commands, and existing Qt widgets may keep references to old classes/functions; after a reload you may need to close/re-open the panel or restart FreeCAD if you see inconsistent behavior.
 
 ## Qt version (FreeCAD)
 

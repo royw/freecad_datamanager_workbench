@@ -9,8 +9,14 @@ import FreeCAD as App
 import FreeCADGui as Gui
 from PySide import QtCore, QtWidgets
 
+from .commands import register_commands
+from .document_model import (
+    get_expression_items,
+    get_sorted_varsets,
+    get_varset_variable_items,
+    select_object_from_expression_item,
+)
 from .freecad_version_check import check_python_and_freecad_version
-from .varset_tools import getVarsetReferences, getVarsets, getVarsetVariableNames
 
 translate = App.Qt.translate
 QT_TRANSLATE_NOOP = App.Qt.QT_TRANSLATE_NOOP
@@ -26,6 +32,9 @@ Gui.updateLocale()
 
 
 check_python_and_freecad_version()
+
+
+register_commands()
 
 
 class DataManagerWorkbench(Gui.Workbench):
@@ -77,40 +86,6 @@ def get_main_panel() -> "MainPanel":
     return MainPanel()
 
 
-class _VarsetManagementCommand:
-    def GetResources(self):
-        return {
-            "MenuText": translate("Workbench", "Varset Management"),
-            "ToolTip": translate("Workbench", "Manage VarSets"),
-            "Pixmap": os.path.join(ICONPATH, "Varsets.svg"),
-        }
-
-    def IsActive(self):
-        return True
-
-    def Activated(self):
-        get_main_panel().show(tab_index=0)
-
-
-class _AliasManagementCommand:
-    def GetResources(self):
-        return {
-            "MenuText": translate("Workbench", "Alias Management"),
-            "ToolTip": translate("Workbench", "Manage Aliases"),
-            "Pixmap": os.path.join(ICONPATH, "Aliases.svg"),
-        }
-
-    def IsActive(self):
-        return True
-
-    def Activated(self):
-        get_main_panel().show(tab_index=1)
-
-
-Gui.addCommand("DataManagerVarsetManagement", _VarsetManagementCommand())
-Gui.addCommand("DataManagerAliasManagement", _AliasManagementCommand())
-
-
 class MainPanel:
     def __init__(self):
         App.Console.PrintMessage(translate("Log", "Workbench MainPanel initialized.") + "\n")
@@ -151,7 +126,7 @@ class MainPanel:
             )
 
         if self.availableVarsetsListWidget is not None:
-            for varset in sorted(getVarsets()):
+            for varset in get_sorted_varsets():
                 self.availableVarsetsListWidget.addItem(varset)
 
             self.availableVarsetsListWidget.itemSelectionChanged.connect(
@@ -184,16 +159,13 @@ class MainPanel:
         App.Console.PrintMessage(translate("Log", "Workbench MainPanel: selection changed\n"))
 
         self.varsetVariableNamesListWidget.clear()
-        variable_items: list[str] = []
-        for item in self.availableVarsetsListWidget.selectedItems():
-            varset_name = item.text()
+        selected_varsets = [item.text() for item in self.availableVarsetsListWidget.selectedItems()]
+        for varset_name in selected_varsets:
             App.Console.PrintMessage(
                 translate("Log", f"Workbench MainPanel: selected varset {varset_name}") + "\n"
             )
-            for var_name in getVarsetVariableNames(varset_name):
-                variable_items.append(f"{varset_name}.{var_name}")
 
-        for variable_item in sorted(variable_items):
+        for variable_item in get_varset_variable_items(selected_varsets):
             self.varsetVariableNamesListWidget.addItem(variable_item)
 
     def _on_variable_names_selection_changed(self):
@@ -205,32 +177,23 @@ class MainPanel:
         )
 
         self.varsetExpressionsListWidget.clear()
-        expression_items: list[str] = []
+        selected_vars = [item.text() for item in self.varsetVariableNamesListWidget.selectedItems()]
+        expression_items, counts = get_expression_items(selected_vars)
 
-        for item in self.varsetVariableNamesListWidget.selectedItems():
-            text = item.text()
+        for text in selected_vars:
             App.Console.PrintMessage(
                 translate("Log", f"Workbench MainPanel: selected variable {text}") + "\n"
             )
-            if "." not in text:
-                continue
-            varset_name, variable_name = text.split(".", 1)
-            refs = getVarsetReferences(varset_name, variable_name)
-            refs_count = len(refs)
+            refs_count = counts.get(text, 0)
             App.Console.PrintMessage(
                 translate(
                     "Log",
-                    (
-                        f"Workbench MainPanel: found {refs_count} references for "
-                        f"{varset_name}.{variable_name}"
-                    ),
+                    (f"Workbench MainPanel: found {refs_count} references for {text}"),
                 )
                 + "\n"
             )
-            for k, v in refs.items():
-                expression_items.append(f"{k} = {v}")
 
-        for expression_item in sorted(expression_items):
+        for expression_item in expression_items:
             self.varsetExpressionsListWidget.addItem(expression_item)
 
     def _on_expressions_selection_changed(self):
@@ -241,25 +204,7 @@ class MainPanel:
         if not selected:
             return
 
-        text = selected[0].text()
-        left = text.split("=", 1)[0].strip()
-        obj_name = left.split(".", 1)[0].strip()
-        if not obj_name:
-            return
-
-        doc = App.ActiveDocument
-        if doc is None:
-            return
-
-        obj = doc.getObject(obj_name)
-        if obj is None:
-            App.Console.PrintWarning(
-                translate("Log", f"Workbench MainPanel: cannot find object '{obj_name}'\n")
-            )
-            return
-
-        Gui.Selection.clearSelection()
-        Gui.Selection.addSelection(doc.Name, obj.Name)
+        select_object_from_expression_item(selected[0].text())
 
     def _on_subwindow_destroyed(self, _obj=None):
         get_main_panel.cache_clear()
