@@ -1,9 +1,5 @@
 version: '3'
 
-vars:
-  SRC:
-    sh: python3 -c "import tomllib; f = open('pyproject.toml', 'rb'); data = tomllib.load(f); f.close(); print(data.get('tool', {}).get('dev-metrics', {}).get('src-paths', 'src/'))"
-
 tasks:
 
   # `task metrics` is equivalent to `task metrics:summary`
@@ -57,7 +53,7 @@ tasks:
             OUTPUT=$(uv run radon cc --show-complexity {{.CLI_ARGS | default .SRC}} --min B | \
             grep -vE "($EXCLUDED)")
             
-            if [ -z "$OUTPUT" ] || echo "$OUTPUT" | grep -qE "^src/.*\.py$" && ! echo "$OUTPUT" | grep -qE "^\s+[MFC]"; then
+            if [ -z "$OUTPUT" ] || echo "$OUTPUT" | grep -qE "^{{.SRC}}.*\.py$" && ! echo "$OUTPUT" | grep -qE "^\s+[MFC]"; then
               echo "✅ No complexity issues found (all B-rated functions are in exclusion list)"
             else
               echo "$OUTPUT"

@@ -72,6 +72,10 @@ warn_unused_ignores = true
 warn_no_return = true
 warn_unreachable = true
 strict_equality = true
+# FreeCAD GUI entrypoints depend on runtime FreeCAD/Qt types; exclude from strict mypy.
+exclude = [
+    '^datamanager_wb/freecad/datamanager_wb/init_gui\.py$',
+]
 # Allow multiple conftest.py files in different test directories
 explicit_package_bases = true
 # Additional strictness for better type safety
@@ -79,6 +83,25 @@ disallow_any_generics = true
 disallow_subclassing_any = true
 # Enable additional error codes for better checking
 enable_error_code = ["misc", "type-arg", "assignment"]
+
+# Enable mypy to resolve FreeCAD-related modules similarly to VS Code's
+# python.analysis.stubPath / python.analysis.extraPaths.
+mypy_path = "./datamanager_wb:/opt/FreeCAD_weekly_exploded/stubs:/opt/FreeCAD_weekly_exploded/usr/Mod:/opt/FreeCAD_weekly_exploded/usr/Ext:/home/royw/.local/share/FreeCAD/v1-2/Mod/OpenTheme:/home/royw/.local/share/FreeCAD/v1-2/Macro"
+
+[[tool.mypy.overrides]]
+module = [
+    "FreeCAD",
+    "FreeCADGui",
+    "PySide",
+    "PySide.*",
+    "PySide2",
+    "PySide2.*",
+    "PySide6",
+    "PySide6.*",
+    "numpy",
+    "numpy.*",
+]
+ignore_missing_imports = true
 
 [tool.pylint.main]
 # Analyse all Python files in src/ and tests/

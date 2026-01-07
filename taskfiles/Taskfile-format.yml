@@ -20,7 +20,7 @@ tasks:
 
   src:
     desc: Format source code with ruff (including import sorting)
-    summary: Fixes imports and formats Python code in src/
+    summary: Fixes imports and formats Python code in source directory
     cmds:
       - uv run ruff check --fix --select I {{.CLI_ARGS | default .SRC}}  # Fix import sorting
       - uv run ruff format {{.CLI_ARGS | default .SRC}}  # Format code

@@ -5,16 +5,17 @@ FreeCAD datamanager workbench
 import functools
 import os
 import sys
-import FreeCADGui as Gui
+
 import FreeCAD as App
+import FreeCADGui as Gui
+from PySide import QtCore, QtWidgets
+
 from freecad.datamanager_wb import my_numpy_function
-from PySide import QtCore
-from PySide import QtWidgets
 
-from .varset_tools import getVarsets, getVarsetVariableNames, getVarsetReferences
+from .varset_tools import getVarsetReferences, getVarsets, getVarsetVariableNames
 
-translate=App.Qt.translate
-QT_TRANSLATE_NOOP=App.Qt.QT_TRANSLATE_NOOP
+translate = App.Qt.translate
+QT_TRANSLATE_NOOP = App.Qt.QT_TRANSLATE_NOOP
 
 ICONPATH = os.path.join(os.path.dirname(__file__), "resources", "icons")
 TRANSLATIONSPATH = os.path.join(os.path.dirname(__file__), "resources", "translations")
@@ -57,10 +58,7 @@ if sys.version_info[0] == 3 and sys.version_info[1] >= 11:
                 minor_ver == FC_MINOR_VER_REQUIRED
                 and (
                     patch_ver < FC_PATCH_VER_REQUIRED
-                    or (
-                        patch_ver == FC_PATCH_VER_REQUIRED
-                        and gitver < FC_COMMIT_REQUIRED
-                    )
+                    or (patch_ver == FC_PATCH_VER_REQUIRED and gitver < FC_COMMIT_REQUIRED)
                 )
             )
         )
@@ -68,7 +66,8 @@ if sys.version_info[0] == 3 and sys.version_info[1] >= 11:
         App.Console.PrintWarning(
             App.Qt.translate(
                 "Log",
-                "FreeCAD version (currently {}.{}.{} ({})) must be at least {}.{}.{} ({}) in order to work with Python 3.11 and above\n",
+                "FreeCAD version (currently {}.{}.{} ({})) must be at least {}.{}.{} ({}) "
+                "in order to work with Python 3.11 and above\n",
             ).format(
                 int(ver[0]),
                 minor_ver,
@@ -81,10 +80,12 @@ if sys.version_info[0] == 3 and sys.version_info[1] >= 11:
             )
         )
 
+
 class DataManagerWorkbench(Gui.Workbench):
     """
     class which gets initiated at startup of the gui
     """
+
     MenuText = translate("Workbench", "data manager workbench")
     ToolTip = translate("Workbench", "a simple data manager workbench")
     Icon = os.path.join(ICONPATH, "datamanager_wb.svg")
@@ -105,12 +106,11 @@ class DataManagerWorkbench(Gui.Workbench):
         here is the place to import all the commands
         """
 
-        App.Console.PrintMessage(translate(
-            "Log",
-            "Switching to datamanager_wb") + "\n")
-        App.Console.PrintMessage(translate(
-            "Log",
-            "Run a numpy function:") + "sqrt(100) = {}\n".format(my_numpy_function.my_foo(100)))
+        App.Console.PrintMessage(translate("Log", "Switching to datamanager_wb") + "\n")
+        App.Console.PrintMessage(
+            translate("Log", "Run a numpy function:")
+            + f"sqrt(100) = {my_numpy_function.my_foo(100)}\n"
+        )
 
         # NOTE: Context for this commands must be "Workbench"
         self.appendToolbar(QT_TRANSLATE_NOOP("Workbench", "Data Manager"), self.toolbox)
@@ -120,17 +120,13 @@ class DataManagerWorkbench(Gui.Workbench):
         """
         code which should be computed when a user switch to this workbench
         """
-        App.Console.PrintMessage(translate(
-            "Log",
-            "Workbench datamanager_wb activated. ;-)") + "\n")
+        App.Console.PrintMessage(translate("Log", "Workbench datamanager_wb activated. ;-)") + "\n")
 
     def Deactivated(self):
         """
         code which should be computed when this workbench is deactivated
         """
-        App.Console.PrintMessage(translate(
-            "Log",
-            "Workbench datamanager_wb de-activated.") + "\n")
+        App.Console.PrintMessage(translate("Log", "Workbench datamanager_wb de-activated.") + "\n")
 
 
 @functools.lru_cache(maxsize=1)
@@ -141,9 +137,9 @@ def get_main_panel() -> "MainPanel":
 class _VarsetManagementCommand:
     def GetResources(self):
         return {
-            'MenuText': translate("Workbench", "Varset Management"),
-            'ToolTip': translate("Workbench", "Manage VarSets"),
-            'Pixmap': os.path.join(ICONPATH, "Varsets.svg"),
+            "MenuText": translate("Workbench", "Varset Management"),
+            "ToolTip": translate("Workbench", "Manage VarSets"),
+            "Pixmap": os.path.join(ICONPATH, "Varsets.svg"),
         }
 
     def IsActive(self):
@@ -156,9 +152,9 @@ class _VarsetManagementCommand:
 class _AliasManagementCommand:
     def GetResources(self):
         return {
-            'MenuText': translate("Workbench", "Alias Management"),
-            'ToolTip': translate("Workbench", "Manage Aliases"),
-            'Pixmap': os.path.join(ICONPATH, "Aliases.svg"),
+            "MenuText": translate("Workbench", "Alias Management"),
+            "ToolTip": translate("Workbench", "Manage Aliases"),
+            "Pixmap": os.path.join(ICONPATH, "Aliases.svg"),
         }
 
     def IsActive(self):
@@ -168,14 +164,13 @@ class _AliasManagementCommand:
         get_main_panel().show(tab_index=1)
 
 
-Gui.addCommand('DataManagerVarsetManagement', _VarsetManagementCommand())
-Gui.addCommand('DataManagerAliasManagement', _AliasManagementCommand())
+Gui.addCommand("DataManagerVarsetManagement", _VarsetManagementCommand())
+Gui.addCommand("DataManagerAliasManagement", _AliasManagementCommand())
+
 
 class MainPanel:
     def __init__(self):
-        App.Console.PrintMessage(translate(
-            "Log",
-            "Workbench MainPanel initialized.") + "\n")
+        App.Console.PrintMessage(translate("Log", "Workbench MainPanel initialized.") + "\n")
         self.form = Gui.PySideUic.loadUi(
             os.path.join(__dirname__, "resources", "ui", "main_panel.ui")
         )
@@ -186,19 +181,31 @@ class MainPanel:
         else:
             self._widget = self.form
 
-        self.availableVarsetsListWidget = self._widget.findChild(QtWidgets.QListWidget, "avaliableVarsetsListWidget")
-        self.varsetVariableNamesListWidget = self._widget.findChild(QtWidgets.QListWidget, "varsetVariableNamesListWidget")
-        self.varsetExpressionsListWidget = self._widget.findChild(QtWidgets.QListWidget, "varsetExpressionsListWidget")
+        self.availableVarsetsListWidget = self._widget.findChild(
+            QtWidgets.QListWidget, "avaliableVarsetsListWidget"
+        )
+        self.varsetVariableNamesListWidget = self._widget.findChild(
+            QtWidgets.QListWidget, "varsetVariableNamesListWidget"
+        )
+        self.varsetExpressionsListWidget = self._widget.findChild(
+            QtWidgets.QListWidget, "varsetExpressionsListWidget"
+        )
         self.tabWidget = self._widget.findChild(QtWidgets.QTabWidget, "tabWidget")
 
         if self.availableVarsetsListWidget is not None:
-            self.availableVarsetsListWidget.setSelectionMode(QtWidgets.QAbstractItemView.ExtendedSelection)
+            self.availableVarsetsListWidget.setSelectionMode(
+                QtWidgets.QAbstractItemView.ExtendedSelection
+            )
 
         if self.varsetVariableNamesListWidget is not None:
-            self.varsetVariableNamesListWidget.setSelectionMode(QtWidgets.QAbstractItemView.ExtendedSelection)
+            self.varsetVariableNamesListWidget.setSelectionMode(
+                QtWidgets.QAbstractItemView.ExtendedSelection
+            )
 
         if self.varsetExpressionsListWidget is not None:
-            self.varsetExpressionsListWidget.setSelectionMode(QtWidgets.QAbstractItemView.SingleSelection)
+            self.varsetExpressionsListWidget.setSelectionMode(
+                QtWidgets.QAbstractItemView.SingleSelection
+            )
 
         if self.availableVarsetsListWidget is not None:
             for varset in sorted(getVarsets()):
@@ -207,9 +214,10 @@ class MainPanel:
             self.availableVarsetsListWidget.itemSelectionChanged.connect(
                 self._on_available_varsets_selection_changed
             )
-            App.Console.PrintMessage(translate(
-                "Log",
-                "Workbench MainPanel: connected available varsets selection handler\n")
+            App.Console.PrintMessage(
+                translate(
+                    "Log", "Workbench MainPanel: connected available varsets selection handler\n"
+                )
             )
 
         if self.varsetVariableNamesListWidget is not None:
@@ -224,23 +232,21 @@ class MainPanel:
 
     def _on_available_varsets_selection_changed(self):
         if self.availableVarsetsListWidget is None or self.varsetVariableNamesListWidget is None:
-            App.Console.PrintMessage(translate(
-                "Log",
-                "Workbench MainPanel: no varsets or variable names list widget") + "\n")
+            App.Console.PrintMessage(
+                translate("Log", "Workbench MainPanel: no varsets or variable names list widget")
+                + "\n"
+            )
             return
 
-        App.Console.PrintMessage(translate(
-            "Log",
-            "Workbench MainPanel: selection changed\n")
-        )
+        App.Console.PrintMessage(translate("Log", "Workbench MainPanel: selection changed\n"))
 
         self.varsetVariableNamesListWidget.clear()
         variable_items: list[str] = []
         for item in self.availableVarsetsListWidget.selectedItems():
             varset_name = item.text()
-            App.Console.PrintMessage(translate(
-                "Log",
-                f"Workbench MainPanel: selected varset {varset_name}") + "\n")
+            App.Console.PrintMessage(
+                translate("Log", f"Workbench MainPanel: selected varset {varset_name}") + "\n"
+            )
             for var_name in getVarsetVariableNames(varset_name):
                 variable_items.append(f"{varset_name}.{var_name}")
 
@@ -251,9 +257,8 @@ class MainPanel:
         if self.varsetVariableNamesListWidget is None or self.varsetExpressionsListWidget is None:
             return
 
-        App.Console.PrintMessage(translate(
-            "Log",
-            "Workbench MainPanel: variable selection changed\n")
+        App.Console.PrintMessage(
+            translate("Log", "Workbench MainPanel: variable selection changed\n")
         )
 
         self.varsetExpressionsListWidget.clear()
@@ -261,22 +266,29 @@ class MainPanel:
 
         for item in self.varsetVariableNamesListWidget.selectedItems():
             text = item.text()
-            App.Console.PrintMessage(translate(
-                "Log",
-                f"Workbench MainPanel: selected variable {text}") + "\n")
+            App.Console.PrintMessage(
+                translate("Log", f"Workbench MainPanel: selected variable {text}") + "\n"
+            )
             if "." not in text:
                 continue
             varset_name, variable_name = text.split(".", 1)
             refs = getVarsetReferences(varset_name, variable_name)
-            App.Console.PrintMessage(translate(
-                "Log",
-                f"Workbench MainPanel: found {len(refs)} references for {varset_name}.{variable_name}") + "\n")
+            refs_count = len(refs)
+            App.Console.PrintMessage(
+                translate(
+                    "Log",
+                    (
+                        f"Workbench MainPanel: found {refs_count} references for "
+                        f"{varset_name}.{variable_name}"
+                    ),
+                )
+                + "\n"
+            )
             for k, v in refs.items():
                 expression_items.append(f"{k} = {v}")
 
         for expression_item in sorted(expression_items):
             self.varsetExpressionsListWidget.addItem(expression_item)
-
 
     def _on_expressions_selection_changed(self):
         if self.varsetExpressionsListWidget is None:
@@ -310,27 +322,21 @@ class MainPanel:
         get_main_panel.cache_clear()
 
     def accept(self):
-        App.Console.PrintMessage(translate(
-            "Log",
-            "Workbench MainPanel accepted.") + "\n")
+        App.Console.PrintMessage(translate("Log", "Workbench MainPanel accepted.") + "\n")
         if self._mdi_subwindow is not None:
             self._mdi_subwindow.close()
         else:
             self.form.close()
 
     def reject(self):
-        App.Console.PrintMessage(translate(
-            "Log",
-            "Workbench MainPanel rejected.") + "\n")
+        App.Console.PrintMessage(translate("Log", "Workbench MainPanel rejected.") + "\n")
         if self._mdi_subwindow is not None:
             self._mdi_subwindow.close()
         else:
             self.form.close()
 
     def show(self, tab_index: int | None = None):
-        App.Console.PrintMessage(translate(
-            "Log",
-            "Workbench MainPanel shown.") + "\n")
+        App.Console.PrintMessage(translate("Log", "Workbench MainPanel shown.") + "\n")
 
         if tab_index is not None and self.tabWidget is not None:
             self.tabWidget.setCurrentIndex(tab_index)

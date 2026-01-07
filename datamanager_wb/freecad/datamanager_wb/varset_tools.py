@@ -2,7 +2,6 @@ from typing import Iterator
 
 import FreeCAD as App
 
-
 # def getVarsetProperties(doc: App.Document, varset_name: str) -> dict[str, str]:
 #     var_set = doc.getObject("VarSet")
 #     result: dict[str, str] = {}
@@ -11,6 +10,7 @@ import FreeCAD as App
 #         result[prop] = getattr(var_set, prop)
 #     return result
 
+
 def getVarsets() -> Iterator[str]:
     doc = App.ActiveDocument
     if doc is None:
@@ -18,6 +18,7 @@ def getVarsets() -> Iterator[str]:
     for obj in doc.Objects:
         if obj.TypeId == "App::VarSet":
             yield obj.Name
+
 
 def getVarsetVariableNames(varset_name: str) -> list[str]:
     doc = App.ActiveDocument
@@ -52,7 +53,8 @@ def getVarsetVariableNames(varset_name: str) -> list[str]:
     names.sort()
     return names
 
-def getVarsetReferences(varset_name:str, variable_name: str|None=None) -> dict[str, str]:
+
+def getVarsetReferences(varset_name: str, variable_name: str | None = None) -> dict[str, str]:
     # Find all objects that use expressions involving a specific VarSet
     doc = App.ActiveDocument
     if doc is None:

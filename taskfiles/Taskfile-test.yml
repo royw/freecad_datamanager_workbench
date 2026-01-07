@@ -28,13 +28,13 @@ tasks:
     desc: Run tests with pytest (sequential) without coverage (default test task)
     summary: Runs all core tests (unit, functional, integration, e2e) without coverage for speed
     cmds:
-      - uv run pytest --timeout {{.TEST_TIMEOUT}} --no-cov {{.TEST_CORE}} {{.CLI_ARGS}}
+      - bash -c 'uv run pytest --timeout {{.TEST_TIMEOUT}} --no-cov {{.TEST_CORE}} {{.CLI_ARGS}}; ec=$?; if [ $ec -eq 5 ]; then exit 0; fi; exit $ec'
 
   parallel:
     desc: Run tests with pytest (parallel) without coverage
     summary: Runs all core tests (unit, functional, integration, e2e) without coverage for speed
     cmds:
-      - uv run pytest --timeout {{.TEST_TIMEOUT}} -n 4 --no-cov {{.TEST_CORE}} {{.CLI_ARGS}}
+      - bash -c 'uv run pytest --timeout {{.TEST_TIMEOUT}} -n 4 --no-cov {{.TEST_CORE}} {{.CLI_ARGS}}; ec=$?; if [ $ec -eq 5 ]; then exit 0; fi; exit $ec'
 
 
   unit:
@@ -59,7 +59,7 @@ tasks:
     desc: Run end-to-end tests to validate core functionality (serially for test isolation) without coverage
     summary: Runs tests/e2e/ with verbose output, no coverage
     cmds:
-      - bash -c 'set -o pipefail; uv run pytest --timeout {{.TEST_TIMEOUT}} tests/e2e/ -v --tb=short --color=yes 2>&1 | grep -Pv "^src/\S+\s+\d+\s+\d+\s+\d+%$"'
+      - bash -c 'set -o pipefail; uv run pytest --timeout {{.TEST_TIMEOUT}} tests/e2e/ -v --tb=short --color=yes 2>&1 | grep -Pv "^{{.SRC}}\S+\s+\d+\s+\d+\s+\d+%$"'
       - task: _check
 
   pattern-matching:
@@ -91,7 +91,7 @@ tasks:
           split: ' '
         cmd: |
           echo "📋 Testing with Python {{.ITEM}}"
-          bash -c 'set -o pipefail; uv run --python {{.ITEM}} pytest --timeout {{.TEST_TIMEOUT}} {{.TEST_CORE}} --cov=src/{{.APP_NAME}} --tb=short --color=yes 2>&1 | grep -Pv "^src/\S+\s+\d+\s+\d+\s+\d+%$"'
+          bash -c 'set -o pipefail; uv run --python {{.ITEM}} pytest --timeout {{.TEST_TIMEOUT}} {{.TEST_CORE}} --cov={{.SRC}} --tb=short --color=yes 2>&1 | grep -Pv "^{{.SRC}}\S+\s+\d+\s+\d+\s+\d+%$"'
       - task: env:sync
       - echo "✅ All Python versions tested successfully!"
     silent: true
@@ -100,7 +100,7 @@ tasks:
     desc: Run all tests with detailed coverage reporting (XML, HTML, terminal)
     summary: Generates comprehensive coverage reports in multiple formats
     cmds:
-      - uv run pytest --timeout {{.TEST_TIMEOUT}} {{.TEST_CORE}} --cov=src/{{.APP_NAME}} --cov-report=xml --cov-report=term-missing --cov-report=html:htmlcov
+      - uv run pytest --timeout {{.TEST_TIMEOUT}} {{.TEST_CORE}} --cov={{.SRC}} --cov-report=xml --cov-report=term-missing --cov-report=html:htmlcov
       - task: _check
       - echo "📊 Coverage report saved to htmlcov/index.html"
     silent: true

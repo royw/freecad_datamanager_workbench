@@ -1,41 +1,12 @@
 version: '3'
 
-includes:
-  docs:
-    taskfile: ./taskfiles/Taskfile-docs.yml
-    dir: .
-  env:
-    taskfile: ./taskfiles/Taskfile-env.yml
-    dir: .
-  format:
-    taskfile: ./taskfiles/Taskfile-format.yml
-    dir: .
-  git:
-    taskfile: ./taskfiles/Taskfile-git.yml
-    dir: .
-  lint:
-    taskfile: ./taskfiles/Taskfile-lint.yml
-    dir: .
-  metrics:
-    taskfile: ./taskfiles/Taskfile-metrics.yml
-    dir: .
-  release:
-    taskfile: ./taskfiles/Taskfile-release.yml
-    dir: .
-  test:
-    taskfile: ./taskfiles/Taskfile-test.yml
-    dir: .
-  version:
-    taskfile: ./taskfiles/Taskfile-version.yml
-    dir: .
-  
 vars:
   # Application name derived from pyproject.toml (hyphens replaced with underscores for Python module name)
   APP_NAME:
     sh: python3 -c "import tomllib; f = open('pyproject.toml', 'rb'); data = tomllib.load(f); f.close(); print(data['project']['name'].replace('-', '_'))"
   
   # Source code directory
-  SRC: src/
+  SRC: datamanager_wb/freecad/datamanager_wb/
   
   # Root tests directory
   TESTS: tests/
@@ -75,6 +46,35 @@ vars:
   # Used by both lint:emoji (keys) and fix:emoji (full mapping)
   EMOJI_REPLACEMENTS_MAP: '✅:PASS ❌:FAIL ⚠️:WARNING 🔍:SEARCH 📦:PACKAGE 🐧:LINUX 🚀:DEPLOY 🎯:TARGET 🏆:SUCCESS 🎉:COMPLETE 📊:REPORT 🧪:TEST 🔴:HIGH 🟡:MEDIUM 🟢:LOW 📚:DOCS 🌍:SERVER 🏗️:BUILD 📈:BUMP 📝:COMMIT 🐍:PYTHON 📋:LIST ✓:DONE 📁:FOLDER 🌐:NETWORK 🎭:MOCK ⚡:EXECUTE 📤:STDOUT 📥:STDERR 💥:EXCEPTION 🔧:VERSION 📄:FILE 🌳:TREE 🏁:COMPLETE 🔒:LOCK 🔓:UNLOCK 🐛:BUG 🛠️:TOOLS 🚨:0'
 
+includes:
+  docs:
+    taskfile: ./taskfiles/Taskfile-docs.yml
+    dir: .
+  env:
+    taskfile: ./taskfiles/Taskfile-env.yml
+    dir: .
+  format:
+    taskfile: ./taskfiles/Taskfile-format.yml
+    dir: .
+  git:
+    taskfile: ./taskfiles/Taskfile-git.yml
+    dir: .
+  lint:
+    taskfile: ./taskfiles/Taskfile-lint.yml
+    dir: .
+  metrics:
+    taskfile: ./taskfiles/Taskfile-metrics.yml
+    dir: .
+  release:
+    taskfile: ./taskfiles/Taskfile-release.yml
+    dir: .
+  test:
+    taskfile: ./taskfiles/Taskfile-test.yml
+    dir: .
+  version:
+    taskfile: ./taskfiles/Taskfile-version.yml
+    dir: .
+  
 tasks:
   # === Default ===
   default:

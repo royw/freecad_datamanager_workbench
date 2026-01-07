@@ -44,8 +44,8 @@ tasks:
   # === Linting ===
 
   src:
-    desc: Run all linting tasks on src/ (default lint task)
-    summary: Runs ruff, mypy, deadcode, and package checks on src/
+    desc: Run all linting tasks on source directory (default lint task)
+    summary: Runs ruff, mypy, deadcode, and package checks on source directory
     cmds:
       - task: fix
       - task: ruff
@@ -87,10 +87,12 @@ tasks:
       - uv run mypy {{.CLI_ARGS | default .TESTS}}
 
   fix:
-    desc: Automatically fix linting issues in src/ with ruff
-    summary: Auto-fixes import sorting and safe issues in src/
+    desc: Automatically fix linting issues in source directory with ruff
+    summary: Auto-fixes import sorting and safe issues in source directory
     cmds:
       - uv run ruff check --fix --select I {{.CLI_ARGS | default .SRC}}
+      - uv run ruff check --fix --select F,E,W,UP,B,ISC,ICN {{.CLI_ARGS | default .SRC}}
+    silent: true
 
   fix:tests:
     desc: Automatically fix linting issues in tests/ with ruff
@@ -134,7 +136,7 @@ tasks:
           echo "Checking __init__.py files for code violations..."
           VIOLATIONS=0
           
-          # Find all __init__.py files in src/
+          # Find all __init__.py files in source directory
           while IFS= read -r file; do
             # Skip if file doesn't exist or is empty
             if [ ! -f "$file" ] || [ ! -s "$file" ]; then
@@ -175,7 +177,7 @@ tasks:
             then
               VIOLATIONS=$((VIOLATIONS + 1))
             fi
-          done < <(find src -name "__init__.py" -type f)
+          done < <(find {{.CLI_ARGS | default .SRC}} -name "__init__.py" -type f)
           
           if [ $VIOLATIONS -eq 0 ]; then
             echo "PASS All __init__.py files are clean (docstrings only)"
@@ -222,8 +224,8 @@ tasks:
           EMOJI_LIST=$(echo "$EMOJI_MAP" | tr ' ' '\n' | cut -d':' -f1)
           
           # Search in source code
-          if echo "$EMOJI_LIST" | xargs -I {} grep -rn --include="*.py" -F {} src/ 2>/dev/null; then
-            echo "FAIL Emojis found in source code (src/)"
+          if echo "$EMOJI_LIST" | xargs -I {} grep -rn --include="*.py" -F {} {{.SRC}} 2>/dev/null; then
+            echo "FAIL Emojis found in source code ({{.SRC}})"
             EMOJI_FOUND=1
           fi
           
