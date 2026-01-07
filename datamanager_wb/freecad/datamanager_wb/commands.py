@@ -1,4 +1,5 @@
 import os
+from typing import TYPE_CHECKING, Callable
 
 import FreeCAD as App
 import FreeCADGui as Gui
@@ -7,8 +8,17 @@ translate = App.Qt.translate
 
 ICONPATH = os.path.join(os.path.dirname(__file__), "resources", "icons")
 
+if TYPE_CHECKING:
+    from .main_panel import MainPanel
+
+
+GetMainPanel = Callable[[], "MainPanel"]
+
 
 class _VarsetManagementCommand:
+    def __init__(self, get_main_panel: GetMainPanel) -> None:
+        self._get_main_panel = get_main_panel
+
     def GetResources(self) -> dict[str, str]:
         return {
             "MenuText": translate("Workbench", "Varset Management"),
@@ -20,12 +30,13 @@ class _VarsetManagementCommand:
         return True
 
     def Activated(self) -> None:
-        from .init_gui import get_main_panel
-
-        get_main_panel().show(tab_index=0)
+        self._get_main_panel().show(tab_index=0)
 
 
 class _AliasManagementCommand:
+    def __init__(self, get_main_panel: GetMainPanel) -> None:
+        self._get_main_panel = get_main_panel
+
     def GetResources(self) -> dict[str, str]:
         return {
             "MenuText": translate("Workbench", "Alias Management"),
@@ -37,11 +48,9 @@ class _AliasManagementCommand:
         return True
 
     def Activated(self) -> None:
-        from .init_gui import get_main_panel
-
-        get_main_panel().show(tab_index=1)
+        self._get_main_panel().show(tab_index=1)
 
 
-def register_commands() -> None:
-    Gui.addCommand("DataManagerVarsetManagement", _VarsetManagementCommand())
-    Gui.addCommand("DataManagerAliasManagement", _AliasManagementCommand())
+def register_commands(get_main_panel: GetMainPanel) -> None:
+    Gui.addCommand("DataManagerVarsetManagement", _VarsetManagementCommand(get_main_panel))
+    Gui.addCommand("DataManagerAliasManagement", _AliasManagementCommand(get_main_panel))

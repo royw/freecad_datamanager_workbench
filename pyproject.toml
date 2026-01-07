@@ -75,6 +75,7 @@ strict_equality = true
 # FreeCAD GUI entrypoints depend on runtime FreeCAD/Qt types; exclude from strict mypy.
 exclude = [
     '^datamanager_wb/freecad/datamanager_wb/init_gui\.py$',
+    '^datamanager_wb/freecad/datamanager_wb/main_panel\.py$',
 ]
 # Allow multiple conftest.py files in different test directories
 explicit_package_bases = true
