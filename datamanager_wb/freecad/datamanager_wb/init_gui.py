@@ -17,7 +17,7 @@ from .varset_tools import getVarsets, getVarsetVariableNames, getVarsetReference
 translate=App.Qt.translate
 QT_TRANSLATE_NOOP=App.Qt.QT_TRANSLATE_NOOP
 
-ICONPATH = os.path.join(os.path.dirname(__file__), "resources")
+ICONPATH = os.path.join(os.path.dirname(__file__), "resources", "icons")
 TRANSLATIONSPATH = os.path.join(os.path.dirname(__file__), "resources", "translations")
 
 __dirname__ = os.path.dirname(__file__)
