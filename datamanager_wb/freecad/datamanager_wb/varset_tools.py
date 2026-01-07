@@ -1,27 +1,77 @@
-doc = App.ActiveDocument
+from typing import Iterator
 
-def getVarsetProperties(doc, varset_name: str) -> dict[str, str]:
-    var_set = doc.getObject("VarSet")
+import FreeCAD as App
 
-    properties = var_set.PropertiesList
-    for prop in properties:
-        result[prop] = getattr(var_set, prop)
-    return result
 
-def getVarsets(doc) -> Iterator[str]:
+# def getVarsetProperties(doc: App.Document, varset_name: str) -> dict[str, str]:
+#     var_set = doc.getObject("VarSet")
+#     result: dict[str, str] = {}
+#     properties = var_set.PropertiesList
+#     for prop in properties:
+#         result[prop] = getattr(var_set, prop)
+#     return result
+
+def getVarsets() -> Iterator[str]:
+    doc = App.ActiveDocument
+    if doc is None:
+        return
     for obj in doc.Objects:
         if obj.TypeId == "App::VarSet":
             yield obj.Name
 
-def getVarsetReferences(doc, varset_name:str, value: str|None=None) -> dict[str, str]:
+def getVarsetVariableNames(varset_name: str) -> list[str]:
+    doc = App.ActiveDocument
+    if doc is None:
+        return []
+
+    varset = doc.getObject(varset_name)
+    if varset is None or getattr(varset, "TypeId", None) != "App::VarSet":
+        return []
+
+    excluded = {
+        "ExpressionEngine",
+        "Label",
+        "Label2",
+        "Visibility",
+        "Placement",
+        "Group",
+        "Material",
+        "Proxy",
+        "Shape",
+        "State",
+        "ViewObject",
+    }
+
+    names: list[str] = []
+    for prop in getattr(varset, "PropertiesList", []):
+        if prop in excluded:
+            continue
+
+        names.append(prop)
+
+    names.sort()
+    return names
+
+def getVarsetReferences(varset_name:str, variable_name: str|None=None) -> dict[str, str]:
     # Find all objects that use expressions involving a specific VarSet
+    doc = App.ActiveDocument
+    if doc is None:
+        return {}
+
+    patterns: list[str] = [f"<<{varset_name}>>"]
+    if variable_name:
+        patterns = [
+            f"<<{varset_name}>>.{variable_name}",
+            f"{varset_name}.{variable_name}",
+        ]
+
+    results: dict[str, str] = {}
     for obj in doc.Objects:
         if hasattr(obj, "ExpressionEngine") and obj.ExpressionEngine:
             expressions = obj.ExpressionEngine
             for expr in expressions:
-                if varset_name in expr[1]:
-                    if (value and value in expr[1]) or not value:
-                        print(f"{obj.Name}.{varset_name} found in {obj.Label}({obj.Name}): {expr}")
+                expr_text = expr[1]
+                if any(p in expr_text for p in patterns):
+                    results[f"{obj.Name}.{expr[0]}"] = expr_text
 
-
-getVarsetReferences(doc, "VarSet", "TriangleHoleSideLength")
+    return results
