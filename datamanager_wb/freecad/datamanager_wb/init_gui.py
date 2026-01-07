@@ -4,14 +4,12 @@ FreeCAD datamanager workbench
 
 import functools
 import os
-import sys
 
 import FreeCAD as App
 import FreeCADGui as Gui
 from PySide import QtCore, QtWidgets
 
-from freecad.datamanager_wb import my_numpy_function
-
+from .freecad_version_check import check_python_and_freecad_version
 from .varset_tools import getVarsetReferences, getVarsets, getVarsetVariableNames
 
 translate = App.Qt.translate
@@ -27,58 +25,7 @@ Gui.addLanguagePath(TRANSLATIONSPATH)
 Gui.updateLocale()
 
 
-if sys.version_info[0] == 3 and sys.version_info[1] >= 11:
-    # only works with 0.21.2 and above
-
-    FC_MAJOR_VER_REQUIRED = 1
-    FC_MINOR_VER_REQUIRED = 0
-    FC_PATCH_VER_REQUIRED = 2
-    FC_COMMIT_REQUIRED = 33772
-
-    # Check FreeCAD version
-    App.Console.PrintLog(App.Qt.translate("Log", "Checking FreeCAD version\n"))
-    ver = App.Version()
-    major_ver = int(ver[0])
-    minor_ver = int(ver[1])
-    patch_ver = int(ver[2])
-    gitver = ver[3].split()
-    if gitver:
-        gitver = gitver[0]
-    if gitver and gitver != "Unknown":
-        gitver = int(gitver)
-    else:
-        # If we don't have the git version, assume it's OK.
-        gitver = FC_COMMIT_REQUIRED
-
-    if major_ver < FC_MAJOR_VER_REQUIRED or (
-        major_ver == FC_MAJOR_VER_REQUIRED
-        and (
-            minor_ver < FC_MINOR_VER_REQUIRED
-            or (
-                minor_ver == FC_MINOR_VER_REQUIRED
-                and (
-                    patch_ver < FC_PATCH_VER_REQUIRED
-                    or (patch_ver == FC_PATCH_VER_REQUIRED and gitver < FC_COMMIT_REQUIRED)
-                )
-            )
-        )
-    ):
-        App.Console.PrintWarning(
-            App.Qt.translate(
-                "Log",
-                "FreeCAD version (currently {}.{}.{} ({})) must be at least {}.{}.{} ({}) "
-                "in order to work with Python 3.11 and above\n",
-            ).format(
-                int(ver[0]),
-                minor_ver,
-                patch_ver,
-                gitver,
-                FC_MAJOR_VER_REQUIRED,
-                FC_MINOR_VER_REQUIRED,
-                FC_PATCH_VER_REQUIRED,
-                FC_COMMIT_REQUIRED,
-            )
-        )
+check_python_and_freecad_version()
 
 
 class DataManagerWorkbench(Gui.Workbench):
@@ -107,10 +54,6 @@ class DataManagerWorkbench(Gui.Workbench):
         """
 
         App.Console.PrintMessage(translate("Log", "Switching to datamanager_wb") + "\n")
-        App.Console.PrintMessage(
-            translate("Log", "Run a numpy function:")
-            + f"sqrt(100) = {my_numpy_function.my_foo(100)}\n"
-        )
 
         # NOTE: Context for this commands must be "Workbench"
         self.appendToolbar(QT_TRANSLATE_NOOP("Workbench", "Data Manager"), self.toolbox)
