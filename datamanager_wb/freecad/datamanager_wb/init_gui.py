@@ -9,7 +9,6 @@ import FreeCADGui as Gui
 import FreeCAD as App
 from freecad.datamanager_wb import my_numpy_function
 from PySide import QtCore
-from PySide import QtGui
 from PySide import QtWidgets
 
 from .varset_tools import getVarsets, getVarsetVariableNames, getVarsetReferences
@@ -90,8 +89,8 @@ class DataManagerWorkbench(Gui.Workbench):
     ToolTip = translate("Workbench", "a simple data manager workbench")
     Icon = os.path.join(ICONPATH, "datamanager_wb.svg")
     toolbox = [
-        "MyClassCommand",
-        "MyFunctionCommand",
+        "DataManagerVarsetManagement",
+        "DataManagerAliasManagement",
     ]
 
     def GetClassName(self):
@@ -139,47 +138,38 @@ def get_main_panel() -> "MainPanel":
     return MainPanel()
 
 
-class _MyTaskCommand:
+class _VarsetManagementCommand:
     def GetResources(self):
         return {
-            'MenuText': 'Open Task Panel',
-            'ToolTip': 'Opens a simple Task Panel',
+            'MenuText': translate("Workbench", "Varset Management"),
+            'ToolTip': translate("Workbench", "Manage VarSets"),
+            'Pixmap': os.path.join(ICONPATH, "Varsets.svg"),
         }
 
     def IsActive(self):
         return True
 
-    # Click Action
     def Activated(self):
-        App.Console.PrintMessage(translate(
-            "Log",
-            "_MyTaskCommand.Activated: show MainPanel") + "\n")
-        get_main_panel().show()
+        get_main_panel().show(tab_index=0)
 
-def _MyFunctionCommand():
-    App.Console.PrintMessage("Hello from function command!\n")
-    
-def make_function_command(func, menuText, toolTip):
-    """Wrap a plain function into a FreeCAD command object"""
-    return type('FuncCommand', (), {
-        'GetResources': lambda self: {'MenuText': menuText, 'ToolTip': toolTip},
-        'IsActive': lambda self: True,
-        'Activated': lambda self: func(),
-    })()
 
-Gui.addCommand(
-    'MyClassCommand',                   # Menu Item Function Label
-    _MyTaskCommand(),                   # Name of Function, that will be called
-)
+class _AliasManagementCommand:
+    def GetResources(self):
+        return {
+            'MenuText': translate("Workbench", "Alias Management"),
+            'ToolTip': translate("Workbench", "Manage Aliases"),
+            'Pixmap': os.path.join(ICONPATH, "Aliases.svg"),
+        }
 
-Gui.addCommand(
-    'MyFunctionCommand',                # Menu Item Function Label
-    make_function_command(
-        _MyFunctionCommand,             # Name of Function, that will be called
-        "Say Hello",                    # Menu Item Label 
-        "Print Hello in the console",  # Menu Item Tooltip
-    )
-)
+    def IsActive(self):
+        return True
+
+    def Activated(self):
+        get_main_panel().show(tab_index=1)
+
+
+Gui.addCommand('DataManagerVarsetManagement', _VarsetManagementCommand())
+Gui.addCommand('DataManagerAliasManagement', _AliasManagementCommand())
 
 class MainPanel:
     def __init__(self):
@@ -199,6 +189,7 @@ class MainPanel:
         self.availableVarsetsListWidget = self._widget.findChild(QtWidgets.QListWidget, "avaliableVarsetsListWidget")
         self.varsetVariableNamesListWidget = self._widget.findChild(QtWidgets.QListWidget, "varsetVariableNamesListWidget")
         self.varsetExpressionsListWidget = self._widget.findChild(QtWidgets.QListWidget, "varsetExpressionsListWidget")
+        self.tabWidget = self._widget.findChild(QtWidgets.QTabWidget, "tabWidget")
 
         if self.availableVarsetsListWidget is not None:
             self.availableVarsetsListWidget.setSelectionMode(QtWidgets.QAbstractItemView.ExtendedSelection)
@@ -336,10 +327,13 @@ class MainPanel:
         else:
             self.form.close()
 
-    def show(self):
+    def show(self, tab_index: int | None = None):
         App.Console.PrintMessage(translate(
             "Log",
             "Workbench MainPanel shown.") + "\n")
+
+        if tab_index is not None and self.tabWidget is not None:
+            self.tabWidget.setCurrentIndex(tab_index)
 
         main_window = Gui.getMainWindow()
         mdi = main_window.findChild(QtWidgets.QMdiArea)
@@ -348,6 +342,11 @@ class MainPanel:
                 translate("Log", "Could not find QMdiArea; showing panel as a standalone window\n")
             )
             self._widget.show()
+            return
+
+        if self._mdi_subwindow is not None:
+            self._mdi_subwindow.showMaximized()
+            self._mdi_subwindow.setFocus()
             return
 
         self._mdi_subwindow = mdi.addSubWindow(self._widget)
