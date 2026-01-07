@@ -5,12 +5,7 @@ import FreeCAD as App
 import FreeCADGui as Gui
 from PySide import QtCore, QtWidgets
 
-from .document_model import (
-    get_expression_items,
-    get_sorted_varsets,
-    get_varset_variable_items,
-)
-from .gui_selection import select_object_from_expression_item
+from .panel_controller import PanelController
 
 translate = App.Qt.translate
 
@@ -26,6 +21,7 @@ class MainPanel:
     def __init__(self):
         App.Console.PrintMessage(translate("Log", "Workbench MainPanel initialized.") + "\n")
         self._mdi_subwindow = None
+        self._controller = PanelController()
 
         self.form = self._load_ui()
         self._widget = self._resolve_root_widget()
@@ -75,7 +71,7 @@ class MainPanel:
         if self.availableVarsetsListWidget is None:
             return
 
-        for varset in get_sorted_varsets():
+        for varset in self._controller.get_sorted_varsets():
             self.availableVarsetsListWidget.addItem(varset)
 
     def _connect_signals(self) -> None:
@@ -116,7 +112,7 @@ class MainPanel:
                 translate("Log", f"Workbench MainPanel: selected varset {varset_name}") + "\n"
             )
 
-        for variable_item in get_varset_variable_items(selected_varsets):
+        for variable_item in self._controller.get_varset_variable_items(selected_varsets):
             self.varsetVariableNamesListWidget.addItem(variable_item)
 
     def _on_variable_names_selection_changed(self):
@@ -129,7 +125,7 @@ class MainPanel:
 
         self.varsetExpressionsListWidget.clear()
         selected_vars = [item.text() for item in self.varsetVariableNamesListWidget.selectedItems()]
-        expression_items, counts = get_expression_items(selected_vars)
+        expression_items, counts = self._controller.get_expression_items(selected_vars)
 
         for text in selected_vars:
             App.Console.PrintMessage(
@@ -155,7 +151,7 @@ class MainPanel:
         if not selected:
             return
 
-        select_object_from_expression_item(selected[0].text())
+        self._controller.select_expression_item(selected[0].text())
 
     def _on_subwindow_destroyed(self, _obj=None):
         get_main_panel.cache_clear()
