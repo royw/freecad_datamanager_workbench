@@ -76,6 +76,7 @@ strict_equality = true
 exclude = [
     '^datamanager_wb/freecad/datamanager_wb/init_gui\.py$',
     '^datamanager_wb/freecad/datamanager_wb/main_panel\.py$',
+    '^datamanager_wb/freecad/datamanager_wb/workbench\.py$',
 ]
 # Allow multiple conftest.py files in different test directories
 explicit_package_bases = true
