@@ -1,19 +1,13 @@
 import FreeCAD as App
 import FreeCADGui as Gui
 
+from .parsing_helpers import parse_expression_item_object_name
+
 translate = App.Qt.translate
 
 
-def _get_object_name_from_expression_item(text: str) -> str | None:
-    left = text.split("=", 1)[0].strip()
-    obj_name = left.split(".", 1)[0].strip()
-    if not obj_name:
-        return None
-    return obj_name
-
-
 def select_object_from_expression_item(text: str) -> None:
-    obj_name = _get_object_name_from_expression_item(text)
+    obj_name = parse_expression_item_object_name(text)
     if obj_name is None:
         return
 

@@ -1,3 +1,4 @@
+from .parsing_helpers import parse_varset_variable_item
 from .varset_tools import getVarsetReferences, getVarsets, getVarsetVariableNames
 
 
@@ -22,9 +23,10 @@ def get_expression_items(
     counts: dict[str, int] = {}
 
     for text in selected_varset_variable_items:
-        if "." not in text:
+        parsed = parse_varset_variable_item(text)
+        if parsed is None:
             continue
-        varset_name, variable_name = text.split(".", 1)
+        varset_name, variable_name = parsed
         refs = getVarsetReferences(varset_name, variable_name)
         counts[text] = len(refs)
         for k, v in refs.items():
