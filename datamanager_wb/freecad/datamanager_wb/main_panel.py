@@ -5,6 +5,7 @@ import FreeCAD as App
 import FreeCADGui as Gui
 from PySide import QtCore, QtWidgets
 
+from .expression_item import ExpressionItem
 from .panel_controller import PanelController
 from .resources import UIPATH
 
@@ -140,7 +141,9 @@ class MainPanel:
             )
 
         for expression_item in expression_items:
-            self.varsetExpressionsListWidget.addItem(expression_item)
+            item = QtWidgets.QListWidgetItem(expression_item.display_text)
+            item.setData(QtCore.Qt.UserRole, expression_item)
+            self.varsetExpressionsListWidget.addItem(item)
 
     def _on_expressions_selection_changed(self):
         if self.varsetExpressionsListWidget is None:
@@ -150,7 +153,11 @@ class MainPanel:
         if not selected:
             return
 
-        self._controller.select_expression_item(selected[0].text())
+        data = selected[0].data(QtCore.Qt.UserRole)
+        if isinstance(data, ExpressionItem):
+            self._controller.select_expression_item(data)
+        else:
+            self._controller.select_expression_item(selected[0].text())
 
     def _on_subwindow_destroyed(self, _obj=None):
         get_main_panel.cache_clear()

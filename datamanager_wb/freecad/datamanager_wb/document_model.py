@@ -1,3 +1,4 @@
+from .expression_item import ExpressionItem
 from .parsing_helpers import parse_varset_variable_item
 from .varset_tools import getVarsetReferences, getVarsets, getVarsetVariableNames
 
@@ -18,8 +19,8 @@ def get_varset_variable_items(selected_varset_names: list[str]) -> list[str]:
 
 def get_expression_items(
     selected_varset_variable_items: list[str],
-) -> tuple[list[str], dict[str, int]]:
-    expression_items: list[str] = []
+) -> tuple[list[ExpressionItem], dict[str, int]]:
+    expression_items: list[ExpressionItem] = []
     counts: dict[str, int] = {}
 
     for text in selected_varset_variable_items:
@@ -30,7 +31,8 @@ def get_expression_items(
         refs = getVarsetReferences(varset_name, variable_name)
         counts[text] = len(refs)
         for k, v in refs.items():
-            expression_items.append(f"{k} = {v}")
+            object_name = k.split(".", 1)[0].strip()
+            expression_items.append(ExpressionItem(object_name=object_name, lhs=k, rhs=v))
 
-    expression_items.sort()
+    expression_items.sort(key=lambda item: item.display_text)
     return expression_items, counts
