@@ -9,8 +9,8 @@ from .document_model import (
     get_expression_items,
     get_sorted_varsets,
     get_varset_variable_items,
-    select_object_from_expression_item,
 )
+from .gui_selection import select_object_from_expression_item
 
 translate = App.Qt.translate
 
