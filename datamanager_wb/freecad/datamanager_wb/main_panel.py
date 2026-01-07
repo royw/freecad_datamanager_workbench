@@ -6,10 +6,9 @@ import FreeCADGui as Gui
 from PySide import QtCore, QtWidgets
 
 from .panel_controller import PanelController
+from .resources import UIPATH
 
 translate = App.Qt.translate
-
-__dirname__ = os.path.dirname(__file__)
 
 
 @functools.lru_cache(maxsize=1)
@@ -32,7 +31,7 @@ class MainPanel:
         self._connect_signals()
 
     def _load_ui(self):
-        return Gui.PySideUic.loadUi(os.path.join(__dirname__, "resources", "ui", "main_panel.ui"))
+        return Gui.PySideUic.loadUi(os.path.join(UIPATH, "main_panel.ui"))
 
     def _resolve_root_widget(self):
         if isinstance(self.form, QtWidgets.QMainWindow):

@@ -4,9 +4,9 @@ from typing import TYPE_CHECKING, Callable
 import FreeCAD as App
 import FreeCADGui as Gui
 
-translate = App.Qt.translate
+from .resources import ICONPATH
 
-ICONPATH = os.path.join(os.path.dirname(__file__), "resources", "icons")
+translate = App.Qt.translate
 
 if TYPE_CHECKING:
     from .main_panel import MainPanel

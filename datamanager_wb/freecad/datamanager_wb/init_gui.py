@@ -10,14 +10,10 @@ import FreeCADGui as Gui
 from .commands import register_commands
 from .freecad_version_check import check_python_and_freecad_version
 from .main_panel import get_main_panel
+from .resources import ICONPATH, TRANSLATIONSPATH
 
 translate = App.Qt.translate
 QT_TRANSLATE_NOOP = App.Qt.QT_TRANSLATE_NOOP
-
-ICONPATH = os.path.join(os.path.dirname(__file__), "resources", "icons")
-TRANSLATIONSPATH = os.path.join(os.path.dirname(__file__), "resources", "translations")
-
-__dirname__ = os.path.dirname(__file__)
 
 # Add translations path
 Gui.addLanguagePath(TRANSLATIONSPATH)
