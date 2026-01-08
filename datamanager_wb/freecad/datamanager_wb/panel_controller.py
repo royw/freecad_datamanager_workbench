@@ -1,3 +1,10 @@
+"""UI-facing controller facade for the DataManager MainPanel.
+
+ This module provides a higher-level API used by the GUI layer. It delegates
+ tab-generic logic to `TabController` instances and owns document recompute and
+ GUI refresh behavior.
+ """
+
 from dataclasses import dataclass
 
 import FreeCAD as App
@@ -6,8 +13,8 @@ import FreeCADGui as Gui
 from .expression_item import ExpressionItem
 from .gui_selection import select_object_from_expression_item
 from .parent_child_ref import ParentChildRef
-from .tab_controller import TabController
 from .spreadsheet_datasource import SpreadsheetDataSource
+from .tab_controller import TabController
 from .varset_datasource import VarsetDataSource
 
 
@@ -111,7 +118,9 @@ class PanelController:
             child_filter_text=variable_filter_text,
             only_unused=only_unused,
         )
-        return PostRemoveUpdate(variable_items=update.child_items, clear_expressions=update.clear_expressions)
+        return PostRemoveUpdate(
+            variable_items=update.child_items, clear_expressions=update.clear_expressions
+        )
 
     def remove_unused_and_get_update(
         self,
@@ -212,7 +221,9 @@ class PanelController:
             child_filter_text=alias_filter_text,
             only_unused=only_unused,
         )
-        return PostRemoveUpdate(variable_items=update.child_items, clear_expressions=update.clear_expressions)
+        return PostRemoveUpdate(
+            variable_items=update.child_items, clear_expressions=update.clear_expressions
+        )
 
     def remove_unused_aliases_and_get_update(
         self,

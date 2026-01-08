@@ -1,7 +1,13 @@
+"""Pytest configuration for the DataManager repository.
+
+Adds the in-repo package path to `sys.path` so unit tests can import the
+workbench modules without installation.
+"""
+
 from __future__ import annotations
 
-import sys
 from pathlib import Path
+import sys
 
 
 _repo_root = Path(__file__).resolve().parents[1]

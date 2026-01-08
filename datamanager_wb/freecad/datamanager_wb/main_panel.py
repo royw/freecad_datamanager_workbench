@@ -1,3 +1,9 @@
+"""Main Qt panel for the DataManager workbench.
+
+Loads the `.ui` file, finds widgets, wires signals, and delegates operations to
+`PanelController`.
+"""
+
 import functools
 import os
 
@@ -7,8 +13,7 @@ from PySide import QtCore, QtWidgets
 
 from .expression_item import ExpressionItem
 from .panel_controller import PanelController
-from .parent_child_ref import ParentChildRef
-from .parent_child_ref import parse_parent_child_ref
+from .parent_child_ref import ParentChildRef, parse_parent_child_ref
 from .resources import UIPATH
 
 translate = App.Qt.translate
@@ -247,9 +252,7 @@ class MainPanel:
             )
 
         if self.varsetVariableNamesOnlyUnusedCheckBox is not None:
-            self.varsetVariableNamesOnlyUnusedCheckBox.toggled.connect(
-                self._on_only_unused_toggled
-            )
+            self.varsetVariableNamesOnlyUnusedCheckBox.toggled.connect(self._on_only_unused_toggled)
 
         if self.removeUnusedVariablesPushButton is not None:
             self.removeUnusedVariablesPushButton.clicked.connect(
@@ -287,9 +290,7 @@ class MainPanel:
             )
 
         if self.aliasesOnlyUnusedCheckBox is not None:
-            self.aliasesOnlyUnusedCheckBox.toggled.connect(
-                self._on_alias_only_unused_toggled
-            )
+            self.aliasesOnlyUnusedCheckBox.toggled.connect(self._on_alias_only_unused_toggled)
 
         if self.removeUnusedAliasesPushButton is not None:
             self.removeUnusedAliasesPushButton.clicked.connect(
@@ -373,7 +374,8 @@ class MainPanel:
         App.Console.PrintMessage(
             translate(
                 "Log",
-                f"Workbench MainPanel: aliases populate sheets={selected_sheets} items={len(items)}\n",
+                f"Workbench MainPanel: aliases populate sheets={selected_sheets} "
+                f"items={len(items)}\n",
             )
         )
         self._render_alias_names(items)
@@ -391,12 +393,16 @@ class MainPanel:
         self._adjust_list_widget_width_to_contents(self.varsetVariableNamesListWidget)
         self._update_remove_unused_button_enabled_state()
 
-    def _populate_alias_expressions(self, selected_alias_items: list[ParentChildRef] | list[str]) -> None:
+    def _populate_alias_expressions(
+        self, selected_alias_items: list[ParentChildRef] | list[str]
+    ) -> None:
         if self.aliasExpressionsListWidget is None:
             return
 
         self.aliasExpressionsListWidget.clear()
-        expression_items, _counts = self._controller.get_alias_expression_items(selected_alias_items)
+        expression_items, _counts = self._controller.get_alias_expression_items(
+            selected_alias_items
+        )
         for expression_item in expression_items:
             item = QtWidgets.QListWidgetItem(expression_item.display_text)
             item.setData(QtCore.Qt.UserRole, expression_item)
@@ -460,7 +466,9 @@ class MainPanel:
             return
 
         self.varsetExpressionsListWidget.clear()
-        expression_items, _counts = self._controller.get_expression_items(selected_varset_variable_items)
+        expression_items, _counts = self._controller.get_expression_items(
+            selected_varset_variable_items
+        )
         for expression_item in expression_items:
             item = QtWidgets.QListWidgetItem(expression_item.display_text)
             item.setData(QtCore.Qt.UserRole, expression_item)
@@ -497,7 +505,10 @@ class MainPanel:
             self.varsetExpressionsListWidget.clear()
 
     def _on_available_spreadsheets_selection_changed(self):
-        if self.availableSpreadsheetsListWidget is None or self.aliasesVariableNamesListWidget is None:
+        if (
+            self.availableSpreadsheetsListWidget is None
+            or self.aliasesVariableNamesListWidget is None
+        ):
             return
 
         selected = self._get_selected_spreadsheets()

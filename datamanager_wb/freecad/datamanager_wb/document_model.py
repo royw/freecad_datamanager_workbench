@@ -1,6 +1,13 @@
+"""Document-level querying and mutations for VarSets.
+
+This module provides the higher-level operations used by the panel controller
+and data sources to list varsets/variables, compute expression references, and
+remove unused variables.
+"""
+
 from .expression_item import ExpressionItem
-from .parsing_helpers import parse_varset_variable_item
 from .parent_child_ref import ParentChildRef
+from .parsing_helpers import parse_varset_variable_item
 from .varset_mutations import removeVarsetVariable
 from .varset_query import getVarsetReferences, getVarsets, getVarsetVariableNames
 

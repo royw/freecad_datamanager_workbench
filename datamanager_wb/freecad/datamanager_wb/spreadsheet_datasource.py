@@ -1,3 +1,8 @@
+"""Spreadsheet-backed `TabDataSource` for the Aliases tab.
+
+ Adapts spreadsheet alias queries/mutations to the generic `TabController`.
+ """
+
 from .expression_item import ExpressionItem
 from .parent_child_ref import ParentChildRef
 from .spreadsheet_mutations import removeSpreadsheetAlias

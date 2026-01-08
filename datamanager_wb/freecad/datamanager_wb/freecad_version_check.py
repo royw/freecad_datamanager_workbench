@@ -1,3 +1,9 @@
+"""Runtime version checks for supported FreeCAD and Python versions.
+
+ This module validates that the current FreeCAD and Python runtime meet the
+ minimum required versions for the workbench.
+ """
+
 import sys
 
 import FreeCAD as App

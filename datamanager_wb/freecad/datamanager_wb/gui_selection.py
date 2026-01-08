@@ -1,3 +1,8 @@
+"""GUI selection helpers for the DataManager workbench.
+
+This module contains small utilities for selecting FreeCAD objects referenced
+by expression items."""
+
 import FreeCAD as App
 import FreeCADGui as Gui
 

@@ -1,5 +1,9 @@
-from .parent_child_ref import parse_parent_child_ref
+"""Parsing helpers for workbench UI display strings.
 
+This module centralizes small string parsers used to interpret `parent.child`
+references and expression list display text."""
+
+from .parent_child_ref import parse_parent_child_ref
 
 def parse_varset_variable_item(text: str) -> tuple[str, str] | None:
     ref = parse_parent_child_ref(text)

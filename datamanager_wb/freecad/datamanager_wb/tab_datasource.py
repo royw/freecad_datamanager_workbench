@@ -1,3 +1,9 @@
+"""Tab data source protocol used by the generic tab controller.
+
+ Defines the `TabDataSource` protocol along with shared dataclasses used for
+ remove-unused operations across different tabs (VarSets and Aliases).
+ """
+
 from dataclasses import dataclass
 from typing import Protocol
 

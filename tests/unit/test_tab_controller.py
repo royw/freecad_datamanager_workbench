@@ -1,3 +1,6 @@
+"""Unit tests for the generic TabController.
+Uses a fake data source to validate filtering and remove-unused behavior."""
+
 from freecad.datamanager_wb.parent_child_ref import ParentChildRef
 from freecad.datamanager_wb.tab_controller import TabController
 from freecad.datamanager_wb.tab_datasource import RemoveUnusedResult

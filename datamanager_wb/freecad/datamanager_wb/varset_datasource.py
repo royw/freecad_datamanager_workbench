@@ -1,3 +1,8 @@
+"""VarSet-backed `TabDataSource` for the VarSets tab.
+
+ Adapts varset document-model operations to the generic `TabController`.
+ """
+
 from .document_model import (
     get_expression_items,
     get_expression_reference_counts,

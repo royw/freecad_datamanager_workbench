@@ -1,3 +1,9 @@
+"""Query helpers for FreeCAD VarSets.
+
+Provides functions to list varsets, list their variables, and find expression
+references to varset variables.
+"""
+
 from typing import Iterator
 
 import FreeCAD as App

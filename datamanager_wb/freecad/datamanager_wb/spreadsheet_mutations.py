@@ -1,3 +1,9 @@
+"""Mutation helpers for spreadsheet aliases.
+
+Contains operations that modify spreadsheets, such as clearing/removing an
+alias definition.
+"""
+
 import FreeCAD as App
 
 translate = App.Qt.translate

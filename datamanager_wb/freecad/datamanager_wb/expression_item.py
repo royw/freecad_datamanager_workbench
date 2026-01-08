@@ -1,3 +1,8 @@
+"""Lightweight representation of an expression binding.
+
+This module defines a small dataclass used to display and select expression
+engine entries in the UI."""
+
 from dataclasses import dataclass
 
 

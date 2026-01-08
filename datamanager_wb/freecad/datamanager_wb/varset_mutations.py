@@ -1,3 +1,8 @@
+"""Mutation helpers for FreeCAD VarSets.
+
+Contains operations that modify VarSets, such as removing a variable property.
+"""
+
 import FreeCAD as App
 
 translate = App.Qt.translate

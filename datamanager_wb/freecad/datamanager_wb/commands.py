@@ -1,3 +1,8 @@
+"""FreeCAD command registrations for the DataManager workbench.
+
+This module defines the toolbar/menu commands and connects them to the
+workbench's main panel."""
+
 import os
 from typing import TYPE_CHECKING, Callable
 

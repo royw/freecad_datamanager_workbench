@@ -1,5 +1,11 @@
-from typing import Iterator
+"""Query helpers for spreadsheet aliases.
+
+Provides discovery of spreadsheet objects, enumeration of alias names, and
+searching expressions for alias references.
+"""
+
 import re
+from typing import Iterator
 
 import FreeCAD as App
 

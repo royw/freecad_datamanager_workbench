@@ -1,7 +1,18 @@
+"""Generic tab controller shared by VarSets and Aliases.
+
+ Implements filtering, only-unused logic, enable-state rules, and remove-unused
+ orchestration against a `TabDataSource`.
+ """
+
 import fnmatch
 
 from .parent_child_ref import ParentChildRef
-from .tab_datasource import PostRemoveUpdate, RemoveUnusedAndUpdateResult, RemoveUnusedResult, TabDataSource
+from .tab_datasource import (
+    PostRemoveUpdate,
+    RemoveUnusedAndUpdateResult,
+    RemoveUnusedResult,
+    TabDataSource,
+)
 
 
 class TabController:
@@ -18,7 +29,9 @@ class TabController:
         selected_items: list[ParentChildRef] | list[str],
     ) -> bool:
         normalized = self._normalize_items(selected_items)
-        return self.should_enable_remove_unused(only_unused=only_unused, selected_count=len(normalized))
+        return self.should_enable_remove_unused(
+            only_unused=only_unused, selected_count=len(normalized)
+        )
 
     def _normalize_items(self, items: list[ParentChildRef] | list[str]) -> list[str]:
         normalized: list[str] = []
@@ -46,7 +59,9 @@ class TabController:
         exclude_copy_on_change: bool = False,
     ) -> list[str]:
         pattern = self._normalize_glob_pattern(filter_text)
-        parents = self._data_source.get_sorted_parents(exclude_copy_on_change=exclude_copy_on_change)
+        parents = self._data_source.get_sorted_parents(
+            exclude_copy_on_change=exclude_copy_on_change
+        )
         if pattern is None:
             return parents
         return [p for p in parents if fnmatch.fnmatchcase(p, pattern)]
@@ -109,8 +124,12 @@ class TabController:
     def get_expression_items(self, selected_child_items: list[ParentChildRef] | list[str]):
         return self._data_source.get_expression_items(selected_child_items)
 
-    def get_expression_reference_counts(self, selected_child_items: list[ParentChildRef] | list[str]):
+    def get_expression_reference_counts(
+        self, selected_child_items: list[ParentChildRef] | list[str]
+    ):
         return self._data_source.get_expression_reference_counts(selected_child_items)
 
-    def remove_unused_children(self, selected_child_items: list[ParentChildRef] | list[str]) -> RemoveUnusedResult:
+    def remove_unused_children(
+        self, selected_child_items: list[ParentChildRef] | list[str]
+    ) -> RemoveUnusedResult:
         return self._data_source.remove_unused_children(selected_child_items)
