@@ -1,6 +1,6 @@
 from .expression_item import ExpressionItem
 from .parsing_helpers import parse_varset_variable_item
-from .varset_tools import getVarsetReferences, getVarsets, getVarsetVariableNames
+from .varset_tools import getVarsetReferences, getVarsets, getVarsetVariableNames, removeVarsetVariable
 
 
 def get_sorted_varsets(*, exclude_copy_on_change: bool = False) -> list[str]:
@@ -50,3 +50,29 @@ def get_expression_reference_counts(selected_varset_variable_items: list[str]) -
         counts[text] = len(refs)
 
     return counts
+
+
+def remove_unused_varset_variables(
+    selected_varset_variable_items: list[str],
+) -> tuple[list[str], list[str], list[str]]:
+    removed: list[str] = []
+    still_used: list[str] = []
+    failed: list[str] = []
+
+    for text in selected_varset_variable_items:
+        parsed = parse_varset_variable_item(text)
+        if parsed is None:
+            failed.append(text)
+            continue
+        varset_name, variable_name = parsed
+        refs = getVarsetReferences(varset_name, variable_name)
+        if refs:
+            still_used.append(text)
+            continue
+        ok = removeVarsetVariable(varset_name, variable_name)
+        if ok:
+            removed.append(text)
+        else:
+            failed.append(text)
+
+    return removed, still_used, failed

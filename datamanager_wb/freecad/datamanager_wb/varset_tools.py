@@ -132,3 +132,29 @@ def getVarsetReferences(varset_name: str, variable_name: str | None = None) -> d
                     results[f"{obj.Name}.{expr[0]}"] = expr_text
 
     return results
+
+
+def removeVarsetVariable(varset_name: str, variable_name: str) -> bool:
+    doc = App.ActiveDocument
+    if doc is None:
+        return False
+
+    varset = doc.getObject(varset_name)
+    if varset is None or getattr(varset, "TypeId", None) != "App::VarSet":
+        return False
+
+    props = set(getattr(varset, "PropertiesList", []) or [])
+    if variable_name not in props:
+        return False
+
+    try:
+        varset.removeProperty(variable_name)
+    except Exception:  # pylint: disable=broad-exception-caught
+        return False
+
+    try:
+        doc.recompute()
+    except Exception:  # pylint: disable=broad-exception-caught
+        pass
+
+    return True

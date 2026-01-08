@@ -65,6 +65,10 @@ class MainPanel:
             QtWidgets.QCheckBox, "varsetVariableNamesOnlyUnusedCheckBox"
         )
 
+        self.removeUnusedVariablesPushButton = self._widget.findChild(
+            QtWidgets.QPushButton, "removeUnusedVariablesPushButton"
+        )
+
         if self.availableVarsetsListWidget is None:
             App.Console.PrintWarning(
                 translate("Log", "Workbench MainPanel: cannot find available varsets list widget\n")
@@ -94,6 +98,12 @@ class MainPanel:
             App.Console.PrintWarning(
                 translate("Log", "Workbench MainPanel: cannot find only unused checkbox\n")
             )
+        if self.removeUnusedVariablesPushButton is None:
+            App.Console.PrintWarning(
+                translate(
+                    "Log", "Workbench MainPanel: cannot find remove unused variables push button\n"
+                )
+            )
 
     def _configure_widgets(self) -> None:
         if self.availableVarsetsListWidget is not None:
@@ -116,6 +126,9 @@ class MainPanel:
             self.varsetExpressionsListWidget.setSelectionMode(
                 QtWidgets.QAbstractItemView.SingleSelection
             )
+
+        if self.removeUnusedVariablesPushButton is not None:
+            self.removeUnusedVariablesPushButton.setEnabled(False)
 
     def _populate_varsets(self) -> None:
         if self.availableVarsetsListWidget is None:
@@ -193,6 +206,11 @@ class MainPanel:
                 self._on_only_unused_toggled
             )
 
+        if self.removeUnusedVariablesPushButton is not None:
+            self.removeUnusedVariablesPushButton.clicked.connect(
+                self._on_remove_unused_variables_clicked
+            )
+
     def _normalize_glob_pattern(self, text: str) -> str | None:
         stripped = text.strip()
         if not stripped:
@@ -247,6 +265,21 @@ class MainPanel:
             self.varsetVariableNamesListWidget.addItem(item_text)
 
         self._adjust_list_widget_width_to_contents(self.varsetVariableNamesListWidget)
+        self._update_remove_unused_button_enabled_state()
+
+    def _update_remove_unused_button_enabled_state(self) -> None:
+        if self.removeUnusedVariablesPushButton is None:
+            return
+
+        only_unused = False
+        if self.varsetVariableNamesOnlyUnusedCheckBox is not None:
+            only_unused = self.varsetVariableNamesOnlyUnusedCheckBox.isChecked()
+
+        any_selected = False
+        if self.varsetVariableNamesListWidget is not None:
+            any_selected = bool(self.varsetVariableNamesListWidget.selectedItems())
+
+        self.removeUnusedVariablesPushButton.setEnabled(only_unused and any_selected)
 
     def _populate_expressions(self, selected_varset_variable_items: list[str]) -> None:
         if self.varsetExpressionsListWidget is None:
@@ -258,6 +291,8 @@ class MainPanel:
             item = QtWidgets.QListWidgetItem(expression_item.display_text)
             item.setData(QtCore.Qt.UserRole, expression_item)
             self.varsetExpressionsListWidget.addItem(item)
+
+        self._update_remove_unused_button_enabled_state()
 
     def _on_available_varsets_selection_changed(self):
         if self.availableVarsetsListWidget is None or self.varsetVariableNamesListWidget is None:
@@ -309,6 +344,8 @@ class MainPanel:
             item.setData(QtCore.Qt.UserRole, expression_item)
             self.varsetExpressionsListWidget.addItem(item)
 
+        self._update_remove_unused_button_enabled_state()
+
     def _on_varsets_filter_changed(self, _text: str) -> None:
         self._populate_varsets()
         self._on_available_varsets_selection_changed()
@@ -322,6 +359,72 @@ class MainPanel:
         selected_varsets = self._get_selected_varsets()
         self._populate_variable_names(selected_varsets)
         self._populate_expressions(self._get_selected_varset_variable_items())
+
+    def _on_remove_unused_variables_clicked(self) -> None:
+        if self.varsetVariableNamesListWidget is None:
+            return
+        if self.varsetVariableNamesOnlyUnusedCheckBox is None:
+            return
+        if not self.varsetVariableNamesOnlyUnusedCheckBox.isChecked():
+            self._update_remove_unused_button_enabled_state()
+            return
+
+        selected = self._get_selected_varset_variable_items()
+        if not selected:
+            self._update_remove_unused_button_enabled_state()
+            return
+
+        reply = QtWidgets.QMessageBox.question(
+            self._widget,
+            translate("Workbench", "Confirm"),
+            translate(
+                "Workbench",
+                "Are you sure you want to remove the selected variables from the varset(s)?",
+            ),
+            QtWidgets.QMessageBox.Yes | QtWidgets.QMessageBox.No,
+            QtWidgets.QMessageBox.No,
+        )
+        if reply != QtWidgets.QMessageBox.Yes:
+            return
+
+        _removed, still_used, failed = self._controller.remove_unused_varset_variables(selected)
+
+        doc = App.ActiveDocument
+        if doc is not None:
+            try:
+                doc.recompute()
+            except Exception:  # pylint: disable=broad-exception-caught
+                pass
+        try:
+            Gui.updateGui()
+        except Exception:  # pylint: disable=broad-exception-caught
+            pass
+
+        if still_used or failed:
+            details = []
+            if still_used:
+                details.append(translate("Workbench", "Still referenced (not removed):"))
+                details.extend(still_used)
+            if failed:
+                if details:
+                    details.append("")
+                details.append(translate("Workbench", "Failed to remove:"))
+                details.extend(failed)
+            QtWidgets.QMessageBox.information(
+                self._widget,
+                translate("Workbench", "Remove variables"),
+                translate(
+                    "Workbench",
+                    "Some selected variables could not be removed.",
+                ),
+                QtWidgets.QMessageBox.Ok,
+            )
+
+        selected_varsets = self._get_selected_varsets()
+        self._populate_variable_names(selected_varsets)
+        if self.varsetExpressionsListWidget is not None:
+            self.varsetExpressionsListWidget.clear()
+        self._update_remove_unused_button_enabled_state()
 
     def _on_exclude_clones_toggled(self, _checked: bool) -> None:
         self._populate_varsets()

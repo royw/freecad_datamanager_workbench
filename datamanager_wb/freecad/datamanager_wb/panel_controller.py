@@ -1,6 +1,7 @@
 from .document_model import (
     get_expression_items,
     get_expression_reference_counts,
+    remove_unused_varset_variables,
     get_sorted_varsets,
     get_varset_variable_items,
 )
@@ -22,6 +23,11 @@ class PanelController:
 
     def get_expression_reference_counts(self, selected_vars: list[str]) -> dict[str, int]:
         return get_expression_reference_counts(selected_vars)
+
+    def remove_unused_varset_variables(
+        self, selected_varset_variable_items: list[str]
+    ) -> tuple[list[str], list[str], list[str]]:
+        return remove_unused_varset_variables(selected_varset_variable_items)
 
     def select_expression_item(self, expression_item: ExpressionItem | str) -> None:
         select_object_from_expression_item(expression_item)
