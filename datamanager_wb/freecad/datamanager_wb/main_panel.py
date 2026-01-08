@@ -31,6 +31,7 @@ class MainPanel:
         self._find_widgets()
         self._configure_widgets()
         self._populate_varsets()
+        self._populate_spreadsheets()
         self._connect_signals()
 
     def _find_required_widget(self, widget_type: type, object_name: str):
@@ -80,6 +81,32 @@ class MainPanel:
             QtWidgets.QPushButton, "removeUnusedVariablesPushButton"
         )
 
+        self.availableSpreadsheetsListWidget = self._find_required_widget(
+            QtWidgets.QListWidget, "avaliableSpreadsheetsListWidget"
+        )
+        self.aliasesVariableNamesListWidget = self._find_required_widget(
+            QtWidgets.QListWidget, "aliasesVariableNamesListWidget"
+        )
+        self.aliasExpressionsListWidget = self._find_required_widget(
+            QtWidgets.QListWidget, "aliasExpressionsListWidget"
+        )
+
+        self.avaliableSpreadsheetsFilterLineEdit = self._find_required_widget(
+            QtWidgets.QLineEdit, "avaliableSpreadsheetsFilterLineEdit"
+        )
+        self.excludeCopyOnChangeSpreadsheetsRadioButton = self._find_required_widget(
+            QtWidgets.QRadioButton, "excludeCopyOnChangeSpreadsheetsRadioButton"
+        )
+        self.aliasesVariableNamesFilterLineEdit = self._find_required_widget(
+            QtWidgets.QLineEdit, "aliasesVariableNamesFilterLineEdit"
+        )
+        self.aliasesOnlyUnusedCheckBox = self._find_required_widget(
+            QtWidgets.QCheckBox, "aliasesOnlyUnusedCheckBox"
+        )
+        self.removeUnusedAliasesPushButton = self._find_required_widget(
+            QtWidgets.QPushButton, "removeUnusedAliasesPushButton"
+        )
+
     def _configure_widgets(self) -> None:
         if self.availableVarsetsListWidget is not None:
             self.availableVarsetsListWidget.setSelectionMode(
@@ -105,6 +132,30 @@ class MainPanel:
         if self.removeUnusedVariablesPushButton is not None:
             self.removeUnusedVariablesPushButton.setEnabled(False)
 
+        if self.availableSpreadsheetsListWidget is not None:
+            self.availableSpreadsheetsListWidget.setSelectionMode(
+                QtWidgets.QAbstractItemView.ExtendedSelection
+            )
+            self.availableSpreadsheetsListWidget.setSizeAdjustPolicy(
+                QtWidgets.QAbstractScrollArea.AdjustToContents
+            )
+
+        if self.aliasesVariableNamesListWidget is not None:
+            self.aliasesVariableNamesListWidget.setSelectionMode(
+                QtWidgets.QAbstractItemView.ExtendedSelection
+            )
+            self.aliasesVariableNamesListWidget.setSizeAdjustPolicy(
+                QtWidgets.QAbstractScrollArea.AdjustToContents
+            )
+
+        if self.aliasExpressionsListWidget is not None:
+            self.aliasExpressionsListWidget.setSelectionMode(
+                QtWidgets.QAbstractItemView.SingleSelection
+            )
+
+        if self.removeUnusedAliasesPushButton is not None:
+            self.removeUnusedAliasesPushButton.setEnabled(False)
+
     def _populate_varsets(self) -> None:
         if self.availableVarsetsListWidget is None:
             return
@@ -126,6 +177,28 @@ class MainPanel:
             self.availableVarsetsListWidget.addItem(varset)
 
         self._adjust_list_widget_width_to_contents(self.availableVarsetsListWidget)
+
+    def _populate_spreadsheets(self) -> None:
+        if self.availableSpreadsheetsListWidget is None:
+            return
+
+        self.availableSpreadsheetsListWidget.clear()
+
+        filter_text = ""
+        if self.avaliableSpreadsheetsFilterLineEdit is not None:
+            filter_text = self.avaliableSpreadsheetsFilterLineEdit.text() or ""
+
+        exclude_copy_on_change = False
+        if self.excludeCopyOnChangeSpreadsheetsRadioButton is not None:
+            exclude_copy_on_change = self.excludeCopyOnChangeSpreadsheetsRadioButton.isChecked()
+
+        for sheet in self._controller.get_filtered_spreadsheets(
+            filter_text=filter_text,
+            exclude_copy_on_change=exclude_copy_on_change,
+        ):
+            self.availableSpreadsheetsListWidget.addItem(sheet)
+
+        self._adjust_list_widget_width_to_contents(self.availableSpreadsheetsListWidget)
 
     def _adjust_list_widget_width_to_contents(self, widget: QtWidgets.QListWidget) -> None:
         # NOTE: This relies on the list already being populated.
@@ -183,16 +256,75 @@ class MainPanel:
                 self._on_remove_unused_variables_clicked
             )
 
+        if self.availableSpreadsheetsListWidget is not None:
+            self.availableSpreadsheetsListWidget.itemSelectionChanged.connect(
+                self._on_available_spreadsheets_selection_changed
+            )
+
+        if self.aliasesVariableNamesListWidget is not None:
+            self.aliasesVariableNamesListWidget.itemSelectionChanged.connect(
+                self._on_alias_names_selection_changed
+            )
+
+        if self.aliasExpressionsListWidget is not None:
+            self.aliasExpressionsListWidget.itemSelectionChanged.connect(
+                self._on_alias_expressions_selection_changed
+            )
+
+        if self.avaliableSpreadsheetsFilterLineEdit is not None:
+            self.avaliableSpreadsheetsFilterLineEdit.textChanged.connect(
+                self._on_spreadsheets_filter_changed
+            )
+
+        if self.excludeCopyOnChangeSpreadsheetsRadioButton is not None:
+            self.excludeCopyOnChangeSpreadsheetsRadioButton.toggled.connect(
+                self._on_exclude_spreadsheet_clones_toggled
+            )
+
+        if self.aliasesVariableNamesFilterLineEdit is not None:
+            self.aliasesVariableNamesFilterLineEdit.textChanged.connect(
+                self._on_alias_filter_changed
+            )
+
+        if self.aliasesOnlyUnusedCheckBox is not None:
+            self.aliasesOnlyUnusedCheckBox.toggled.connect(
+                self._on_alias_only_unused_toggled
+            )
+
+        if self.removeUnusedAliasesPushButton is not None:
+            self.removeUnusedAliasesPushButton.clicked.connect(
+                self._on_remove_unused_aliases_clicked
+            )
+
     def _get_selected_varsets(self) -> list[str]:
         if self.availableVarsetsListWidget is None:
             return []
         return [item.text() for item in self.availableVarsetsListWidget.selectedItems()]
+
+    def _get_selected_spreadsheets(self) -> list[str]:
+        if self.availableSpreadsheetsListWidget is None:
+            return []
+        return [item.text() for item in self.availableSpreadsheetsListWidget.selectedItems()]
 
     def _get_selected_varset_variable_items(self) -> list[ParentChildRef]:
         if self.varsetVariableNamesListWidget is None:
             return []
         selected: list[ParentChildRef] = []
         for item in self.varsetVariableNamesListWidget.selectedItems():
+            data = item.data(QtCore.Qt.UserRole)
+            if isinstance(data, ParentChildRef):
+                selected.append(data)
+            else:
+                ref = parse_parent_child_ref(item.text())
+                if ref is not None:
+                    selected.append(ref)
+        return selected
+
+    def _get_selected_alias_items(self) -> list[ParentChildRef]:
+        if self.aliasesVariableNamesListWidget is None:
+            return []
+        selected: list[ParentChildRef] = []
+        for item in self.aliasesVariableNamesListWidget.selectedItems():
             data = item.data(QtCore.Qt.UserRole)
             if isinstance(data, ParentChildRef):
                 selected.append(data)
@@ -221,6 +353,25 @@ class MainPanel:
         )
         self._render_variable_names(items)
 
+    def _populate_alias_names(self, selected_sheets: list[str]) -> None:
+        if self.aliasesVariableNamesListWidget is None:
+            return
+
+        alias_filter_text = ""
+        if self.aliasesVariableNamesFilterLineEdit is not None:
+            alias_filter_text = self.aliasesVariableNamesFilterLineEdit.text() or ""
+
+        only_unused = False
+        if self.aliasesOnlyUnusedCheckBox is not None:
+            only_unused = self.aliasesOnlyUnusedCheckBox.isChecked()
+
+        items = self._controller.get_filtered_spreadsheet_alias_items(
+            selected_spreadsheets=selected_sheets,
+            alias_filter_text=alias_filter_text,
+            only_unused=only_unused,
+        )
+        self._render_alias_names(items)
+
     def _render_variable_names(self, items: list[ParentChildRef]) -> None:
         if self.varsetVariableNamesListWidget is None:
             return
@@ -234,6 +385,32 @@ class MainPanel:
         self._adjust_list_widget_width_to_contents(self.varsetVariableNamesListWidget)
         self._update_remove_unused_button_enabled_state()
 
+    def _populate_alias_expressions(self, selected_alias_items: list[ParentChildRef] | list[str]) -> None:
+        if self.aliasExpressionsListWidget is None:
+            return
+
+        self.aliasExpressionsListWidget.clear()
+        expression_items, _counts = self._controller.get_alias_expression_items(selected_alias_items)
+        for expression_item in expression_items:
+            item = QtWidgets.QListWidgetItem(expression_item.display_text)
+            item.setData(QtCore.Qt.UserRole, expression_item)
+            self.aliasExpressionsListWidget.addItem(item)
+
+        self._update_remove_unused_aliases_button_enabled_state()
+
+    def _render_alias_names(self, items: list[ParentChildRef]) -> None:
+        if self.aliasesVariableNamesListWidget is None:
+            return
+
+        self.aliasesVariableNamesListWidget.clear()
+        for ref in items:
+            item = QtWidgets.QListWidgetItem(ref.text)
+            item.setData(QtCore.Qt.UserRole, ref)
+            self.aliasesVariableNamesListWidget.addItem(item)
+
+        self._adjust_list_widget_width_to_contents(self.aliasesVariableNamesListWidget)
+        self._update_remove_unused_aliases_button_enabled_state()
+
     def _update_remove_unused_button_enabled_state(self) -> None:
         if self.removeUnusedVariablesPushButton is None:
             return
@@ -246,6 +423,24 @@ class MainPanel:
         if self.varsetVariableNamesListWidget is not None:
             selected_count = len(self.varsetVariableNamesListWidget.selectedItems())
         self.removeUnusedVariablesPushButton.setEnabled(
+            self._controller.should_enable_remove_unused(
+                only_unused=only_unused,
+                selected_count=selected_count,
+            )
+        )
+
+    def _update_remove_unused_aliases_button_enabled_state(self) -> None:
+        if self.removeUnusedAliasesPushButton is None:
+            return
+
+        only_unused = False
+        if self.aliasesOnlyUnusedCheckBox is not None:
+            only_unused = self.aliasesOnlyUnusedCheckBox.isChecked()
+
+        selected_count = 0
+        if self.aliasesVariableNamesListWidget is not None:
+            selected_count = len(self.aliasesVariableNamesListWidget.selectedItems())
+        self.removeUnusedAliasesPushButton.setEnabled(
             self._controller.should_enable_remove_unused(
                 only_unused=only_unused,
                 selected_count=selected_count,
@@ -267,6 +462,13 @@ class MainPanel:
 
         self._update_remove_unused_button_enabled_state()
 
+    def _on_alias_names_selection_changed(self):
+        if self.aliasesVariableNamesListWidget is None or self.aliasExpressionsListWidget is None:
+            return
+
+        selected_aliases = self._get_selected_alias_items()
+        self._populate_alias_expressions(selected_aliases)
+
     def _on_available_varsets_selection_changed(self):
         if self.availableVarsetsListWidget is None or self.varsetVariableNamesListWidget is None:
             App.Console.PrintMessage(
@@ -287,6 +489,16 @@ class MainPanel:
 
         if self.varsetExpressionsListWidget is not None:
             self.varsetExpressionsListWidget.clear()
+
+    def _on_available_spreadsheets_selection_changed(self):
+        if self.availableSpreadsheetsListWidget is None or self.aliasesVariableNamesListWidget is None:
+            return
+
+        selected = self._get_selected_spreadsheets()
+        self._populate_alias_names(selected)
+
+        if self.aliasExpressionsListWidget is not None:
+            self.aliasExpressionsListWidget.clear()
 
     def _on_variable_names_selection_changed(self):
         if self.varsetVariableNamesListWidget is None or self.varsetExpressionsListWidget is None:
@@ -324,15 +536,29 @@ class MainPanel:
         self._populate_varsets()
         self._on_available_varsets_selection_changed()
 
+    def _on_spreadsheets_filter_changed(self, _text: str) -> None:
+        self._populate_spreadsheets()
+        self._on_available_spreadsheets_selection_changed()
+
     def _on_variable_filter_changed(self, _text: str) -> None:
         selected_varsets = self._get_selected_varsets()
         self._populate_variable_names(selected_varsets)
         self._populate_expressions(self._get_selected_varset_variable_items())
 
+    def _on_alias_filter_changed(self, _text: str) -> None:
+        selected = self._get_selected_spreadsheets()
+        self._populate_alias_names(selected)
+        self._populate_alias_expressions(self._get_selected_alias_items())
+
     def _on_only_unused_toggled(self, _checked: bool) -> None:
         selected_varsets = self._get_selected_varsets()
         self._populate_variable_names(selected_varsets)
         self._populate_expressions(self._get_selected_varset_variable_items())
+
+    def _on_alias_only_unused_toggled(self, _checked: bool) -> None:
+        selected = self._get_selected_spreadsheets()
+        self._populate_alias_names(selected)
+        self._populate_alias_expressions(self._get_selected_alias_items())
 
     def _get_remove_unused_context(self):
         selected = self._get_selected_varset_variable_items()
@@ -421,15 +647,96 @@ class MainPanel:
         self._show_remove_unused_errors(combined.remove_result)
         self._apply_post_remove_update(combined.update)
 
+    def _get_remove_unused_aliases_context(self):
+        selected = self._get_selected_alias_items()
+        selected_sheets = self._get_selected_spreadsheets()
+
+        alias_filter_text = ""
+        if self.aliasesVariableNamesFilterLineEdit is not None:
+            alias_filter_text = self.aliasesVariableNamesFilterLineEdit.text() or ""
+
+        only_unused = False
+        if self.aliasesOnlyUnusedCheckBox is not None:
+            only_unused = self.aliasesOnlyUnusedCheckBox.isChecked()
+
+        return selected, selected_sheets, alias_filter_text, only_unused
+
+    def _confirm_remove_unused_aliases(self) -> bool:
+        reply = QtWidgets.QMessageBox.question(
+            self._widget,
+            translate("Workbench", "Confirm"),
+            translate(
+                "Workbench",
+                "Are you sure you want to remove the selected aliases from the spreadsheet(s)?",
+            ),
+            QtWidgets.QMessageBox.Yes | QtWidgets.QMessageBox.No,
+            QtWidgets.QMessageBox.No,
+        )
+        return reply == QtWidgets.QMessageBox.Yes
+
+    def _apply_post_remove_aliases_update(self, update) -> None:
+        self._render_alias_names(update.variable_items)
+        if update.clear_expressions and self.aliasExpressionsListWidget is not None:
+            self.aliasExpressionsListWidget.clear()
+        self._update_remove_unused_aliases_button_enabled_state()
+
+    def _on_remove_unused_aliases_clicked(self) -> None:
+        if self.aliasesVariableNamesListWidget is None:
+            return
+        if self.aliasesOnlyUnusedCheckBox is None:
+            return
+
+        selected, selected_sheets, alias_filter_text, only_unused = (
+            self._get_remove_unused_aliases_context()
+        )
+
+        if not self._controller.can_remove_unused(
+            only_unused=only_unused,
+            selected_items=selected,
+        ):
+            self._update_remove_unused_aliases_button_enabled_state()
+            return
+
+        if not self._confirm_remove_unused_aliases():
+            return
+
+        combined = self._controller.remove_unused_aliases_and_get_update(
+            selected_alias_items=selected,
+            selected_spreadsheets=selected_sheets,
+            alias_filter_text=alias_filter_text,
+            only_unused=only_unused,
+        )
+
+        self._show_remove_unused_errors(combined.remove_result)
+        self._apply_post_remove_aliases_update(combined.update)
+
     def _on_exclude_clones_toggled(self, _checked: bool) -> None:
         self._populate_varsets()
         self._on_available_varsets_selection_changed()
+
+    def _on_exclude_spreadsheet_clones_toggled(self, _checked: bool) -> None:
+        self._populate_spreadsheets()
+        self._on_available_spreadsheets_selection_changed()
 
     def _on_expressions_selection_changed(self):
         if self.varsetExpressionsListWidget is None:
             return
 
         selected = self.varsetExpressionsListWidget.selectedItems()
+        if not selected:
+            return
+
+        data = selected[0].data(QtCore.Qt.UserRole)
+        if isinstance(data, ExpressionItem):
+            self._controller.select_expression_item(data)
+        else:
+            self._controller.select_expression_item(selected[0].text())
+
+    def _on_alias_expressions_selection_changed(self):
+        if self.aliasExpressionsListWidget is None:
+            return
+
+        selected = self.aliasExpressionsListWidget.selectedItems()
         if not selected:
             return
 
