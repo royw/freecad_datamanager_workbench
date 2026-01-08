@@ -1,7 +1,9 @@
 # Code Snippets
+
 There is no way to add a button, menu entry from python to a workbench which is added with c++. So here is a comparison how to do that with python and with c++.
 
-## Adding a command:
+## Adding a command
+
 This can be done either with python or c++.
 
 ### 1. python
@@ -31,6 +33,7 @@ class MyCommand(object):
         the function to be handled, when a user starts the command
         """
 ```
+
 To register the command in FreeCAD:
 
 ```python
@@ -39,6 +42,7 @@ Gui.addCommand('MyCommand', MyCommand())
 ```
 
 Adding a new toolbar/menu:
+
 ```python
 from FreeCADGui import Workbench
 class myWorkbench(Workbench):
@@ -90,6 +94,7 @@ bool MyCommand::isActive(void)
     return (hasActiveDocument() && !Gui::Control().activeDialog());
 }
 ```
+
 To register the command in FreeCAD:
 
 ```c++
@@ -98,6 +103,7 @@ To register the command in FreeCAD:
 Gui::CommandManager &rcCmdMgr = Gui::Application::Instance->commandManager();
 rcCmdMgr.addCommand(new MyCommand());
 ```
+
 Adding a item to a menu/toolbar:
 
 if your command is added with python you have to run this code:
@@ -113,7 +119,6 @@ try{
 ```
 
 and add the name of the command to a tooltip/menu in src/module/Gui/Workbench.cpp Workbench::setupToolBars
-
 
 ```c++
 Gui::ToolBarItem* Workbench::setupToolBars() const

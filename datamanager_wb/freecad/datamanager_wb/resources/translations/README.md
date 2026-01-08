@@ -2,7 +2,7 @@
 
 > [!NOTE]
 > All commands **must** be run in `./freecad/datamanager_wb/resources/translations/` directory.
-
+>
 > [!IMPORTANT]
 > If you want to update/release the files you need to have installed
 > `lupdate` and `lrelease` from **Qt6** version. Using the versions from
