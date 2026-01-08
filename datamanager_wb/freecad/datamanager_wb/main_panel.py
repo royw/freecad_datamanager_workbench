@@ -334,20 +334,21 @@ class MainPanel:
         self._populate_variable_names(selected_varsets)
         self._populate_expressions(self._get_selected_varset_variable_items())
 
-    def _on_remove_unused_variables_clicked(self) -> None:
-        if self.varsetVariableNamesListWidget is None:
-            return
-        if self.varsetVariableNamesOnlyUnusedCheckBox is None:
-            return
-
+    def _get_remove_unused_context(self):
         selected = self._get_selected_varset_variable_items()
-        if not self._controller.can_remove_unused(
-            only_unused=self.varsetVariableNamesOnlyUnusedCheckBox.isChecked(),
-            selected_items=selected,
-        ):
-            self._update_remove_unused_button_enabled_state()
-            return
+        selected_varsets = self._get_selected_varsets()
 
+        variable_filter_text = ""
+        if self.varsetVariableNamesFilterLineEdit is not None:
+            variable_filter_text = self.varsetVariableNamesFilterLineEdit.text() or ""
+
+        only_unused = False
+        if self.varsetVariableNamesOnlyUnusedCheckBox is not None:
+            only_unused = self.varsetVariableNamesOnlyUnusedCheckBox.isChecked()
+
+        return selected, selected_varsets, variable_filter_text, only_unused
+
+    def _confirm_remove_unused(self) -> bool:
         reply = QtWidgets.QMessageBox.question(
             self._widget,
             translate("Workbench", "Confirm"),
@@ -358,16 +359,57 @@ class MainPanel:
             QtWidgets.QMessageBox.Yes | QtWidgets.QMessageBox.No,
             QtWidgets.QMessageBox.No,
         )
-        if reply != QtWidgets.QMessageBox.Yes:
+        return reply == QtWidgets.QMessageBox.Yes
+
+    def _show_remove_unused_errors(self, result) -> None:
+        if not (result.still_used or result.failed):
             return
 
-        selected_varsets = self._get_selected_varsets()
-        variable_filter_text = ""
-        if self.varsetVariableNamesFilterLineEdit is not None:
-            variable_filter_text = self.varsetVariableNamesFilterLineEdit.text() or ""
-        only_unused = False
-        if self.varsetVariableNamesOnlyUnusedCheckBox is not None:
-            only_unused = self.varsetVariableNamesOnlyUnusedCheckBox.isChecked()
+        details = []
+        if result.still_used:
+            details.append(translate("Workbench", "Still referenced (not removed):"))
+            details.extend(result.still_used)
+        if result.failed:
+            if details:
+                details.append("")
+            details.append(translate("Workbench", "Failed to remove:"))
+            details.extend(result.failed)
+
+        QtWidgets.QMessageBox.information(
+            self._widget,
+            translate("Workbench", "Remove variables"),
+            translate(
+                "Workbench",
+                "Some selected variables could not be removed.",
+            ),
+            QtWidgets.QMessageBox.Ok,
+        )
+
+    def _apply_post_remove_update(self, update) -> None:
+        self._render_variable_names(update.variable_items)
+        if update.clear_expressions and self.varsetExpressionsListWidget is not None:
+            self.varsetExpressionsListWidget.clear()
+        self._update_remove_unused_button_enabled_state()
+
+    def _on_remove_unused_variables_clicked(self) -> None:
+        if self.varsetVariableNamesListWidget is None:
+            return
+        if self.varsetVariableNamesOnlyUnusedCheckBox is None:
+            return
+
+        selected, selected_varsets, variable_filter_text, only_unused = (
+            self._get_remove_unused_context()
+        )
+
+        if not self._controller.can_remove_unused(
+            only_unused=only_unused,
+            selected_items=selected,
+        ):
+            self._update_remove_unused_button_enabled_state()
+            return
+
+        if not self._confirm_remove_unused():
+            return
 
         combined = self._controller.remove_unused_and_get_update(
             selected_varset_variable_items=selected,
@@ -376,32 +418,8 @@ class MainPanel:
             only_unused=only_unused,
         )
 
-        result = combined.remove_result
-        if result.still_used or result.failed:
-            details = []
-            if result.still_used:
-                details.append(translate("Workbench", "Still referenced (not removed):"))
-                details.extend(result.still_used)
-            if result.failed:
-                if details:
-                    details.append("")
-                details.append(translate("Workbench", "Failed to remove:"))
-                details.extend(result.failed)
-            QtWidgets.QMessageBox.information(
-                self._widget,
-                translate("Workbench", "Remove variables"),
-                translate(
-                    "Workbench",
-                    "Some selected variables could not be removed.",
-                ),
-                QtWidgets.QMessageBox.Ok,
-            )
-
-        update = combined.update
-        self._render_variable_names(update.variable_items)
-        if update.clear_expressions and self.varsetExpressionsListWidget is not None:
-            self.varsetExpressionsListWidget.clear()
-        self._update_remove_unused_button_enabled_state()
+        self._show_remove_unused_errors(combined.remove_result)
+        self._apply_post_remove_update(combined.update)
 
     def _on_exclude_clones_toggled(self, _checked: bool) -> None:
         self._populate_varsets()
