@@ -152,9 +152,4 @@ def removeVarsetVariable(varset_name: str, variable_name: str) -> bool:
     except Exception:  # pylint: disable=broad-exception-caught
         return False
 
-    try:
-        doc.recompute()
-    except Exception:  # pylint: disable=broad-exception-caught
-        pass
-
     return True
