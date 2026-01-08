@@ -32,6 +32,17 @@ class MainPanel:
         self._populate_varsets()
         self._connect_signals()
 
+    def _find_required_widget(self, widget_type: type, object_name: str):
+        widget = self._widget.findChild(widget_type, object_name)
+        if widget is None:
+            raise RuntimeError(
+                translate(
+                    "Log",
+                    f"Workbench MainPanel: required widget not found: {object_name}",
+                )
+            )
+        return widget
+
     def _load_ui(self):
         return Gui.PySideUic.loadUi(os.path.join(UIPATH, "main_panel.ui"))
 
@@ -41,69 +52,32 @@ class MainPanel:
         return self.form
 
     def _find_widgets(self) -> None:
-        self.availableVarsetsListWidget = self._widget.findChild(
+        self.availableVarsetsListWidget = self._find_required_widget(
             QtWidgets.QListWidget, "avaliableVarsetsListWidget"
         )
-        self.varsetVariableNamesListWidget = self._widget.findChild(
+        self.varsetVariableNamesListWidget = self._find_required_widget(
             QtWidgets.QListWidget, "varsetVariableNamesListWidget"
         )
-        self.varsetExpressionsListWidget = self._widget.findChild(
+        self.varsetExpressionsListWidget = self._find_required_widget(
             QtWidgets.QListWidget, "varsetExpressionsListWidget"
         )
-        self.tabWidget = self._widget.findChild(QtWidgets.QTabWidget, "tabWidget")
+        self.tabWidget = self._find_required_widget(QtWidgets.QTabWidget, "tabWidget")
 
-        self.avaliableVarsetsFilterLineEdit = self._widget.findChild(
+        self.avaliableVarsetsFilterLineEdit = self._find_required_widget(
             QtWidgets.QLineEdit, "avaliableVarsetsFilterLineEdit"
         )
-        self.avaliableVarsetsExcludeClonesRadioButton = self._widget.findChild(
+        self.avaliableVarsetsExcludeClonesRadioButton = self._find_required_widget(
             QtWidgets.QRadioButton, "avaliableVarsetsExcludeClonesRadioButton"
         )
-        self.varsetVariableNamesFilterLineEdit = self._widget.findChild(
+        self.varsetVariableNamesFilterLineEdit = self._find_required_widget(
             QtWidgets.QLineEdit, "varsetVariableNamesFilterLineEdit"
         )
-        self.varsetVariableNamesOnlyUnusedCheckBox = self._widget.findChild(
+        self.varsetVariableNamesOnlyUnusedCheckBox = self._find_required_widget(
             QtWidgets.QCheckBox, "varsetVariableNamesOnlyUnusedCheckBox"
         )
-
-        self.removeUnusedVariablesPushButton = self._widget.findChild(
+        self.removeUnusedVariablesPushButton = self._find_required_widget(
             QtWidgets.QPushButton, "removeUnusedVariablesPushButton"
         )
-
-        if self.availableVarsetsListWidget is None:
-            App.Console.PrintWarning(
-                translate("Log", "Workbench MainPanel: cannot find available varsets list widget\n")
-            )
-        if self.varsetVariableNamesListWidget is None:
-            App.Console.PrintWarning(
-                translate("Log", "Workbench MainPanel: cannot find variable names list widget\n")
-            )
-        if self.varsetExpressionsListWidget is None:
-            App.Console.PrintWarning(
-                translate("Log", "Workbench MainPanel: cannot find expressions list widget\n")
-            )
-
-        if self.avaliableVarsetsFilterLineEdit is None:
-            App.Console.PrintWarning(
-                translate("Log", "Workbench MainPanel: cannot find varsets filter line edit\n")
-            )
-        if self.avaliableVarsetsExcludeClonesRadioButton is None:
-            App.Console.PrintWarning(
-                translate("Log", "Workbench MainPanel: cannot find varsets exclude clones widget\n")
-            )
-        if self.varsetVariableNamesFilterLineEdit is None:
-            App.Console.PrintWarning(
-                translate("Log", "Workbench MainPanel: cannot find variable filter line edit\n")
-            )
-        if self.varsetVariableNamesOnlyUnusedCheckBox is None:
-            App.Console.PrintWarning(
-                translate("Log", "Workbench MainPanel: cannot find only unused checkbox\n")
-            )
-        if self.removeUnusedVariablesPushButton is None:
-            App.Console.PrintWarning(
-                translate(
-                    "Log", "Workbench MainPanel: cannot find remove unused variables push button\n"
-                )
-            )
 
     def _configure_widgets(self) -> None:
         if self.availableVarsetsListWidget is not None:
