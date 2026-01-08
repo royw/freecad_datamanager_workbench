@@ -8,14 +8,14 @@ This project is in **early development**. Expect breaking changes, incomplete fe
 
 ## Installation (from GitHub)
 
-FreeCAD discovers user workbenches by scanning your user `Mod/` directory. For development (and for installing from a cloned repo), the recommended workflow is to clone this repository and then create a link into your `Mod/` directory pointing at the repository’s `datamanager_wb` folder.
+FreeCAD discovers user workbenches by scanning your FreeCAD `Mod/` directory. For development (and for installing from a cloned repo), the recommended workflow is to clone this repository and then create a link into your `Mod/` directory pointing at the repository’s `datamanager_wb` folder.
 
 After adding/removing a workbench (or changing the link), **restart FreeCAD**.
 
 ### 1) Clone the repository
 
 ```sh
-git clone https://github.com/<your-org-or-user>/<repo>.git
+git clone git@github.com:royw/freecad_datamanager_workbench.git
 ```
 
 ### 2) Locate your FreeCAD `Mod/` directory
@@ -86,3 +86,10 @@ New-Item -ItemType Junction -Path "$env:APPDATA\\FreeCAD\\<version>\\Mod\\datama
 
 - **Only Unused**
   - Shows only variables that have **no** expression references.
+
+- **Remove Selected Unused Variables**
+  - Removes the selected unused variables from the VarSet.
+
+- **Expressions list**
+  - Shows the expressions that reference each variable.
+  - Clicking an expression selects the Object in the Model tree.
