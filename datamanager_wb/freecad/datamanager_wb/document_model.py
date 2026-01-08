@@ -1,6 +1,19 @@
 from .expression_item import ExpressionItem
 from .parsing_helpers import parse_varset_variable_item
+from .parent_child_ref import ParentChildRef
 from .varset_tools import getVarsetReferences, getVarsets, getVarsetVariableNames, removeVarsetVariable
+
+
+def _normalize_varset_variable_items(
+    selected_varset_variable_items: list[ParentChildRef] | list[str],
+) -> list[str]:
+    normalized: list[str] = []
+    for item in selected_varset_variable_items:
+        if isinstance(item, ParentChildRef):
+            normalized.append(item.text)
+        else:
+            normalized.append(item)
+    return normalized
 
 
 def get_sorted_varsets(*, exclude_copy_on_change: bool = False) -> list[str]:
@@ -8,22 +21,33 @@ def get_sorted_varsets(*, exclude_copy_on_change: bool = False) -> list[str]:
 
 
 def get_varset_variable_items(selected_varset_names: list[str]) -> list[str]:
+    return [ref.text for ref in get_varset_variable_refs(selected_varset_names)]
+
+
+def get_varset_variable_refs(selected_varset_names: list[str]) -> list[ParentChildRef]:
     variable_items: list[str] = []
     for varset_name in selected_varset_names:
         for var_name in getVarsetVariableNames(varset_name):
             variable_items.append(f"{varset_name}.{var_name}")
 
     variable_items.sort()
-    return variable_items
+    refs: list[ParentChildRef] = []
+    for text in variable_items:
+        parsed = parse_varset_variable_item(text)
+        if parsed is None:
+            continue
+        parent, child = parsed
+        refs.append(ParentChildRef(parent=parent, child=child))
+    return refs
 
 
 def get_expression_items(
-    selected_varset_variable_items: list[str],
+    selected_varset_variable_items: list[ParentChildRef] | list[str],
 ) -> tuple[list[ExpressionItem], dict[str, int]]:
     expression_items: list[ExpressionItem] = []
     counts: dict[str, int] = {}
 
-    for text in selected_varset_variable_items:
+    for text in _normalize_varset_variable_items(selected_varset_variable_items):
         parsed = parse_varset_variable_item(text)
         if parsed is None:
             continue
@@ -38,10 +62,12 @@ def get_expression_items(
     return expression_items, counts
 
 
-def get_expression_reference_counts(selected_varset_variable_items: list[str]) -> dict[str, int]:
+def get_expression_reference_counts(
+    selected_varset_variable_items: list[ParentChildRef] | list[str],
+) -> dict[str, int]:
     counts: dict[str, int] = {}
 
-    for text in selected_varset_variable_items:
+    for text in _normalize_varset_variable_items(selected_varset_variable_items):
         parsed = parse_varset_variable_item(text)
         if parsed is None:
             continue
@@ -53,13 +79,13 @@ def get_expression_reference_counts(selected_varset_variable_items: list[str]) -
 
 
 def remove_unused_varset_variables(
-    selected_varset_variable_items: list[str],
+    selected_varset_variable_items: list[ParentChildRef] | list[str],
 ) -> tuple[list[str], list[str], list[str]]:
     removed: list[str] = []
     still_used: list[str] = []
     failed: list[str] = []
 
-    for text in selected_varset_variable_items:
+    for text in _normalize_varset_variable_items(selected_varset_variable_items):
         parsed = parse_varset_variable_item(text)
         if parsed is None:
             failed.append(text)
