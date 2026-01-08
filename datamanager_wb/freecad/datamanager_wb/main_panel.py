@@ -1,4 +1,5 @@
 import functools
+import fnmatch
 import os
 
 import FreeCAD as App
@@ -51,15 +52,64 @@ class MainPanel:
         )
         self.tabWidget = self._widget.findChild(QtWidgets.QTabWidget, "tabWidget")
 
+        self.avaliableVarsetsFilterLineEdit = self._widget.findChild(
+            QtWidgets.QLineEdit, "avaliableVarsetsFilterLineEdit"
+        )
+        self.avaliableVarsetsExcludeClonesRadioButton = self._widget.findChild(
+            QtWidgets.QRadioButton, "avaliableVarsetsExcludeClonesRadioButton"
+        )
+        self.varsetVariableNamesFilterLineEdit = self._widget.findChild(
+            QtWidgets.QLineEdit, "varsetVariableNamesFilterLineEdit"
+        )
+        self.varsetVariableNamesOnlyUnusedCheckBox = self._widget.findChild(
+            QtWidgets.QCheckBox, "varsetVariableNamesOnlyUnusedCheckBox"
+        )
+
+        if self.availableVarsetsListWidget is None:
+            App.Console.PrintWarning(
+                translate("Log", "Workbench MainPanel: cannot find available varsets list widget\n")
+            )
+        if self.varsetVariableNamesListWidget is None:
+            App.Console.PrintWarning(
+                translate("Log", "Workbench MainPanel: cannot find variable names list widget\n")
+            )
+        if self.varsetExpressionsListWidget is None:
+            App.Console.PrintWarning(
+                translate("Log", "Workbench MainPanel: cannot find expressions list widget\n")
+            )
+
+        if self.avaliableVarsetsFilterLineEdit is None:
+            App.Console.PrintWarning(
+                translate("Log", "Workbench MainPanel: cannot find varsets filter line edit\n")
+            )
+        if self.avaliableVarsetsExcludeClonesRadioButton is None:
+            App.Console.PrintWarning(
+                translate("Log", "Workbench MainPanel: cannot find varsets exclude clones widget\n")
+            )
+        if self.varsetVariableNamesFilterLineEdit is None:
+            App.Console.PrintWarning(
+                translate("Log", "Workbench MainPanel: cannot find variable filter line edit\n")
+            )
+        if self.varsetVariableNamesOnlyUnusedCheckBox is None:
+            App.Console.PrintWarning(
+                translate("Log", "Workbench MainPanel: cannot find only unused checkbox\n")
+            )
+
     def _configure_widgets(self) -> None:
         if self.availableVarsetsListWidget is not None:
             self.availableVarsetsListWidget.setSelectionMode(
                 QtWidgets.QAbstractItemView.ExtendedSelection
             )
+            self.availableVarsetsListWidget.setSizeAdjustPolicy(
+                QtWidgets.QAbstractScrollArea.AdjustToContents
+            )
 
         if self.varsetVariableNamesListWidget is not None:
             self.varsetVariableNamesListWidget.setSelectionMode(
                 QtWidgets.QAbstractItemView.ExtendedSelection
+            )
+            self.varsetVariableNamesListWidget.setSizeAdjustPolicy(
+                QtWidgets.QAbstractScrollArea.AdjustToContents
             )
 
         if self.varsetExpressionsListWidget is not None:
@@ -71,8 +121,38 @@ class MainPanel:
         if self.availableVarsetsListWidget is None:
             return
 
-        for varset in self._controller.get_sorted_varsets():
+        self.availableVarsetsListWidget.clear()
+
+        filter_text = ""
+        if self.avaliableVarsetsFilterLineEdit is not None:
+            filter_text = self.avaliableVarsetsFilterLineEdit.text() or ""
+
+        filter_pattern = self._normalize_glob_pattern(filter_text)
+
+        exclude_copy_on_change = False
+        if self.avaliableVarsetsExcludeClonesRadioButton is not None:
+            exclude_copy_on_change = self.avaliableVarsetsExcludeClonesRadioButton.isChecked()
+
+        for varset in self._controller.get_sorted_varsets(
+            exclude_copy_on_change=exclude_copy_on_change
+        ):
+            if filter_pattern is not None and not fnmatch.fnmatchcase(varset, filter_pattern):
+                continue
             self.availableVarsetsListWidget.addItem(varset)
+
+        self._adjust_list_widget_width_to_contents(self.availableVarsetsListWidget)
+
+    def _adjust_list_widget_width_to_contents(self, widget: QtWidgets.QListWidget) -> None:
+        # NOTE: This relies on the list already being populated.
+        contents_width = widget.sizeHintForColumn(0)
+        if contents_width < 0:
+            return
+
+        # Padding for frame and the (potential) vertical scrollbar.
+        frame = widget.frameWidth() * 2
+        scrollbar = widget.verticalScrollBar().sizeHint().width() + 4
+        widget.setMinimumWidth(contents_width + frame + scrollbar)
+        widget.updateGeometry()
 
     def _connect_signals(self) -> None:
         if self.availableVarsetsListWidget is not None:
@@ -95,6 +175,90 @@ class MainPanel:
                 self._on_expressions_selection_changed
             )
 
+        if self.avaliableVarsetsFilterLineEdit is not None:
+            self.avaliableVarsetsFilterLineEdit.textChanged.connect(self._on_varsets_filter_changed)
+
+        if self.avaliableVarsetsExcludeClonesRadioButton is not None:
+            self.avaliableVarsetsExcludeClonesRadioButton.toggled.connect(
+                self._on_exclude_clones_toggled
+            )
+
+        if self.varsetVariableNamesFilterLineEdit is not None:
+            self.varsetVariableNamesFilterLineEdit.textChanged.connect(
+                self._on_variable_filter_changed
+            )
+
+        if self.varsetVariableNamesOnlyUnusedCheckBox is not None:
+            self.varsetVariableNamesOnlyUnusedCheckBox.toggled.connect(
+                self._on_only_unused_toggled
+            )
+
+    def _normalize_glob_pattern(self, text: str) -> str | None:
+        stripped = text.strip()
+        if not stripped:
+            return None
+
+        # If the user didn't include any glob characters, treat it as a substring match.
+        if not any(ch in stripped for ch in "*?[]"):
+            return f"*{stripped}*"
+
+        return stripped
+
+    def _get_selected_varsets(self) -> list[str]:
+        if self.availableVarsetsListWidget is None:
+            return []
+        return [item.text() for item in self.availableVarsetsListWidget.selectedItems()]
+
+    def _get_selected_varset_variable_items(self) -> list[str]:
+        if self.varsetVariableNamesListWidget is None:
+            return []
+        return [item.text() for item in self.varsetVariableNamesListWidget.selectedItems()]
+
+    def _populate_variable_names(self, selected_varsets: list[str]) -> None:
+        if self.varsetVariableNamesListWidget is None:
+            return
+
+        self.varsetVariableNamesListWidget.clear()
+
+        variable_filter_text = ""
+        if self.varsetVariableNamesFilterLineEdit is not None:
+            variable_filter_text = self.varsetVariableNamesFilterLineEdit.text() or ""
+        variable_filter_pattern = self._normalize_glob_pattern(variable_filter_text)
+
+        only_unused = False
+        if self.varsetVariableNamesOnlyUnusedCheckBox is not None:
+            only_unused = self.varsetVariableNamesOnlyUnusedCheckBox.isChecked()
+
+        items = self._controller.get_varset_variable_items(selected_varsets)
+
+        counts: dict[str, int] = {}
+        if only_unused:
+            counts = self._controller.get_expression_reference_counts(items)
+
+        for item_text in items:
+            # Variable filter matches only the variable name portion (without varset prefix).
+            var_name = item_text.split(".", 1)[1] if "." in item_text else item_text
+            if variable_filter_pattern is not None and not fnmatch.fnmatchcase(
+                var_name, variable_filter_pattern
+            ):
+                continue
+            if only_unused and counts.get(item_text, 0) != 0:
+                continue
+            self.varsetVariableNamesListWidget.addItem(item_text)
+
+        self._adjust_list_widget_width_to_contents(self.varsetVariableNamesListWidget)
+
+    def _populate_expressions(self, selected_varset_variable_items: list[str]) -> None:
+        if self.varsetExpressionsListWidget is None:
+            return
+
+        self.varsetExpressionsListWidget.clear()
+        expression_items, _counts = self._controller.get_expression_items(selected_varset_variable_items)
+        for expression_item in expression_items:
+            item = QtWidgets.QListWidgetItem(expression_item.display_text)
+            item.setData(QtCore.Qt.UserRole, expression_item)
+            self.varsetExpressionsListWidget.addItem(item)
+
     def _on_available_varsets_selection_changed(self):
         if self.availableVarsetsListWidget is None or self.varsetVariableNamesListWidget is None:
             App.Console.PrintMessage(
@@ -105,15 +269,16 @@ class MainPanel:
 
         App.Console.PrintMessage(translate("Log", "Workbench MainPanel: selection changed\n"))
 
-        self.varsetVariableNamesListWidget.clear()
-        selected_varsets = [item.text() for item in self.availableVarsetsListWidget.selectedItems()]
+        selected_varsets = self._get_selected_varsets()
         for varset_name in selected_varsets:
             App.Console.PrintMessage(
                 translate("Log", f"Workbench MainPanel: selected varset {varset_name}") + "\n"
             )
 
-        for variable_item in self._controller.get_varset_variable_items(selected_varsets):
-            self.varsetVariableNamesListWidget.addItem(variable_item)
+        self._populate_variable_names(selected_varsets)
+
+        if self.varsetExpressionsListWidget is not None:
+            self.varsetExpressionsListWidget.clear()
 
     def _on_variable_names_selection_changed(self):
         if self.varsetVariableNamesListWidget is None or self.varsetExpressionsListWidget is None:
@@ -123,8 +288,7 @@ class MainPanel:
             translate("Log", "Workbench MainPanel: variable selection changed\n")
         )
 
-        self.varsetExpressionsListWidget.clear()
-        selected_vars = [item.text() for item in self.varsetVariableNamesListWidget.selectedItems()]
+        selected_vars = self._get_selected_varset_variable_items()
         expression_items, counts = self._controller.get_expression_items(selected_vars)
 
         for text in selected_vars:
@@ -144,6 +308,24 @@ class MainPanel:
             item = QtWidgets.QListWidgetItem(expression_item.display_text)
             item.setData(QtCore.Qt.UserRole, expression_item)
             self.varsetExpressionsListWidget.addItem(item)
+
+    def _on_varsets_filter_changed(self, _text: str) -> None:
+        self._populate_varsets()
+        self._on_available_varsets_selection_changed()
+
+    def _on_variable_filter_changed(self, _text: str) -> None:
+        selected_varsets = self._get_selected_varsets()
+        self._populate_variable_names(selected_varsets)
+        self._populate_expressions(self._get_selected_varset_variable_items())
+
+    def _on_only_unused_toggled(self, _checked: bool) -> None:
+        selected_varsets = self._get_selected_varsets()
+        self._populate_variable_names(selected_varsets)
+        self._populate_expressions(self._get_selected_varset_variable_items())
+
+    def _on_exclude_clones_toggled(self, _checked: bool) -> None:
+        self._populate_varsets()
+        self._on_available_varsets_selection_changed()
 
     def _on_expressions_selection_changed(self):
         if self.varsetExpressionsListWidget is None:

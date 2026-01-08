@@ -3,8 +3,8 @@ from .parsing_helpers import parse_varset_variable_item
 from .varset_tools import getVarsetReferences, getVarsets, getVarsetVariableNames
 
 
-def get_sorted_varsets() -> list[str]:
-    return sorted(getVarsets())
+def get_sorted_varsets(*, exclude_copy_on_change: bool = False) -> list[str]:
+    return sorted(getVarsets(exclude_copy_on_change=exclude_copy_on_change))
 
 
 def get_varset_variable_items(selected_varset_names: list[str]) -> list[str]:
@@ -36,3 +36,17 @@ def get_expression_items(
 
     expression_items.sort(key=lambda item: item.display_text)
     return expression_items, counts
+
+
+def get_expression_reference_counts(selected_varset_variable_items: list[str]) -> dict[str, int]:
+    counts: dict[str, int] = {}
+
+    for text in selected_varset_variable_items:
+        parsed = parse_varset_variable_item(text)
+        if parsed is None:
+            continue
+        varset_name, variable_name = parsed
+        refs = getVarsetReferences(varset_name, variable_name)
+        counts[text] = len(refs)
+
+    return counts

@@ -53,6 +53,19 @@ Notes:
 1. FreeCAD’s workbench discovery and command registration are primarily done at startup; if you add/remove the workbench (e.g. create/remove the `Mod/` symlink), you still need to restart.
 1. GUI objects, registered commands, and existing Qt widgets may keep references to old classes/functions; after a reload you may need to close/re-open the panel or restart FreeCAD if you see inconsistent behavior.
 
+## VarSets and Copy-on-change (`CopyOnChangeGroup`)
+
+When you create Links to objects that reference a `App::VarSet`, FreeCAD may create hidden *copy-on-change* groups (typically `CopyOnChangeGroup`, sometimes with suffixes) and generate copied VarSets (for example `VarSet001`, `myvars001`, etc.). These are internal implementation details used to make linked objects independent.
+
+In the DataManager UI, the option **"Exclude CopyOnChanged varsets"** filters out VarSets discovered under `CopyOnChangeGroup*` so the VarSets list focuses on the “real” VarSets you created.
+
+To test:
+
+1. Create an object that uses a VarSet.
+1. Create a Link to that object.
+1. Open the DataManager panel.
+1. Toggle **"Exclude CopyOnChanged varsets"** and confirm that the copied VarSets disappear from the VarSets list.
+
 ## Qt version (FreeCAD)
 
 FreeCAD is transitioning from Qt5 to Qt6, with the 1.1 release planned to make Qt6 the default.
