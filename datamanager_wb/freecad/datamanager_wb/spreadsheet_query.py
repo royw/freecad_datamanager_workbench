@@ -1,4 +1,5 @@
 from typing import Iterator
+import re
 
 import FreeCAD as App
 
@@ -62,17 +63,114 @@ def getSpreadsheets(*, exclude_copy_on_change: bool = False) -> Iterator[str]:
 
 
 def _get_alias_map(spreadsheet: object) -> dict[str, str]:
+    def coerce_map(value: object) -> dict[str, str]:
+        if value is None:
+            return {}
+        if isinstance(value, dict):
+            return {str(k): str(v) for k, v in value.items()}
+        items = getattr(value, "items", None)
+        if callable(items):
+            try:
+                return {str(k): str(v) for k, v in items()}
+            except Exception:  # pylint: disable=broad-exception-caught
+                return {}
+        try:
+            return {str(k): str(v) for k, v in dict(value).items()}  # type: ignore[arg-type]
+        except Exception:  # pylint: disable=broad-exception-caught
+            return {}
+
+    def normalize_alias_map(raw: dict[str, str]) -> dict[str, str]:
+        if not raw:
+            return {}
+        cell_re = re.compile(r"^[A-Z]+[0-9]+$")
+        key_cells = sum(1 for k in raw.keys() if cell_re.match(k or ""))
+        val_cells = sum(1 for v in raw.values() if cell_re.match(v or ""))
+
+        # Normalize to alias->cell.
+        # Some FreeCAD versions/APIs return cell->alias.
+        if key_cells > val_cells:
+            return {alias: cell for cell, alias in raw.items()}
+        return raw
+
     getter = getattr(spreadsheet, "getAliases", None)
     if callable(getter):
-        aliases = getter()
-        if isinstance(aliases, dict):
-            return {str(k): str(v) for k, v in aliases.items()}
+        raw = coerce_map(getter())
+        normalized = normalize_alias_map(raw)
+        if normalized:
+            return normalized
 
-    alias_prop = getattr(spreadsheet, "Alias", None)
-    if isinstance(alias_prop, dict):
-        return {str(k): str(v) for k, v in alias_prop.items()}
+    # Property name differs across versions: try Alias then Aliases.
+    for prop_name in ("Alias", "Aliases"):
+        raw = coerce_map(getattr(spreadsheet, prop_name, None))
+        normalized = normalize_alias_map(raw)
+        if normalized:
+            return normalized
+
+    # Fallback for FreeCAD versions that only provide getAlias(cell) (no getAliases())
+    getter_one = getattr(spreadsheet, "getAlias", None)
+    if callable(getter_one):
+        cell_from_alias = getattr(spreadsheet, "getCellFromAlias", None)
+        if callable(cell_from_alias):
+            # If the API supports alias->cell directly, prefer it. We still need the alias names,
+            # so we discover aliases by scanning cells.
+            aliases: dict[str, str] = {}
+            for cell in _iter_candidate_cells(spreadsheet):
+                try:
+                    alias = getter_one(cell)
+                except Exception:  # pylint: disable=broad-exception-caught
+                    continue
+                if not alias:
+                    continue
+                try:
+                    resolved = cell_from_alias(alias)
+                except Exception:  # pylint: disable=broad-exception-caught
+                    resolved = None
+                if resolved:
+                    aliases[str(alias)] = str(resolved)
+                else:
+                    aliases[str(alias)] = str(cell)
+            if aliases:
+                return aliases
+
+        aliases = {}
+        for cell in _iter_candidate_cells(spreadsheet):
+            try:
+                alias = getter_one(cell)
+            except Exception:  # pylint: disable=broad-exception-caught
+                continue
+            if alias:
+                aliases[str(alias)] = str(cell)
+        if aliases:
+            return aliases
 
     return {}
+
+
+def _iter_candidate_cells(spreadsheet: object) -> Iterator[str]:
+    # Prefer built-in APIs if available.
+    for attr in ("getUsedCells", "getNonEmptyCells", "getCells"):
+        getter = getattr(spreadsheet, attr, None)
+        if callable(getter):
+            try:
+                cells = getter()
+                if cells:
+                    for cell in cells:
+                        if cell:
+                            yield str(cell)
+                    return
+            except Exception:  # pylint: disable=broad-exception-caught
+                pass
+
+    # Conservative fallback scan: enough for typical alias sheets.
+    # (Avoid scanning the entire spreadsheet which could be very large.)
+    cols = "ABCDEFGHIJKLMNOPQRSTUVWXYZ"
+    max_rows = 200
+    max_cols = 52
+    for col_idx in range(max_cols):
+        a = cols[col_idx % 26]
+        prefix = a if col_idx < 26 else f"{cols[(col_idx // 26) - 1]}{a}"
+        for row in range(1, max_rows + 1):
+            yield f"{prefix}{row}"
 
 
 def getSpreadsheetAliasNames(spreadsheet_name: str) -> list[str]:

@@ -370,6 +370,12 @@ class MainPanel:
             alias_filter_text=alias_filter_text,
             only_unused=only_unused,
         )
+        App.Console.PrintMessage(
+            translate(
+                "Log",
+                f"Workbench MainPanel: aliases populate sheets={selected_sheets} items={len(items)}\n",
+            )
+        )
         self._render_alias_names(items)
 
     def _render_variable_names(self, items: list[ParentChildRef]) -> None:
@@ -495,6 +501,9 @@ class MainPanel:
             return
 
         selected = self._get_selected_spreadsheets()
+        App.Console.PrintMessage(
+            translate("Log", f"Workbench MainPanel: selected spreadsheets {selected}\n")
+        )
         self._populate_alias_names(selected)
 
         if self.aliasExpressionsListWidget is not None:
