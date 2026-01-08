@@ -6,7 +6,7 @@ vars:
     sh: python3 -c "import tomllib; f = open('pyproject.toml', 'rb'); data = tomllib.load(f); f.close(); print(data['project']['name'].replace('-', '_'))"
   
   # Source code directory
-  SRC: datamanager_wb/freecad/datamanager_wb/
+  SRC: freecad/datamanager_wb/
   
   # Root tests directory
   TESTS: tests/

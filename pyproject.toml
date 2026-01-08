@@ -1,17 +1,21 @@
 [build-system]
-requires = ["hatchling"]
-build-backend = "hatchling.build"
+requires = ["setuptools"]
+build-backend = "setuptools.build_meta"
 
 [project]
-name = "freecad-workbench-datamanager"
-version = "0.1.0"
+name = "freecad.datamanager_wb"
+dynamic = ["version"]
 description = "A FreeCAD workbench for managing varsets and aliases"
 readme = "README.md"
-license = { text = "LGPL-2.0-or-later" }
-requires-python = ">=3.12"
+license = {file = "LICENSE"}
 authors = [
     { name = "Roy Wright", email = "roy@wright.org" }
 ]
+maintainers = [
+    {name = "Roy Wright", email = "roy@wright.org"},
+]
+requires-python = ">=3.8"
+
 
 dependencies = [
     "pcpp>=1.30",
@@ -48,14 +52,25 @@ dev = [
 ]
 
 [tool.hatch.build.targets.wheel]
-packages = ["datamanager_wb/freecad/datamanager_wb"]
+packages = ["freecad/datamanager_wb"]
 
 [project.urls]
 Homepage = "https://github.com/royw/freecad_datamanager_wb"
 Documentation = "https://royw.github.io/freecad_datamanager_wb/"
 Repository = "https://github.com/royw/freecad_datamanager_wb"
+source = "https://github.com/royw/freecad_datamanager_workbench"
 Issues = "https://github.com/royw/freecad_datamanager_wb/issues"
 Changelog = "https://github.com/royw/freecad_datamanager_wb/blob/main/CHANGELOG.md"
+
+[tool.setuptools]
+include-package-data = true
+
+[tool.setuptools.packages.find]
+where = ["."]
+include = ["freecad*"]
+
+[tool.setuptools.dynamic]
+version = {attr = "freecad.datamanager_wb.version.__version__"}
 
 [tool.mypy]
 python_version = "3.12"
@@ -74,9 +89,9 @@ warn_unreachable = true
 strict_equality = true
 # FreeCAD GUI entrypoints depend on runtime FreeCAD/Qt types; exclude from strict mypy.
 exclude = [
-    '^datamanager_wb/freecad/datamanager_wb/init_gui\.py$',
-    '^datamanager_wb/freecad/datamanager_wb/main_panel\.py$',
-    '^datamanager_wb/freecad/datamanager_wb/workbench\.py$',
+    '^freecad/datamanager_wb/init_gui\.py$',
+    '^freecad/datamanager_wb/main_panel\.py$',
+    '^freecad/datamanager_wb/workbench\.py$',
 ]
 # Allow multiple conftest.py files in different test directories
 explicit_package_bases = true
@@ -88,7 +103,7 @@ enable_error_code = ["misc", "type-arg", "assignment"]
 
 # Enable mypy to resolve FreeCAD-related modules similarly to VS Code's
 # python.analysis.stubPath / python.analysis.extraPaths.
-mypy_path = "./datamanager_wb:/opt/FreeCAD_weekly_exploded/stubs:/opt/FreeCAD_weekly_exploded/usr/Mod:/opt/FreeCAD_weekly_exploded/usr/Ext:/home/royw/.local/share/FreeCAD/v1-2/Mod/OpenTheme:/home/royw/.local/share/FreeCAD/v1-2/Macro"
+mypy_path = "./:/opt/FreeCAD_weekly_exploded/stubs:/opt/FreeCAD_weekly_exploded/usr/Mod:/opt/FreeCAD_weekly_exploded/usr/Ext:/home/royw/.local/share/FreeCAD/v1-2/Mod/OpenTheme:/home/royw/.local/share/FreeCAD/v1-2/Macro"
 
 [[tool.mypy.overrides]]
 module = [
