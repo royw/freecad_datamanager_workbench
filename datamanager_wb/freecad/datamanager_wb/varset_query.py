@@ -4,14 +4,6 @@ import FreeCAD as App
 
 translate = App.Qt.translate
 
-# def getVarsetProperties(doc: App.Document, varset_name: str) -> dict[str, str]:
-#     var_set = doc.getObject("VarSet")
-#     result: dict[str, str] = {}
-#     properties = var_set.PropertiesList
-#     for prop in properties:
-#         result[prop] = getattr(var_set, prop)
-#     return result
-
 
 def _get_copy_on_change_varset_names(doc: "App.Document") -> set[str]:
     # Copy-on-change produces one or more hidden App::LinkGroup objects with label like
@@ -132,24 +124,3 @@ def getVarsetReferences(varset_name: str, variable_name: str | None = None) -> d
                     results[f"{obj.Name}.{expr[0]}"] = expr_text
 
     return results
-
-
-def removeVarsetVariable(varset_name: str, variable_name: str) -> bool:
-    doc = App.ActiveDocument
-    if doc is None:
-        return False
-
-    varset = doc.getObject(varset_name)
-    if varset is None or getattr(varset, "TypeId", None) != "App::VarSet":
-        return False
-
-    props = set(getattr(varset, "PropertiesList", []) or [])
-    if variable_name not in props:
-        return False
-
-    try:
-        varset.removeProperty(variable_name)
-    except Exception:  # pylint: disable=broad-exception-caught
-        return False
-
-    return True

@@ -1,7 +1,8 @@
 from .expression_item import ExpressionItem
 from .parsing_helpers import parse_varset_variable_item
 from .parent_child_ref import ParentChildRef
-from .varset_tools import getVarsetReferences, getVarsets, getVarsetVariableNames, removeVarsetVariable
+from .varset_mutations import removeVarsetVariable
+from .varset_query import getVarsetReferences, getVarsets, getVarsetVariableNames
 
 
 def _normalize_varset_variable_items(
