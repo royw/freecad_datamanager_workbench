@@ -7,15 +7,37 @@ from dataclasses import dataclass
 
 @dataclass(frozen=True)
 class ParentChildRef:
+    """Structured identifier of a `parent.child` reference.
+
+    This type is used as a stable representation of list items in the UI
+    (VarSet variables and Spreadsheet aliases). The UI often renders items as a
+    string but needs to retain the structured parts for querying and mutations.
+
+    Attributes:
+        parent: The parent container name (e.g. VarSet name, Spreadsheet name).
+        child: The child identifier within the parent (e.g. variable/alias).
+    """
+
     parent: str
     child: str
 
     @property
     def text(self) -> str:
+        """Return the canonical `parent.child` string form."""
         return f"{self.parent}.{self.child}"
 
 
 def parse_parent_child_ref(text: str) -> ParentChildRef | None:
+    """Parse a `parent.child` string into a :class:`ParentChildRef`.
+
+    Args:
+        text: A string expected to contain exactly one dot separating parent
+            and child.
+
+    Returns:
+        A :class:`ParentChildRef` when parsing succeeds, otherwise ``None``.
+    """
+
     if "." not in text:
         return None
     parent, child = text.split(".", 1)

@@ -25,6 +25,10 @@ class _VarsetManagementCommand:
         self._get_main_panel = get_main_panel
 
     def GetResources(self) -> dict[str, str]:
+        """Return FreeCAD command metadata for UI integration.
+
+        FreeCAD calls this to populate menu text, tooltip, and toolbar icon.
+        """
         return {
             "MenuText": translate("Workbench", "Varset Management"),
             "ToolTip": translate("Workbench", "Manage VarSets"),
@@ -32,9 +36,14 @@ class _VarsetManagementCommand:
         }
 
     def IsActive(self) -> bool:
+        """Return whether the command should be enabled.
+
+        DataManager commands are always available once the GUI is running.
+        """
         return True
 
     def Activated(self) -> None:
+        """Show the DataManager panel focused on the VarSets tab."""
         self._get_main_panel().show(tab_index=0)
 
 
@@ -43,6 +52,7 @@ class _AliasManagementCommand:
         self._get_main_panel = get_main_panel
 
     def GetResources(self) -> dict[str, str]:
+        """Return FreeCAD command metadata for UI integration."""
         return {
             "MenuText": translate("Workbench", "Alias Management"),
             "ToolTip": translate("Workbench", "Manage Aliases"),
@@ -50,12 +60,20 @@ class _AliasManagementCommand:
         }
 
     def IsActive(self) -> bool:
+        """Return whether the command should be enabled."""
         return True
 
     def Activated(self) -> None:
+        """Show the DataManager panel focused on the Aliases tab."""
         self._get_main_panel().show(tab_index=1)
 
 
 def register_commands(get_main_panel: GetMainPanel) -> None:
+    """Register the DataManager commands with FreeCAD.
+
+    Args:
+        get_main_panel: Factory used by command activation to show/reuse a
+            singleton MainPanel.
+    """
     Gui.addCommand("DataManagerVarsetManagement", _VarsetManagementCommand(get_main_panel))
     Gui.addCommand("DataManagerAliasManagement", _AliasManagementCommand(get_main_panel))

@@ -53,6 +53,15 @@ def _get_copy_on_change_spreadsheet_names(doc: "App.Document") -> set[str]:
 
 
 def getSpreadsheets(*, exclude_copy_on_change: bool = False) -> Iterator[str]:
+    """Yield spreadsheet object names from the active document.
+
+    Args:
+        exclude_copy_on_change: When true, filters out spreadsheets that are
+            created by FreeCAD's copy-on-change mechanism.
+
+    Yields:
+        The `Name` of each `Spreadsheet::Sheet` object.
+    """
     doc = App.ActiveDocument
     if doc is None:
         return
@@ -180,6 +189,14 @@ def _iter_candidate_cells(spreadsheet: object) -> Iterator[str]:
 
 
 def getSpreadsheetAliasNames(spreadsheet_name: str) -> list[str]:
+    """Return all alias names defined on a spreadsheet.
+
+    Args:
+        spreadsheet_name: Name of a `Spreadsheet::Sheet`.
+
+    Returns:
+        Sorted list of alias names.
+    """
     doc = App.ActiveDocument
     if doc is None:
         return []
@@ -196,6 +213,16 @@ def getSpreadsheetAliasReferences(
     spreadsheet_name: str,
     alias_name: str | None = None,
 ) -> dict[str, str]:
+    """Find expressions that reference a spreadsheet or a specific alias.
+
+    Args:
+        spreadsheet_name: Name of the spreadsheet.
+        alias_name: Optional alias name. When provided, searches for references
+            to that alias; otherwise searches for references to the spreadsheet.
+
+    Returns:
+        Mapping of ``"Object.Property"`` -> expression string.
+    """
     doc = App.ActiveDocument
     if doc is None:
         return {}

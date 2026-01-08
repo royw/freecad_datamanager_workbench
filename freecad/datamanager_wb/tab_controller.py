@@ -16,10 +16,33 @@ from .tab_datasource import (
 
 
 class TabController:
+    """Tab-generic controller logic shared across domains.
+
+    This controller encapsulates behavior that is the same for both the VarSets
+    and Aliases tabs:
+
+    - Normalizing filter inputs (glob vs substring).
+    - Filtering parents (VarSets / Spreadsheets).
+    - Filtering children (Variables / Aliases), optionally restricting to
+      "only unused" by consulting expression reference counts.
+    - Enable/disable rules for the "remove unused" action.
+    - Orchestrating remove-unused and producing a post-mutation UI update.
+
+    The controller is intentionally UI-agnostic; it delegates all domain access
+    to a `TabDataSource`.
+    """
+
     def __init__(self, data_source: TabDataSource) -> None:
         self._data_source = data_source
 
     def should_enable_remove_unused(self, *, only_unused: bool, selected_count: int) -> bool:
+        """Return whether the remove-unused button should be enabled.
+
+        Args:
+            only_unused: Whether the tab is currently configured to show only
+                unused children.
+            selected_count: Number of selected children.
+        """
         return only_unused and selected_count > 0
 
     def can_remove_unused(
@@ -28,6 +51,11 @@ class TabController:
         only_unused: bool,
         selected_items: list[ParentChildRef] | list[str],
     ) -> bool:
+        """Return whether the given selection is eligible for remove-unused.
+
+        This is a convenience wrapper that normalizes the selection and then
+        applies `should_enable_remove_unused`.
+        """
         normalized = self._normalize_items(selected_items)
         return self.should_enable_remove_unused(
             only_unused=only_unused, selected_count=len(normalized)
@@ -58,6 +86,16 @@ class TabController:
         filter_text: str,
         exclude_copy_on_change: bool = False,
     ) -> list[str]:
+        """Return parent names filtered by the given text.
+
+        The filter supports glob patterns. If the user provides no glob
+        characters, the filter is treated as a substring match.
+
+        Args:
+            filter_text: User-entered filter text.
+            exclude_copy_on_change: Whether copy-on-change derived parents
+                should be hidden.
+        """
         pattern = self._normalize_glob_pattern(filter_text)
         parents = self._data_source.get_sorted_parents(
             exclude_copy_on_change=exclude_copy_on_change
@@ -73,6 +111,14 @@ class TabController:
         child_filter_text: str,
         only_unused: bool,
     ) -> list[ParentChildRef]:
+        """Return child refs filtered by name and optionally by "unused".
+
+        Args:
+            selected_parents: Parent names currently selected in the UI.
+            child_filter_text: Filter text for child names.
+            only_unused: When true, only children with zero expression
+                references are returned.
+        """
         pattern = self._normalize_glob_pattern(child_filter_text)
         refs = self._data_source.get_child_refs(selected_parents)
 
@@ -96,6 +142,7 @@ class TabController:
         child_filter_text: str,
         only_unused: bool,
     ) -> PostRemoveUpdate:
+        """Compute the post-mutation UI state after removing unused children."""
         return PostRemoveUpdate(
             child_items=self.get_filtered_child_items(
                 selected_parents=selected_parents,
@@ -113,6 +160,7 @@ class TabController:
         child_filter_text: str,
         only_unused: bool,
     ) -> RemoveUnusedAndUpdateResult:
+        """Remove unused selected children and compute updated filtered lists."""
         remove_result = self._data_source.remove_unused_children(selected_child_items)
         update = self.get_post_remove_unused_update(
             selected_parents=selected_parents,
@@ -122,14 +170,20 @@ class TabController:
         return RemoveUnusedAndUpdateResult(remove_result=remove_result, update=update)
 
     def get_expression_items(self, selected_child_items: list[ParentChildRef] | list[str]):
+        """Return expression items for the selection.
+
+        Delegates to the underlying data source.
+        """
         return self._data_source.get_expression_items(selected_child_items)
 
     def get_expression_reference_counts(
         self, selected_child_items: list[ParentChildRef] | list[str]
     ):
+        """Return expression reference counts for the selection."""
         return self._data_source.get_expression_reference_counts(selected_child_items)
 
     def remove_unused_children(
         self, selected_child_items: list[ParentChildRef] | list[str]
     ) -> RemoveUnusedResult:
+        """Remove unused children from the underlying data source."""
         return self._data_source.remove_unused_children(selected_child_items)

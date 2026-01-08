@@ -21,10 +21,29 @@ translate = App.Qt.translate
 
 @functools.lru_cache(maxsize=1)
 def get_main_panel() -> "MainPanel":
+    """Return a cached singleton instance of the workbench main panel.
+
+    The workbench registers FreeCAD commands that open the panel. Using a
+    cached factory ensures command activations reuse the same Qt widget instance
+    instead of creating multiple panels.
+    """
     return MainPanel()
 
 
 class MainPanel:
+    """Main Qt panel for the DataManager workbench.
+
+    Responsibilities:
+
+    - Load the Qt Designer `.ui` file.
+    - Find and configure required widgets.
+    - Connect UI signals to handler methods.
+    - Delegate domain operations to `PanelController`.
+
+    This class is the primary bridge between FreeCAD GUI events and the
+    workbench controller/data layers.
+    """
+
     def __init__(self):
         App.Console.PrintMessage(translate("Log", "Workbench MainPanel initialized.") + "\n")
         self._mdi_subwindow = None
@@ -770,6 +789,11 @@ class MainPanel:
         get_main_panel.cache_clear()
 
     def accept(self):
+        """Close the panel (Qt dialog accept semantics).
+
+        When hosted inside FreeCAD's MDI, closes the subwindow; otherwise closes
+        the top-level form.
+        """
         App.Console.PrintMessage(translate("Log", "Workbench MainPanel accepted.") + "\n")
         if self._mdi_subwindow is not None:
             self._mdi_subwindow.close()
@@ -777,6 +801,7 @@ class MainPanel:
             self.form.close()
 
     def reject(self):
+        """Close the panel (Qt dialog reject semantics)."""
         App.Console.PrintMessage(translate("Log", "Workbench MainPanel rejected.") + "\n")
         if self._mdi_subwindow is not None:
             self._mdi_subwindow.close()
@@ -784,6 +809,12 @@ class MainPanel:
             self.form.close()
 
     def show(self, tab_index: int | None = None):
+        """Show the panel, optionally selecting a tab.
+
+        Args:
+            tab_index: When provided, selects the corresponding tab index before
+                showing the panel.
+        """
         App.Console.PrintMessage(translate("Log", "Workbench MainPanel shown.") + "\n")
 
         if tab_index is not None and self.tabWidget is not None:

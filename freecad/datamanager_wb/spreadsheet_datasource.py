@@ -15,10 +15,14 @@ from .tab_datasource import RemoveUnusedResult, TabDataSource
 
 
 class SpreadsheetDataSource(TabDataSource):
+    """Adapter that exposes spreadsheet aliases through the `TabDataSource` protocol."""
+
     def get_sorted_parents(self, *, exclude_copy_on_change: bool = False) -> list[str]:
+        """Return sorted spreadsheet names."""
         return sorted(getSpreadsheets(exclude_copy_on_change=exclude_copy_on_change))
 
     def get_child_refs(self, selected_parents: list[str]) -> list[ParentChildRef]:
+        """Return alias refs for the selected spreadsheets."""
         items: list[ParentChildRef] = []
         for sheet_name in selected_parents:
             for alias_name in getSpreadsheetAliasNames(sheet_name):
@@ -29,6 +33,7 @@ class SpreadsheetDataSource(TabDataSource):
     def get_expression_items(
         self, selected_children: list[ParentChildRef] | list[str]
     ) -> tuple[list[ExpressionItem], dict[str, int]]:
+        """Return expression items referencing the selected aliases."""
         expression_items: list[ExpressionItem] = []
         counts: dict[str, int] = {}
 
@@ -45,6 +50,7 @@ class SpreadsheetDataSource(TabDataSource):
     def get_expression_reference_counts(
         self, selected_children: list[ParentChildRef] | list[str]
     ) -> dict[str, int]:
+        """Return expression reference counts for the selected aliases."""
         counts: dict[str, int] = {}
         for ref in _normalize_alias_refs(selected_children):
             refs = getSpreadsheetAliasReferences(ref.parent, ref.child)
@@ -54,6 +60,7 @@ class SpreadsheetDataSource(TabDataSource):
     def remove_unused_children(
         self, selected_children: list[ParentChildRef] | list[str]
     ) -> RemoveUnusedResult:
+        """Remove selected aliases that have no expression references."""
         removed: list[str] = []
         still_used: list[str] = []
         failed: list[str] = []

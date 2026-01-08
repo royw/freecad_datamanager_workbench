@@ -9,6 +9,15 @@ translate = App.Qt.translate
 
 
 def removeVarsetVariable(varset_name: str, variable_name: str) -> bool:
+    """Remove a variable/property from a VarSet.
+
+    Args:
+        varset_name: Name of the `App::VarSet` object in the active document.
+        variable_name: Name of the property to remove.
+
+    Returns:
+        ``True`` if the property was removed, otherwise ``False``.
+    """
     doc = App.ActiveDocument
     if doc is None:
         return False

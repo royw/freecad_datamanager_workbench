@@ -58,6 +58,15 @@ def _get_copy_on_change_varset_names(doc: "App.Document") -> set[str]:
 
 
 def getVarsets(*, exclude_copy_on_change: bool = False) -> Iterator[str]:
+    """Yield VarSet object names from the active document.
+
+    Args:
+        exclude_copy_on_change: When true, filters out VarSets that are created
+            by FreeCAD's copy-on-change mechanism.
+
+    Yields:
+        The `Name` of each `App::VarSet` object.
+    """
     doc = App.ActiveDocument
     if doc is None:
         return
@@ -74,6 +83,15 @@ def getVarsets(*, exclude_copy_on_change: bool = False) -> Iterator[str]:
 
 
 def getVarsetVariableNames(varset_name: str) -> list[str]:
+    """Return variable/property names defined on a VarSet.
+
+    Args:
+        varset_name: Name of the `App::VarSet` object.
+
+    Returns:
+        Sorted list of variable/property names. Built-in FreeCAD properties
+        (Label, Placement, etc.) are excluded.
+    """
     doc = App.ActiveDocument
     if doc is None:
         return []
@@ -108,6 +126,16 @@ def getVarsetVariableNames(varset_name: str) -> list[str]:
 
 
 def getVarsetReferences(varset_name: str, variable_name: str | None = None) -> dict[str, str]:
+    """Find expression engine entries that reference a VarSet or variable.
+
+    Args:
+        varset_name: VarSet name.
+        variable_name: Optional variable name to scope matches. When omitted,
+            all expressions containing `<<VarSet>>` are considered.
+
+    Returns:
+        Mapping of ``"Object.Property"`` -> expression string.
+    """
     # Find all objects that use expressions involving a specific VarSet
     doc = App.ActiveDocument
     if doc is None:

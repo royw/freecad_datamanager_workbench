@@ -18,6 +18,21 @@ FC_COMMIT_REQUIRED = 33772
 def check_supported_python_version(
     major_ver: int, minor_ver: int, patch_ver: int = 0, git_ver: int = 0
 ) -> bool:
+    """Return whether the given FreeCAD version tuple meets the minimum.
+
+    Despite the historical name, this helper compares the provided FreeCAD
+    version tuple against the minimum version constants defined in this module.
+
+    Args:
+        major_ver: FreeCAD major version.
+        minor_ver: FreeCAD minor version.
+        patch_ver: FreeCAD patch version.
+        git_ver: FreeCAD build/commit number when available.
+
+    Returns:
+        ``True`` if the version is supported, otherwise ``False``.
+    """
+
     return (major_ver, minor_ver, patch_ver, git_ver) >= (
         FC_MAJOR_VER_REQUIRED,
         FC_MINOR_VER_REQUIRED,
@@ -27,6 +42,19 @@ def check_supported_python_version(
 
 
 def check_python_and_freecad_version() -> None:
+    """Validate that the current runtime is compatible with the workbench.
+
+    This function checks:
+
+    - The running Python version (must satisfy the minimum required by the
+      supported FreeCAD releases).
+    - The running FreeCAD version/commit (when available).
+
+    Failures are reported via `App.Console.PrintWarning` / `PrintLog`.
+    No exception is raised; the workbench may continue to load with reduced
+    functionality.
+    """
+
     if not (sys.version_info[0] == 3 and sys.version_info[1] >= 11):
         App.Console.PrintWarning(
             App.Qt.translate(

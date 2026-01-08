@@ -13,6 +13,18 @@ translate = App.Qt.translate
 
 
 def select_object_from_expression_item(expression_item: ExpressionItem | str) -> None:
+    """Select the FreeCAD object referenced by an expression item.
+
+    The expressions list in the panel can provide either:
+    - an `ExpressionItem` instance, or
+    - its display string (e.g. ``"Object.Property = expr"``).
+
+    This function resolves the owning object name and selects it in the model
+    tree.
+
+    Args:
+        expression_item: Expression item object or expression display string.
+    """
     obj_name: str | None
     if isinstance(expression_item, ExpressionItem):
         obj_name = expression_item.object_name

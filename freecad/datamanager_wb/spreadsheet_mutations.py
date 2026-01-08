@@ -46,6 +46,23 @@ def _get_alias_map(spreadsheet: object) -> dict[str, str]:
 
 
 def removeSpreadsheetAlias(spreadsheet_name: str, alias_name: str) -> bool:
+    """Remove (clear) a spreadsheet alias definition.
+
+    This function resolves the cell associated with an alias and then clears the
+    alias using `Spreadsheet::Sheet.setAlias`.
+
+    The implementation supports FreeCAD versions with different alias APIs by
+    attempting:
+    - `getCellFromAlias` when available
+    - a local alias map extracted via `getAliases`/properties or `getAlias(cell)`
+
+    Args:
+        spreadsheet_name: Name of the `Spreadsheet::Sheet` object.
+        alias_name: Alias to remove.
+
+    Returns:
+        ``True`` if the alias was cleared, otherwise ``False``.
+    """
     doc = App.ActiveDocument
     if doc is None:
         return False
