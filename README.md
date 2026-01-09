@@ -40,21 +40,22 @@ If you’re unsure, in FreeCAD go to:
 - `Edit` -> `Preferences` -> `General` -> `Macro`
 
 The macro directory is typically adjacent to your user `Mod/` directory.
+If you find the `Macro/` directory and there is not a `Mod/` directory, create a `Mod/` directory in the same location.
 
 ### 3) Create the link
 
-Link the repository’s `datamanager_wb` directory into your FreeCAD user `Mod/` directory.
+Link the repository’s directory into your FreeCAD user `Mod/` directory.
 
 #### Linux (symlink)
 
 ```sh
-ln -s /path/to/FreeCAD_Workbench_DataManager/datamanager_wb ~/.local/share/FreeCAD/<version>/Mod/datamanager_wb
+ln -s /path/to/FreeCAD_Workbench_DataManager ~/.local/share/FreeCAD/<version>/Mod/datamanager_wb
 ```
 
 #### macOS (symlink)
 
 ```sh
-ln -s /path/to/FreeCAD_Workbench_DataManager/datamanager_wb "$HOME/Library/Application Support/FreeCAD/<version>/Mod/datamanager_wb"
+ln -s /path/to/FreeCAD_Workbench_DataManager "$HOME/Library/Application Support/FreeCAD/<version>/Mod/datamanager_wb"
 ```
 
 #### Windows (PowerShell junction)
@@ -62,7 +63,7 @@ ln -s /path/to/FreeCAD_Workbench_DataManager/datamanager_wb "$HOME/Library/Appli
 Use a directory junction:
 
 ```powershell
-New-Item -ItemType Junction -Path "$env:APPDATA\\FreeCAD\\<version>\\Mod\\datamanager_wb" -Target "C:\\path\\to\\FreeCAD_Workbench_DataManager\\datamanager_wb"
+New-Item -ItemType Junction -Path "$env:APPDATA\\FreeCAD\\<version>\\Mod\\datamanager_wb" -Target "C:\\path\\to\\FreeCAD_Workbench_DataManager"
 ```
 
 ## Usage
@@ -93,3 +94,38 @@ New-Item -ItemType Junction -Path "$env:APPDATA\\FreeCAD\\<version>\\Mod\\datama
 - **Expressions list**
   - Shows the expressions that reference each variable.
   - Clicking an expression selects the Object in the Model tree.
+
+Tested on:
+
+```text
+OS: Manjaro Linux (KDE/plasma/wayland)
+Architecture: x86_64
+Version: 1.2.0dev.20260106 (Git shallow) AppImage
+Build date: 2026/01/06 15:36:19
+Build type: Release
+Branch: (HEAD detached at 9b64da8)
+Hash: 9b64da827a112d88a025be26316e3d023ff491dc
+Python 3.11.14, Qt 6.8.3, Coin 4.0.3, Vtk 9.3.1, boost 1_86, Eigen3 3.4.0, PySide 6.8.3
+shiboken 6.8.3, xerces-c 3.3.0, IfcOpenShell 0.8.2, OCC 7.8.1
+Locale: English/United States (en_US)
+Navigation Style/Orbit Style/Rotation Mode: CAD/Rounded Arcball/Window center
+Stylesheet/Theme/QtStyle: FreeCAD.qss/FreeCAD Dark/
+Logical DPI/Physical DPI/Pixel Ratio: 96/40.64/1.5
+Installed mods: 
+  * datamanager_wb
+  * OpenTheme 2025.5.20
+```
+
+```text
+OS: macOS 26.0.1
+Architecture: arm64
+Version: 1.0.2.39319 (Git) Conda
+Build type: Release
+Branch: (HEAD detached at 1.0.2)
+Hash: 256fc7eff3379911ab5daf88e10182c509aa8052
+Python 3.11.13, Qt 5.15.15, Coin 4.0.3, Vtk 9.3.0, OCC 7.8.1
+Locale: C/Default (C)
+Stylesheet/Theme/QtStyle: FreeCAD Dark.qss/FreeCAD Dark/Fusion
+Installed mods: 
+  * datamanager_wb
+```
