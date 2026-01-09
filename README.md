@@ -5,10 +5,13 @@ Manages FreeCAD VarSets and aliases.
 ## Status
 
 This project is in **early development**. Expect breaking changes, incomplete features, and rough edges.
+Tested on weekly dev release and v1.0.2 of FreeCAD on linux and MacOS. See [Tested On](#tested-on) for details.
 
 ## Installation (from GitHub)
 
-FreeCAD discovers user workbenches by scanning your FreeCAD `Mod/` directory. For development (and for installing from a cloned repo), the recommended workflow is to clone this repository and then create a link into your `Mod/` directory pointing at the repository’s `datamanager_wb` folder.
+FreeCAD discovers user workbenches by scanning your FreeCAD `Mod/` directory. For development (and for installing
+from a cloned repo), the recommended workflow is to clone this repository and then create a link into your `Mod/`
+directory pointing at the repository’s `datamanager_wb` folder.
 
 After adding/removing a workbench (or changing the link), **restart FreeCAD**.
 
@@ -95,7 +98,7 @@ New-Item -ItemType Junction -Path "$env:APPDATA\\FreeCAD\\<version>\\Mod\\datama
   - Shows the expressions that reference each variable.
   - Clicking an expression selects the Object in the Model tree.
 
-Tested on:
+## Tested On
 
 ```text
 OS: Manjaro Linux (KDE/plasma/wayland)
