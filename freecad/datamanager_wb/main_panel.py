@@ -550,6 +550,8 @@ class MainPanel:
         selected_vars = self._get_selected_varset_variable_items()
         expression_items, counts = self._controller.get_expression_items(selected_vars)
 
+        self.varsetExpressionsListWidget.clear()
+
         for ref in selected_vars:
             text = ref.text
             App.Console.PrintMessage(
