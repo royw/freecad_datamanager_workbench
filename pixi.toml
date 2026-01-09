@@ -1,4 +1,4 @@
-[project]
+[workspace]
 authors = ["Roy Wright <roy@wright.org>"]
 channels = ["freecad/label/dev", "conda-forge"]
 description = "Manages FreeCAD varsets and aliases"
@@ -10,7 +10,10 @@ version = "0.1.0"
 freecad_datamanager_wb = { path = ".", editable = true }
 
 [tasks]
-test = "python tests/tests.py"
+test = "pytest"
+lint = "ruff check ."
+typecheck = "mypy freecad"
+docs = "mkdocs serve"
 
 [dependencies]
-freecad = ">=1.0.0,<2"
+python = ">=3.12"
