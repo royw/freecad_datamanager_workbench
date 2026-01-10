@@ -4,6 +4,7 @@ Provides functions to list varsets, list their variables, and find expression
 references to varset variables.
 """
 
+import re
 from typing import Iterator
 
 import FreeCAD as App
@@ -142,11 +143,17 @@ def getVarsetReferences(varset_name: str, variable_name: str | None = None) -> d
         return {}
 
     patterns: list[str] = [f"<<{varset_name}>>"]
+    internal_var_re: re.Pattern[str] | None = None
     if variable_name:
         patterns = [
             f"<<{varset_name}>>.{variable_name}",
             f"{varset_name}.{variable_name}",
         ]
+        # VarSet-internal expressions commonly reference other variables by bare
+        # name (e.g. "B1 = 2 * A1") rather than using the external VarSet
+        # reference syntax. Limit this match to the VarSet object's own
+        # ExpressionEngine.
+        internal_var_re = re.compile(rf"(?<![A-Za-z0-9_]){re.escape(variable_name)}(?![A-Za-z0-9_])")
 
     results: dict[str, str] = {}
     for obj in doc.Objects:
@@ -155,6 +162,14 @@ def getVarsetReferences(varset_name: str, variable_name: str | None = None) -> d
             for expr in expressions:
                 expr_text = expr[1]
                 if any(p in expr_text for p in patterns):
+                    results[f"{obj.Name}.{expr[0]}"] = expr_text
+                    continue
+                if (
+                    internal_var_re is not None
+                    and getattr(obj, "TypeId", None) == "App::VarSet"
+                    and getattr(obj, "Name", None) == varset_name
+                    and internal_var_re.search(expr_text) is not None
+                ):
                     results[f"{obj.Name}.{expr[0]}"] = expr_text
 
     return results

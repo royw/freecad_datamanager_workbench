@@ -7,6 +7,11 @@ Manages FreeCAD VarSets and aliases.
 This project is in **early development**. Expect breaking changes, incomplete features, and rough edges.
 Tested on weekly dev release and v1.0.2 of FreeCAD on linux and MacOS. See [Tested On](#tested-on) for details.
 
+## Suggestion FreeCAD Preferences
+
+- Enable: General --> Selection --> Tree Selection Behavior --> Auto expand tree item when the corresponding object is selected in the 3D view.
+- Disable: Display --> UI --> Tree View --> Hide internal names
+
 ## Installation (from GitHub)
 
 FreeCAD discovers user workbenches by scanning your FreeCAD `Mod/` directory. For development (and for installing
@@ -38,12 +43,28 @@ FreeCAD’s per-user data directory is versioned. Typical locations:
 
 - `%APPDATA%\\FreeCAD\\<version>\\Mod`
 
+#### Find your FreeCAD `Mod/` directory
+
 If you’re unsure, in FreeCAD go to:
 
 - `Edit` -> `Preferences` -> `General` -> `Macro`
 
 The macro directory is typically adjacent to your user `Mod/` directory.
 If you find the `Macro/` directory and there is not a `Mod/` directory, create a `Mod/` directory in the same location.
+
+Typically:
+
+```bash
+,,,/Freecad/Macro/
+,,,/Freecad/Mod/
+```
+
+or
+
+```bash
+.../FreeCAD/<version>/Macro/
+.../FreeCAD/<version>/Mod/
+```
 
 ### 3) Create the link
 

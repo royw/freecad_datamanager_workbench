@@ -234,14 +234,49 @@ def getSpreadsheetAliasReferences(
     label_or_name = getattr(sheet, "Label", None) or getattr(sheet, "Name", "")
 
     patterns: list[str] = [f"<<{label_or_name}>>"]
+    alias_re: re.Pattern[str] | None = None
     if alias_name:
         patterns = [
             f"<<{label_or_name}>>.{alias_name}",
             f"{label_or_name}.{alias_name}",
-            f"{alias_name}",
         ]
+        # Spreadsheet formulas frequently reference aliases by bare name.
+        # Use a boundary-style regex to avoid matching e.g. "A1" inside "A10".
+        alias_re = re.compile(rf"(?<![A-Za-z0-9_]){re.escape(alias_name)}(?![A-Za-z0-9_])")
+
+    def try_get_cell_text(sheet_obj: object, cell: str) -> str | None:
+        getter = getattr(sheet_obj, "getContents", None)
+        if callable(getter):
+            try:
+                value = getter(cell)
+                if isinstance(value, str):
+                    return value
+                return str(value)
+            except Exception:  # pylint: disable=broad-exception-caught
+                return None
+
+        getter = getattr(sheet_obj, "get", None)
+        if callable(getter):
+            try:
+                value = getter(cell)
+                if isinstance(value, str):
+                    return value
+                return str(value)
+            except Exception:  # pylint: disable=broad-exception-caught
+                return None
+        return None
 
     results: dict[str, str] = {}
+
+    # Include spreadsheet-internal references (cell formulas referencing aliases).
+    if alias_name and alias_re is not None:
+        for cell in _iter_candidate_cells(sheet):
+            text = try_get_cell_text(sheet, cell)
+            if not text:
+                continue
+            if alias_re.search(text) is not None:
+                results[f"{sheet.Name}.{cell}"] = text
+
     for obj in getattr(doc, "Objects", []) or []:
         expressions = getattr(obj, "ExpressionEngine", None)
         if not expressions:
@@ -253,17 +288,12 @@ def getSpreadsheetAliasReferences(
             except Exception:  # pylint: disable=broad-exception-caught
                 continue
 
+            text = str(expr_text)
             if alias_name:
-                tokens = str(expr_text).split()
-                if any(
-                    token.endswith(patterns[0])
-                    or token.endswith(patterns[1])
-                    or token.startswith(patterns[2])
-                    for token in tokens
-                ):
+                if any(p in text for p in patterns) or (alias_re is not None and alias_re.search(text) is not None):
                     results[f"{obj.Name}.{lhs}"] = expr_text
             else:
-                if any(p in str(expr_text) for p in patterns):
+                if any(p in text for p in patterns):
                     results[f"{obj.Name}.{lhs}"] = expr_text
 
     return results

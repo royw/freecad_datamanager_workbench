@@ -19,13 +19,15 @@ class ExpressionItem:
         object_name: Name/label of the FreeCAD object that owns the expression.
         lhs: Left-hand side of the expression (typically "Object.Property").
         rhs: Right-hand side expression string.
+        operator: Infix operator shown between `lhs` and `rhs` in the UI.
     """
 
     object_name: str
     lhs: str
     rhs: str
+    operator: str = "="
 
     @property
     def display_text(self) -> str:
         """Return the display string shown in the expressions list."""
-        return f"{self.lhs} = {self.rhs}"
+        return f"{self.lhs} {self.operator} {self.rhs}"

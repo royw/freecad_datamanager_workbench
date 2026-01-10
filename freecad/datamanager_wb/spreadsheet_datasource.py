@@ -42,7 +42,32 @@ class SpreadsheetDataSource(TabDataSource):
             counts[ref.text] = len(refs)
             for lhs, rhs in refs.items():
                 object_name = lhs.split(".", 1)[0].strip()
-                expression_items.append(ExpressionItem(object_name=object_name, lhs=lhs, rhs=rhs))
+                operator = "="
+                rhs_text = str(rhs)
+
+                normalized_rhs = rhs_text.strip()
+                if normalized_rhs.startswith("="):
+                    normalized_rhs = normalized_rhs[1:].lstrip()
+
+                # Alias definition rows on the spreadsheet itself are represented
+                # as a backtick-prefixed alias name (e.g. "'Alias"). Display them
+                # with ':=' to distinguish definition from a normal expression.
+                is_alias_definition = False
+                if object_name == ref.parent and normalized_rhs.startswith("'"):
+                    stripped = normalized_rhs.lstrip("'")
+                    if stripped == ref.child:
+                        is_alias_definition = True
+
+                if is_alias_definition:
+                    operator = ":="
+                    rhs_text = normalized_rhs
+                else:
+                    # Spreadsheet formulas often include a leading '=' in cell
+                    # contents; strip it so the UI doesn't show '= =...'.
+                    rhs_text = normalized_rhs
+                expression_items.append(
+                    ExpressionItem(object_name=object_name, lhs=lhs, rhs=rhs_text, operator=operator)
+                )
 
         expression_items.sort(key=lambda item: item.display_text)
         return expression_items, counts
