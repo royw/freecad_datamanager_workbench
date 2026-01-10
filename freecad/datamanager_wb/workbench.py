@@ -20,7 +20,7 @@ class DataManagerWorkbench(Gui.Workbench):
     class which gets initiated at startup of the gui
     """
 
-    MenuText = translate("Workbench", "data manager workbench")
+    MenuText = translate("Workbench", "Data Manager")
     ToolTip = translate("Workbench", "a simple data manager workbench")
     Icon = os.path.join(ICONPATH, "datamanager_wb.svg")
     toolbox = [
