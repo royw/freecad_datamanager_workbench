@@ -4,7 +4,7 @@ build-backend = "setuptools.build_meta"
 
 [project]
 name = "freecad.datamanager_wb"
-dynamic = ["version"]
+version = "0.1.0"
 description = "A FreeCAD workbench for managing varsets and aliases"
 readme = "README.md"
 license = {file = "LICENSE"}
@@ -68,9 +68,6 @@ include-package-data = true
 [tool.setuptools.packages.find]
 where = ["."]
 include = ["freecad*"]
-
-[tool.setuptools.dynamic]
-version = {attr = "freecad.datamanager_wb.version.__version__"}
 
 [tool.mypy]
 python_version = "3.12"
@@ -293,7 +290,7 @@ max-complexity = 10
 
 [tool.ruff.lint.isort]
 # Configure ruff's built-in isort to match project preferences
-known-first-party = ["appimage_updater"]
+known-first-party = ["datamanager_wb"]
 section-order = ["future", "standard-library", "third-party", "first-party", "local-folder"]
 lines-after-imports = 2
 force-single-line = false

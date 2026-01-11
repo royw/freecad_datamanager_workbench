@@ -43,7 +43,7 @@ class Colors:
 class MetricsConfig:
     """Configuration for metrics script."""
 
-    src_paths: list[Path] = field(default_factory=list)  # [Path("src")]
+    src_paths: list[Path] = field(default_factory=list)  # [Path("freecad/datamanager_wb")]
     tests_paths: list[Path] = field(default_factory=list)  # [Path("tests")]
     radon_list: list[str] = field(default_factory=list)  # ["radon"]
     pylint_list: list[str] = field(default_factory=list)  # ["pylint"]
@@ -153,7 +153,7 @@ def detect_package_name(src_paths: list[Path]) -> str:
     Strategy:
     1. If exactly one package directory (containing __init__.py) exists in src_path, use it
     2. Otherwise, use snake_case of project.name from pyproject.toml
-    3. Fallback to "appimage_updater"
+    3. Fallback to "datamanager_wb"
     """
     # Look for package directories (containing __init__.py) in src_path
     packages = []

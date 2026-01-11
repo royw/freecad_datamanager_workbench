@@ -267,6 +267,7 @@ wheels = [
 
 [[package]]
 name = "freecad-datamanager-wb"
+version = "0.1.0"
 source = { editable = "." }
 dependencies = [
     { name = "pcpp" },
