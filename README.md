@@ -97,27 +97,34 @@ The workbench appears in the FreeCAD workbench selector as **Data Manager**.
 ### VarSets tab
 
 - **VarSets list**
+
   - Select one or more VarSets to populate the Variables list.
 
 - **VarSets filter**
+
   - Filters VarSets by name using a glob match.
   - If you type no glob characters, the filter is treated as a substring match.
 
 - **Exclude CopyOnChanged varsets**
+
   - When you create Links to objects referencing a VarSet, FreeCAD may create hidden *copy-on-change* groups (typically `CopyOnChangeGroup*`) and generate copied VarSets (e.g. `VarSet001`).
   - Enabling this option hides those generated copies so the list focuses on the VarSets you created.
 
 - **Variables filter**
+
   - Filters variables by variable name using a glob match.
   - The match is against the variable name only (not the `VarSetName.` prefix).
 
 - **Only Unused**
+
   - Shows only variables that have **no** expression references.
 
 - **Remove Selected Unused Variables**
+
   - Removes the selected unused variables from the VarSet.
 
 - **Expressions list**
+
   - Shows the expressions that reference each variable.
   - Clicking an expression selects the Object in the Model tree.
   - The list is resizable using a splitter.
@@ -147,7 +154,7 @@ Locale: English/United States (en_US)
 Navigation Style/Orbit Style/Rotation Mode: CAD/Rounded Arcball/Window center
 Stylesheet/Theme/QtStyle: FreeCAD.qss/FreeCAD Dark/
 Logical DPI/Physical DPI/Pixel Ratio: 96/40.64/1.5
-Installed mods: 
+Installed mods:
   * datamanager_wb
   * OpenTheme 2025.5.20
 ```
@@ -162,6 +169,6 @@ Hash: 256fc7eff3379911ab5daf88e10182c509aa8052
 Python 3.11.13, Qt 5.15.15, Coin 4.0.3, Vtk 9.3.0, OCC 7.8.1
 Locale: C/Default (C)
 Stylesheet/Theme/QtStyle: FreeCAD Dark.qss/FreeCAD Dark/Fusion
-Installed mods: 
+Installed mods:
   * datamanager_wb
 ```

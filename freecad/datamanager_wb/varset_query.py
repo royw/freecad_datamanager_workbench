@@ -5,11 +5,48 @@ references to varset variables.
 """
 
 import re
-from typing import Iterator
+from collections.abc import Iterator
 
 import FreeCAD as App
 
 translate = App.Qt.translate
+
+
+def _build_varset_search(
+    *,
+    varset_name: str,
+    variable_name: str | None,
+) -> tuple[list[str], re.Pattern[str] | None]:
+    patterns: list[str] = [f"<<{varset_name}>>"]
+    if not variable_name:
+        return patterns, None
+
+    patterns = [
+        f"<<{varset_name}>>.{variable_name}",
+        f"{varset_name}.{variable_name}",
+    ]
+    internal_var_re = re.compile(rf"(?<![A-Za-z0-9_]){re.escape(variable_name)}(?![A-Za-z0-9_])")
+    return patterns, internal_var_re
+
+
+def _matches_varset_expression(
+    *,
+    expr_text: object,
+    patterns: list[str],
+    internal_var_re: re.Pattern[str] | None,
+    obj: object,
+    varset_name: str,
+) -> bool:
+    text = str(expr_text)
+    if any(p in text for p in patterns):
+        return True
+    if internal_var_re is None:
+        return False
+    if getattr(obj, "TypeId", None) != "App::VarSet":
+        return False
+    if getattr(obj, "Name", None) != varset_name:
+        return False
+    return internal_var_re.search(text) is not None
 
 
 def _get_copy_on_change_varset_names(doc: "App.Document") -> set[str]:
@@ -142,18 +179,10 @@ def getVarsetReferences(varset_name: str, variable_name: str | None = None) -> d
     if doc is None:
         return {}
 
-    patterns: list[str] = [f"<<{varset_name}>>"]
-    internal_var_re: re.Pattern[str] | None = None
-    if variable_name:
-        patterns = [
-            f"<<{varset_name}>>.{variable_name}",
-            f"{varset_name}.{variable_name}",
-        ]
-        # VarSet-internal expressions commonly reference other variables by bare
-        # name (e.g. "B1 = 2 * A1") rather than using the external VarSet
-        # reference syntax. Limit this match to the VarSet object's own
-        # ExpressionEngine.
-        internal_var_re = re.compile(rf"(?<![A-Za-z0-9_]){re.escape(variable_name)}(?![A-Za-z0-9_])")
+    patterns, internal_var_re = _build_varset_search(
+        varset_name=varset_name,
+        variable_name=variable_name,
+    )
 
     results: dict[str, str] = {}
     for obj in doc.Objects:
@@ -163,14 +192,12 @@ def getVarsetReferences(varset_name: str, variable_name: str | None = None) -> d
                 expr_text = expr[1]
                 lhs = expr[0]
                 key = f"{obj.Name}{lhs}" if str(lhs).startswith(".") else f"{obj.Name}.{lhs}"
-                if any(p in expr_text for p in patterns):
-                    results[key] = expr_text
-                    continue
-                if (
-                    internal_var_re is not None
-                    and getattr(obj, "TypeId", None) == "App::VarSet"
-                    and getattr(obj, "Name", None) == varset_name
-                    and internal_var_re.search(expr_text) is not None
+                if _matches_varset_expression(
+                    expr_text=expr_text,
+                    patterns=patterns,
+                    internal_var_re=internal_var_re,
+                    obj=obj,
+                    varset_name=varset_name,
                 ):
                     results[key] = expr_text
 

@@ -6,6 +6,7 @@ Loads the `.ui` file, finds widgets, wires signals, and delegates operations to
 
 import functools
 import os
+from collections.abc import Callable
 
 import FreeCAD as App
 import FreeCADGui as Gui
@@ -39,7 +40,7 @@ def get_main_panel() -> "MainPanel":
     return MainPanel()
 
 
-class MainPanel:
+class MainPanel(QtWidgets.QDialog):
     """Main Qt panel for the DataManager workbench.
 
     Responsibilities:
@@ -141,9 +142,7 @@ class MainPanel:
         )
 
         self.varsetsSplitter = self._find_required_widget(QtWidgets.QSplitter, "splitter")
-        self.aliasesSplitter = self._find_required_widget(
-            QtWidgets.QSplitter, "aliases_splitter"
-        )
+        self.aliasesSplitter = self._find_required_widget(QtWidgets.QSplitter, "aliases_splitter")
 
         self.objectNameRadioButton = self._find_required_widget(
             QtWidgets.QRadioButton, "objectNameRadioButton"
@@ -213,65 +212,72 @@ class MainPanel:
     def _get_settings(self) -> QtCore.QSettings:
         return QtCore.QSettings(_SETTINGS_GROUP, _SETTINGS_APP)
 
-    def _restore_object_display_mode_radio_state(self) -> None:
+    def _get_display_mode_setting(self, *, setting_key: str) -> str:
         settings = self._get_settings()
+        mode = settings.value(setting_key, _DISPLAY_MODE_NAME, type=str)
+        if mode not in (_DISPLAY_MODE_NAME, _DISPLAY_MODE_LABEL):
+            return _DISPLAY_MODE_NAME
+        return mode
 
-        varsets_mode = settings.value(
-            _SETTING_VARSETS_OBJECT_DISPLAY_MODE,
-            _DISPLAY_MODE_NAME,
-            type=str,
-        )
-        aliases_mode = settings.value(
-            _SETTING_ALIASES_OBJECT_DISPLAY_MODE,
-            _DISPLAY_MODE_NAME,
-            type=str,
-        )
+    def _ensure_one_checked(
+        self,
+        *,
+        name_button: QtWidgets.QRadioButton,
+        label_button: QtWidgets.QRadioButton,
+        mode: str,
+    ) -> None:
+        name_button.setChecked(mode == _DISPLAY_MODE_NAME)
+        label_button.setChecked(mode == _DISPLAY_MODE_LABEL)
+        if not (name_button.isChecked() or label_button.isChecked()):
+            name_button.setChecked(True)
 
-        if varsets_mode not in (_DISPLAY_MODE_NAME, _DISPLAY_MODE_LABEL):
-            varsets_mode = _DISPLAY_MODE_NAME
-        if aliases_mode not in (_DISPLAY_MODE_NAME, _DISPLAY_MODE_LABEL):
-            aliases_mode = _DISPLAY_MODE_NAME
+    def _restore_object_display_mode_radio_state(self) -> None:
+        varsets_mode = self._get_display_mode_setting(
+            setting_key=_SETTING_VARSETS_OBJECT_DISPLAY_MODE
+        )
+        aliases_mode = self._get_display_mode_setting(
+            setting_key=_SETTING_ALIASES_OBJECT_DISPLAY_MODE
+        )
 
         if self.objectNameRadioButton is not None and self.objectLabelRadioButton is not None:
-            self.objectNameRadioButton.setChecked(varsets_mode == _DISPLAY_MODE_NAME)
-            self.objectLabelRadioButton.setChecked(varsets_mode == _DISPLAY_MODE_LABEL)
-            if not (self.objectNameRadioButton.isChecked() or self.objectLabelRadioButton.isChecked()):
-                self.objectNameRadioButton.setChecked(True)
+            self._ensure_one_checked(
+                name_button=self.objectNameRadioButton,
+                label_button=self.objectLabelRadioButton,
+                mode=varsets_mode,
+            )
 
         if (
             self.aliasesObjectNameRadioButton is not None
             and self.aliasesObjectLabelRadioButton is not None
         ):
-            self.aliasesObjectNameRadioButton.setChecked(aliases_mode == _DISPLAY_MODE_NAME)
-            self.aliasesObjectLabelRadioButton.setChecked(aliases_mode == _DISPLAY_MODE_LABEL)
-            if not (
-                self.aliasesObjectNameRadioButton.isChecked()
-                or self.aliasesObjectLabelRadioButton.isChecked()
-            ):
-                self.aliasesObjectNameRadioButton.setChecked(True)
+            self._ensure_one_checked(
+                name_button=self.aliasesObjectNameRadioButton,
+                label_button=self.aliasesObjectLabelRadioButton,
+                mode=aliases_mode,
+            )
+
+    def _restore_splitter_state(self, *, setting_key: str, splitter: QtWidgets.QSplitter) -> None:
+        settings = self._get_settings()
+        raw = settings.value(setting_key, None)
+        state: QtCore.QByteArray | None = None
+        if isinstance(raw, QtCore.QByteArray):
+            state = raw
+        elif isinstance(raw, (bytes, bytearray)):
+            state = QtCore.QByteArray(raw)
+        if state is not None and not state.isEmpty():
+            splitter.restoreState(state)
 
     def _restore_splitter_states(self) -> None:
-        settings = self._get_settings()
-
         if self.varsetsSplitter is not None:
-            raw = settings.value(_SETTING_VARSETS_SPLITTER_STATE, None)
-            state: QtCore.QByteArray | None = None
-            if isinstance(raw, QtCore.QByteArray):
-                state = raw
-            elif isinstance(raw, (bytes, bytearray)):
-                state = QtCore.QByteArray(raw)
-            if state is not None and not state.isEmpty():
-                self.varsetsSplitter.restoreState(state)
-
+            self._restore_splitter_state(
+                setting_key=_SETTING_VARSETS_SPLITTER_STATE,
+                splitter=self.varsetsSplitter,
+            )
         if self.aliasesSplitter is not None:
-            raw = settings.value(_SETTING_ALIASES_SPLITTER_STATE, None)
-            state: QtCore.QByteArray | None = None
-            if isinstance(raw, QtCore.QByteArray):
-                state = raw
-            elif isinstance(raw, (bytes, bytearray)):
-                state = QtCore.QByteArray(raw)
-            if state is not None and not state.isEmpty():
-                self.aliasesSplitter.restoreState(state)
+            self._restore_splitter_state(
+                setting_key=_SETTING_ALIASES_SPLITTER_STATE,
+                splitter=self.aliasesSplitter,
+            )
 
     def _save_splitter_states(self) -> None:
         settings = self._get_settings()
@@ -281,7 +287,9 @@ class MainPanel:
             settings.setValue(_SETTING_ALIASES_SPLITTER_STATE, self.aliasesSplitter.saveState())
 
     def _is_varsets_display_mode_label(self) -> bool:
-        return bool(self.objectLabelRadioButton is not None and self.objectLabelRadioButton.isChecked())
+        return bool(
+            self.objectLabelRadioButton is not None and self.objectLabelRadioButton.isChecked()
+        )
 
     def _is_aliases_display_mode_label(self) -> bool:
         return bool(
@@ -377,102 +385,113 @@ class MainPanel:
         widget.updateGeometry()
 
     def _connect_signals(self) -> None:
-        if self.availableVarsetsListWidget is not None:
-            self.availableVarsetsListWidget.itemSelectionChanged.connect(
-                self._on_available_varsets_selection_changed
-            )
-            App.Console.PrintMessage(
-                translate(
-                    "Log", "Workbench MainPanel: connected available varsets selection handler\n"
-                )
-            )
+        connections: list[tuple[object | None, Callable[[object], None]]] = [
+            (
+                self.availableVarsetsListWidget,
+                lambda w: (
+                    w.itemSelectionChanged.connect(self._on_available_varsets_selection_changed),
+                    App.Console.PrintMessage(
+                        translate(
+                            "Log",
+                            "Workbench MainPanel: connected available varsets selection handler\n",
+                        )
+                    ),
+                ),
+            ),
+            (
+                self.varsetVariableNamesListWidget,
+                lambda w: w.itemSelectionChanged.connect(self._on_variable_names_selection_changed),
+            ),
+            (
+                self.varsetExpressionsListWidget,
+                lambda w: w.itemSelectionChanged.connect(self._on_expressions_selection_changed),
+            ),
+            (
+                self.avaliableVarsetsFilterLineEdit,
+                lambda w: w.textChanged.connect(self._on_varsets_filter_changed),
+            ),
+            (
+                self.avaliableVarsetsExcludeClonesRadioButton,
+                lambda w: w.toggled.connect(self._on_exclude_clones_toggled),
+            ),
+            (
+                self.varsetVariableNamesFilterLineEdit,
+                lambda w: w.textChanged.connect(self._on_variable_filter_changed),
+            ),
+            (
+                self.varsetVariableNamesOnlyUnusedCheckBox,
+                lambda w: w.toggled.connect(self._on_only_unused_toggled),
+            ),
+            (
+                self.removeUnusedVariablesPushButton,
+                lambda w: w.clicked.connect(self._on_remove_unused_variables_clicked),
+            ),
+            (
+                self.availableSpreadsheetsListWidget,
+                lambda w: w.itemSelectionChanged.connect(
+                    self._on_available_spreadsheets_selection_changed
+                ),
+            ),
+            (
+                self.aliasesVariableNamesListWidget,
+                lambda w: w.itemSelectionChanged.connect(self._on_alias_names_selection_changed),
+            ),
+            (
+                self.aliasExpressionsListWidget,
+                lambda w: w.itemSelectionChanged.connect(
+                    self._on_alias_expressions_selection_changed
+                ),
+            ),
+            (
+                self.avaliableSpreadsheetsFilterLineEdit,
+                lambda w: w.textChanged.connect(self._on_spreadsheets_filter_changed),
+            ),
+            (
+                self.excludeCopyOnChangeSpreadsheetsRadioButton,
+                lambda w: w.toggled.connect(self._on_exclude_spreadsheet_clones_toggled),
+            ),
+            (
+                self.aliasesVariableNamesFilterLineEdit,
+                lambda w: w.textChanged.connect(self._on_alias_filter_changed),
+            ),
+            (
+                self.aliasesOnlyUnusedCheckBox,
+                lambda w: w.toggled.connect(self._on_alias_only_unused_toggled),
+            ),
+            (
+                self.removeUnusedAliasesPushButton,
+                lambda w: w.clicked.connect(self._on_remove_unused_aliases_clicked),
+            ),
+            (
+                self.objectNameRadioButton,
+                lambda w: w.toggled.connect(self._on_varsets_object_display_mode_toggled),
+            ),
+            (
+                self.objectLabelRadioButton,
+                lambda w: w.toggled.connect(self._on_varsets_object_display_mode_toggled),
+            ),
+            (
+                self.aliasesObjectNameRadioButton,
+                lambda w: w.toggled.connect(self._on_aliases_object_display_mode_toggled),
+            ),
+            (
+                self.aliasesObjectLabelRadioButton,
+                lambda w: w.toggled.connect(self._on_aliases_object_display_mode_toggled),
+            ),
+            (
+                self.varsetsSplitter,
+                lambda w: w.splitterMoved.connect(self._on_varsets_splitter_moved),
+            ),
+            (
+                self.aliasesSplitter,
+                lambda w: w.splitterMoved.connect(self._on_aliases_splitter_moved),
+            ),
+        ]
 
-        if self.varsetVariableNamesListWidget is not None:
-            self.varsetVariableNamesListWidget.itemSelectionChanged.connect(
-                self._on_variable_names_selection_changed
-            )
-
-        if self.varsetExpressionsListWidget is not None:
-            self.varsetExpressionsListWidget.itemSelectionChanged.connect(
-                self._on_expressions_selection_changed
-            )
-
-        if self.avaliableVarsetsFilterLineEdit is not None:
-            self.avaliableVarsetsFilterLineEdit.textChanged.connect(self._on_varsets_filter_changed)
-
-        if self.avaliableVarsetsExcludeClonesRadioButton is not None:
-            self.avaliableVarsetsExcludeClonesRadioButton.toggled.connect(
-                self._on_exclude_clones_toggled
-            )
-
-        if self.varsetVariableNamesFilterLineEdit is not None:
-            self.varsetVariableNamesFilterLineEdit.textChanged.connect(
-                self._on_variable_filter_changed
-            )
-
-        if self.varsetVariableNamesOnlyUnusedCheckBox is not None:
-            self.varsetVariableNamesOnlyUnusedCheckBox.toggled.connect(self._on_only_unused_toggled)
-
-        if self.removeUnusedVariablesPushButton is not None:
-            self.removeUnusedVariablesPushButton.clicked.connect(
-                self._on_remove_unused_variables_clicked
-            )
-
-        if self.availableSpreadsheetsListWidget is not None:
-            self.availableSpreadsheetsListWidget.itemSelectionChanged.connect(
-                self._on_available_spreadsheets_selection_changed
-            )
-
-        if self.aliasesVariableNamesListWidget is not None:
-            self.aliasesVariableNamesListWidget.itemSelectionChanged.connect(
-                self._on_alias_names_selection_changed
-            )
-
-        if self.aliasExpressionsListWidget is not None:
-            self.aliasExpressionsListWidget.itemSelectionChanged.connect(
-                self._on_alias_expressions_selection_changed
-            )
-
-        if self.avaliableSpreadsheetsFilterLineEdit is not None:
-            self.avaliableSpreadsheetsFilterLineEdit.textChanged.connect(
-                self._on_spreadsheets_filter_changed
-            )
-
-        if self.excludeCopyOnChangeSpreadsheetsRadioButton is not None:
-            self.excludeCopyOnChangeSpreadsheetsRadioButton.toggled.connect(
-                self._on_exclude_spreadsheet_clones_toggled
-            )
-
-        if self.aliasesVariableNamesFilterLineEdit is not None:
-            self.aliasesVariableNamesFilterLineEdit.textChanged.connect(
-                self._on_alias_filter_changed
-            )
-
-        if self.aliasesOnlyUnusedCheckBox is not None:
-            self.aliasesOnlyUnusedCheckBox.toggled.connect(self._on_alias_only_unused_toggled)
-
-        if self.removeUnusedAliasesPushButton is not None:
-            self.removeUnusedAliasesPushButton.clicked.connect(
-                self._on_remove_unused_aliases_clicked
-            )
-
-        if self.objectNameRadioButton is not None:
-            self.objectNameRadioButton.toggled.connect(self._on_varsets_object_display_mode_toggled)
-        if self.objectLabelRadioButton is not None:
-            self.objectLabelRadioButton.toggled.connect(self._on_varsets_object_display_mode_toggled)
-        if self.aliasesObjectNameRadioButton is not None:
-            self.aliasesObjectNameRadioButton.toggled.connect(
-                self._on_aliases_object_display_mode_toggled
-            )
-        if self.aliasesObjectLabelRadioButton is not None:
-            self.aliasesObjectLabelRadioButton.toggled.connect(
-                self._on_aliases_object_display_mode_toggled
-            )
-
-        if self.varsetsSplitter is not None:
-            self.varsetsSplitter.splitterMoved.connect(self._on_varsets_splitter_moved)
-        if self.aliasesSplitter is not None:
-            self.aliasesSplitter.splitterMoved.connect(self._on_aliases_splitter_moved)
+        for widget, connector in connections:
+            if widget is None:
+                continue
+            connector(widget)
 
     def _on_varsets_splitter_moved(self, _pos: int, _index: int) -> None:
         if self.varsetsSplitter is None:

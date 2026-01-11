@@ -1,7 +1,7 @@
 """Spreadsheet-backed `TabDataSource` for the Aliases tab.
 
- Adapts spreadsheet alias queries/mutations to the generic `TabController`.
- """
+Adapts spreadsheet alias queries/mutations to the generic `TabController`.
+"""
 
 from .expression_item import ExpressionItem
 from .parent_child_ref import ParentChildRef
@@ -66,7 +66,9 @@ class SpreadsheetDataSource(TabDataSource):
                     # contents; strip it so the UI doesn't show '= =...'.
                     rhs_text = normalized_rhs
                 expression_items.append(
-                    ExpressionItem(object_name=object_name, lhs=lhs, rhs=rhs_text, operator=operator)
+                    ExpressionItem(
+                        object_name=object_name, lhs=lhs, rhs=rhs_text, operator=operator
+                    )
                 )
 
         expression_items.sort(key=lambda item: item.display_text)

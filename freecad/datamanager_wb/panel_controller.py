@@ -1,9 +1,9 @@
 """UI-facing controller facade for the DataManager MainPanel.
 
- This module provides a higher-level API used by the GUI layer. It delegates
- tab-generic logic to `TabController` instances and owns document recompute and
- GUI refresh behavior.
- """
+This module provides a higher-level API used by the GUI layer. It delegates
+tab-generic logic to `TabController` instances and owns document recompute and
+GUI refresh behavior.
+"""
 
 from dataclasses import dataclass
 

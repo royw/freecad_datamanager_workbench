@@ -2,6 +2,7 @@
 
 The UI stores these objects in `QListWidgetItem` user data to preserve a
 structured representation of `parent.child` identifiers."""
+
 from dataclasses import dataclass
 
 

@@ -1,7 +1,7 @@
 """VarSet-backed `TabDataSource` for the VarSets tab.
 
- Adapts varset document-model operations to the generic `TabController`.
- """
+Adapts varset document-model operations to the generic `TabController`.
+"""
 
 from .expression_item import ExpressionItem
 from .parent_child_ref import ParentChildRef

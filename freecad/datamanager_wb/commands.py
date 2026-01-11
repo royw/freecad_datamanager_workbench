@@ -4,7 +4,8 @@ This module defines the toolbar/menu commands and connects them to the
 workbench's main panel."""
 
 import os
-from typing import TYPE_CHECKING, Callable
+from collections.abc import Callable
+from typing import TYPE_CHECKING
 
 import FreeCAD as App
 import FreeCADGui as Gui

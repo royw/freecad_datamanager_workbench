@@ -1,8 +1,8 @@
 """FreeCAD workbench registration for DataManager.
 
- Defines the `Gui.Workbench` subclass used by FreeCAD to create menus/toolbars
- and activate the workbench.
- """
+Defines the `Gui.Workbench` subclass used by FreeCAD to create menus/toolbars
+and activate the workbench.
+"""
 
 import os
 

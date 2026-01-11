@@ -1,5 +1,6 @@
 """Filesystem paths to packaged workbench resources.
 Provides absolute paths for icons, translations, and UI files bundled with the workbench."""
+
 import os
 
 PACKAGE_DIR = os.path.dirname(__file__)
