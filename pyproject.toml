@@ -340,6 +340,29 @@ exclude_lines = [
 ignore-names = [
     # CLI commands (decorated with @app.command)
     "main",
+    # FreeCAD command and workbench callback methods (invoked by reflection)
+    "Activated",
+    "Deactivated",
+    "GetClassName",
+    "GetResources",
+    "Initialize",
+    "IsActive",
+    # Qt dialog lifecycle callbacks
+    "accept",
+    "reject",
+    # FreeCAD workbench metadata attributes (read via reflection)
+    "MenuText",
+    "ToolTip",
+    "Icon",
+    # Facade methods called indirectly by the UI layer
+    "get_sorted_varsets",
+    "get_varset_variable_items",
+    "remove_unused_varset_variables",
+    "get_sorted_spreadsheets",
+    "get_spreadsheet_alias_refs",
+    "get_alias_post_remove_unused_update",
+    # Stored panel instance referenced externally
+    "_dm_main_panel",
 ]
 
 # Decorators that indicate a function is used
