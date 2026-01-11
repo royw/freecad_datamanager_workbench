@@ -1,6 +1,6 @@
 [build-system]
-requires = ["setuptools"]
-build-backend = "setuptools.build_meta"
+requires = ["hatchling >= 1.26"]
+build-backend = "hatchling.build"
 
 [project]
 name = "freecad.datamanager_wb"
@@ -54,6 +54,9 @@ dev = [
 [tool.hatch.build.targets.wheel]
 packages = ["freecad/datamanager_wb"]
 
+[tool.hatch.build.targets.wheel.force-include]
+"freecad/datamanager_wb/resources" = "freecad/datamanager_wb/resources"
+
 [project.urls]
 Homepage = "https://github.com/royw/freecad_datamanager_wb"
 Documentation = "https://royw.github.io/freecad_datamanager_wb/"
@@ -61,13 +64,6 @@ Repository = "https://github.com/royw/freecad_datamanager_wb"
 source = "https://github.com/royw/freecad_datamanager_workbench"
 Issues = "https://github.com/royw/freecad_datamanager_wb/issues"
 Changelog = "https://github.com/royw/freecad_datamanager_wb/blob/main/CHANGELOG.md"
-
-[tool.setuptools]
-include-package-data = true
-
-[tool.setuptools.packages.find]
-where = ["."]
-include = ["freecad*"]
 
 [tool.mypy]
 python_version = "3.12"
@@ -127,12 +123,12 @@ module = [
 ignore_errors = true
 
 [tool.pylint.main]
-# Analyse all Python files in src/ and tests/
+# Analyse all Python files in freecad/ and tests/
 py-version = "3.12"
 # Use multiple processes to speed up Pylint
 jobs = 0
 # Load the Pylint configuration from pyproject.toml
-init-hook = "import sys; sys.path.append('src')"
+init-hook = "import sys; sys.path.append('freecad')"
 
 [tool.pylint.basic]
 # Good variable names which should always be accepted, separated by a comma
@@ -315,13 +311,13 @@ markers = [
 ]
 
 [tool.coverage.run]
-source = ["src"]
+source = ["freecad/"]
 omit = ["tests/*"]
 parallel = false
 concurrency = ["thread"]
 
 [tool.coverage.paths]
-source = ["src/", "*/site-packages/"]
+source = ["freecad/", "*/site-packages/"]
 
 [tool.coverage.report]
 exclude_lines = [
@@ -369,7 +365,7 @@ ignore-if-decorated-with = [
 
 [tool.dev-metrics]
 # Paths for metrics calculation
-src-paths = "src"
+src-paths = "freecad"
 tests-paths = "tests"
 # Tool paths (can be overridden for custom installations)
 radon-path = ["uv", "run", "radon"]
@@ -384,6 +380,6 @@ test-type = [
     "integration",
     "e2e"
 ]
-package = "datamanager_wb"  # Optional: auto-detected from src/ directory or project name
+package = "datamanager_wb"  # Optional: auto-detected from freecad/ directory or project name
 # Optional: files to exclude from untested report
 excluded-files = ["__init__.py", "__main__.py", "_version.py"]
