@@ -4,6 +4,8 @@ Contains operations that modify spreadsheets, such as clearing/removing an
 alias definition.
 """
 
+from collections.abc import Mapping
+
 import FreeCAD as App
 
 translate = App.Qt.translate
@@ -13,13 +15,13 @@ def _get_alias_map(spreadsheet: object) -> dict[str, str]:
     # Local minimal map extraction for mutations.
     getter = getattr(spreadsheet, "getAliases", None)
     if callable(getter):
-        aliases = getter()
-        if isinstance(aliases, dict):
-            return {str(k): str(v) for k, v in aliases.items()}
+        raw = getter()
+        if isinstance(raw, Mapping):
+            return {str(k): str(v) for k, v in raw.items()}
 
     for prop_name in ("Alias", "Aliases"):
         alias_prop = getattr(spreadsheet, prop_name, None)
-        if isinstance(alias_prop, dict):
+        if isinstance(alias_prop, Mapping):
             return {str(k): str(v) for k, v in alias_prop.items()}
 
     # FreeCAD builds with getAlias(cell) only.
@@ -27,7 +29,7 @@ def _get_alias_map(spreadsheet: object) -> dict[str, str]:
     if not callable(getter_one):
         return {}
 
-    aliases: dict[str, str] = {}
+    result: dict[str, str] = {}
     cols = "ABCDEFGHIJKLMNOPQRSTUVWXYZ"
     max_rows = 200
     max_cols = 52
@@ -41,8 +43,8 @@ def _get_alias_map(spreadsheet: object) -> dict[str, str]:
             except Exception:  # pylint: disable=broad-exception-caught
                 continue
             if alias:
-                aliases[str(alias)] = cell
-    return aliases
+                result[str(alias)] = cell
+    return result
 
 
 def removeSpreadsheetAlias(spreadsheet_name: str, alias_name: str) -> bool:

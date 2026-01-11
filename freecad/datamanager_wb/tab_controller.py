@@ -1,11 +1,12 @@
 """Generic tab controller shared by VarSets and Aliases.
 
- Implements filtering, only-unused logic, enable-state rules, and remove-unused
- orchestration against a `TabDataSource`.
- """
+Implements filtering, only-unused logic, enable-state rules, and remove-unused
+orchestration against a `TabDataSource`.
+"""
 
 import fnmatch
 
+from .expression_item import ExpressionItem
 from .parent_child_ref import ParentChildRef
 from .tab_datasource import (
     PostRemoveUpdate,
@@ -169,7 +170,9 @@ class TabController:
         )
         return RemoveUnusedAndUpdateResult(remove_result=remove_result, update=update)
 
-    def get_expression_items(self, selected_child_items: list[ParentChildRef] | list[str]):
+    def get_expression_items(
+        self, selected_child_items: list[ParentChildRef] | list[str]
+    ) -> tuple[list[ExpressionItem], dict[str, int]]:
         """Return expression items for the selection.
 
         Delegates to the underlying data source.
@@ -178,7 +181,7 @@ class TabController:
 
     def get_expression_reference_counts(
         self, selected_child_items: list[ParentChildRef] | list[str]
-    ):
+    ) -> dict[str, int]:
         """Return expression reference counts for the selection."""
         return self._data_source.get_expression_reference_counts(selected_child_items)
 

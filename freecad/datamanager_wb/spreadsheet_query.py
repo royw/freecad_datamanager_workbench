@@ -5,7 +5,7 @@ searching expressions for alias references.
 """
 
 import re
-from typing import Iterator
+from collections.abc import Iterator, Mapping
 
 import FreeCAD as App
 
@@ -81,18 +81,9 @@ def _get_alias_map(spreadsheet: object) -> dict[str, str]:
     def coerce_map(value: object) -> dict[str, str]:
         if value is None:
             return {}
-        if isinstance(value, dict):
+        if isinstance(value, Mapping):
             return {str(k): str(v) for k, v in value.items()}
-        items = getattr(value, "items", None)
-        if callable(items):
-            try:
-                return {str(k): str(v) for k, v in items()}
-            except Exception:  # pylint: disable=broad-exception-caught
-                return {}
-        try:
-            return {str(k): str(v) for k, v in dict(value).items()}  # type: ignore[arg-type]
-        except Exception:  # pylint: disable=broad-exception-caught
-            return {}
+        return {}
 
     def normalize_alias_map(raw: dict[str, str]) -> dict[str, str]:
         if not raw:
@@ -292,7 +283,9 @@ def getSpreadsheetAliasReferences(
 
             text = str(expr_text)
             if alias_name:
-                if any(p in text for p in patterns) or (alias_re is not None and alias_re.search(text) is not None):
+                if any(p in text for p in patterns) or (
+                    alias_re is not None and alias_re.search(text) is not None
+                ):
                     results[key] = expr_text
             else:
                 if any(p in text for p in patterns):

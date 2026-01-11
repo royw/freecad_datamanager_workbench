@@ -92,6 +92,7 @@ exclude = [
     '^freecad/datamanager_wb/init_gui\.py$',
     '^freecad/datamanager_wb/main_panel\.py$',
     '^freecad/datamanager_wb/workbench\.py$',
+    '^scripts/.*$',
 ]
 # Allow multiple conftest.py files in different test directories
 explicit_package_bases = true
@@ -119,6 +120,14 @@ module = [
     "numpy.*",
 ]
 ignore_missing_imports = true
+
+[[tool.mypy.overrides]]
+module = [
+    "freecad.datamanager_wb.init_gui",
+    "freecad.datamanager_wb.main_panel",
+    "freecad.datamanager_wb.workbench",
+]
+ignore_errors = true
 
 [tool.pylint.main]
 # Analyse all Python files in src/ and tests/
