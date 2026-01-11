@@ -61,7 +61,7 @@ Several names are needed:
   eg.: `freecad.workbench_starterkit`
 
 - **distribution-name**
-  This name is set in the [setup.py](setup.py)
+  This name is set in the setup.py
   eg.: `name='freecad.workbench_starterkit'`
 
 - **package-name**

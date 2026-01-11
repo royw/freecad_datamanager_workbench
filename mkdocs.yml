@@ -1,10 +1,10 @@
-site_name: AppImage Updater
-site_description: A Linux service for automating finding and downloading AppImage applications
-site_url: https://royw.github.io/appimage-updater
-repo_url: https://github.com/royw/appimage-updater
-repo_name: royw/appimage-updater
+site_name: Data Manager Workbench for FreeCAD
+site_description: A FreeCAD workbench for managing VarSets and aliases
+site_url: https://royw.github.io/freecad_datamanager_wb
+repo_url: https://github.com/royw/freecad_datamanager_wb
+repo_name: royw/freecad_datamanager_wb
 
-copyright: Copyright &copy; 2024 Roy Wright
+copyright: Copyright &copy; 2026 Roy Wright
 
 exclude_docs: |
   /completed-plans/
@@ -71,7 +71,7 @@ plugins:
       default_handler: python
       handlers:
         python:
-          paths: [src]
+          paths: ["."]
           options:
             docstring_style: google
             docstring_options:
@@ -138,41 +138,17 @@ extra_javascript:
 nav:
   - Home: index.md
   - User Guide:
-    - Installation: installation.md
-    - Getting Started: getting-started.md
-    - Linux-Only Support: linux-only.md
-    - Usage Guide: usage.md
-    - Configuration: configuration.md
-    - Examples: examples.md
-  - Repository Support:
-    - GitHub Repositories: github-support.md
-    - GitLab Repositories: gitlab-support.md
-    - SourceForge Projects: sourceforge-support.md
-    - Direct Downloads: direct-support.md
-  - Feature Guides:
-    - ZIP Support: zip-support.md
-    - File Rotation: rotation.md
-    - Compatibility: compatibility.md
-  - Support & Maintenance:
-    - Security Guide: security.md
-    - Troubleshooting: troubleshooting.md
-    - Changelog: changelog.md
+    - Usage Guide: user-guide.md
+    - Installation (TBD): install.md
   - Development:
     - Architecture: architecture.md
-    - Developer Commands: commands.md
-    - Development Setup: development.md
-    - Testing: testing.md
-    - Tests: tests.md
-    - Test Analysis: test_analysis.md
-    - PyPI Publishing: pypi-publishing-setup.md
-    - Project Metrics: metrics.md
-    - CI Debugging: ci-debugging.md
-    - Contributing: contributing.md
+    - Development: development.md
+    - Starterkit Historical README: HISTORICAL_README.md
   - API Reference: reference/
-  - Repository on GitHub: https://github.com/royw/appimage-updater
+  - Repository on GitHub: https://github.com/royw/freecad_datamanager_wb
 
 hooks:
   - docs/version_hook.py
 
 watch:
-  - src/appimage_updater
+  - freecad/datamanager_wb

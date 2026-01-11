@@ -15,16 +15,16 @@ It helps you:
 
 ## Documentation index
 
-- **User guide**
+### User documentation
 
-  - [User Guide](user-guide.md)
-  - [Installation (TBD)](install.md)
+- [User Guide](user-guide.md)
+- [Installation (TBD)](install.md)
 
-- **Developer documentation**
+### Developer documentation
 
-  - [Architecture](architecture.md)
-  - [Development](development.md)
+- [Architecture](architecture.md)
+- [Development](development.md)
 
-- **API reference**
+### API reference
 
-  - See the **API Reference** section in the documentation site navigation.
+- [datamanager_wb](reference/datamanager_wb)
