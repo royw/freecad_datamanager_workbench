@@ -123,18 +123,33 @@ class TabController:
         pattern = self._normalize_glob_pattern(child_filter_text)
         refs = self._data_source.get_child_refs(selected_parents)
 
-        counts: dict[str, int] = {}
-        if only_unused:
-            counts = self._data_source.get_expression_reference_counts([ref.text for ref in refs])
+        counts = self._get_reference_counts(refs, only_unused=only_unused)
+        return [
+            ref
+            for ref in refs
+            if self._should_keep_ref(ref, pattern=pattern, only_unused=only_unused, counts=counts)
+        ]
 
-        filtered: list[ParentChildRef] = []
-        for ref in refs:
-            if pattern is not None and not fnmatch.fnmatchcase(ref.child, pattern):
-                continue
-            if only_unused and counts.get(ref.text, 0) != 0:
-                continue
-            filtered.append(ref)
-        return filtered
+    def _get_reference_counts(
+        self, refs: list[ParentChildRef], *, only_unused: bool
+    ) -> dict[str, int]:
+        if not only_unused:
+            return {}
+        return self._data_source.get_expression_reference_counts([ref.text for ref in refs])
+
+    def _should_keep_ref(
+        self,
+        ref: ParentChildRef,
+        *,
+        pattern: str | None,
+        only_unused: bool,
+        counts: dict[str, int],
+    ) -> bool:
+        if pattern is not None and not fnmatch.fnmatchcase(ref.child, pattern):
+            return False
+        if not only_unused:
+            return True
+        return counts.get(ref.text, 0) == 0
 
     def get_post_remove_unused_update(
         self,

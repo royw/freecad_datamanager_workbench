@@ -39,6 +39,24 @@ def _scan_aliases_via_getAlias(spreadsheet: object) -> dict[str, str]:
     return result
 
 
+def _alias_map_from_getAliases(spreadsheet: object) -> dict[str, str]:
+    getter = getattr(spreadsheet, "getAliases", None)
+    if not callable(getter):
+        return {}
+    raw = getter()
+    if isinstance(raw, Mapping):
+        return {str(k): str(v) for k, v in raw.items()}
+    return {}
+
+
+def _alias_map_from_properties(spreadsheet: object) -> dict[str, str]:
+    for prop_name in ("Alias", "Aliases"):
+        alias_prop = getattr(spreadsheet, prop_name, None)
+        if isinstance(alias_prop, Mapping):
+            return {str(k): str(v) for k, v in alias_prop.items()}
+    return {}
+
+
 def _try_get_spreadsheet(spreadsheet_name: str) -> object | None:
     doc = App.ActiveDocument
     if doc is None:
@@ -84,17 +102,12 @@ def _try_clear_alias(sheet: object, cell: str) -> bool:
 
 def _get_alias_map(spreadsheet: object) -> dict[str, str]:
     # Local minimal map extraction for mutations.
-    getter = getattr(spreadsheet, "getAliases", None)
-    if callable(getter):
-        raw = getter()
-        if isinstance(raw, Mapping):
-            return {str(k): str(v) for k, v in raw.items()}
-
-    for prop_name in ("Alias", "Aliases"):
-        alias_prop = getattr(spreadsheet, prop_name, None)
-        if isinstance(alias_prop, Mapping):
-            return {str(k): str(v) for k, v in alias_prop.items()}
-
+    aliases = _alias_map_from_getAliases(spreadsheet)
+    if aliases:
+        return aliases
+    aliases = _alias_map_from_properties(spreadsheet)
+    if aliases:
+        return aliases
     return _scan_aliases_via_getAlias(spreadsheet)
 
 

@@ -158,56 +158,61 @@ class MainPanel(QtWidgets.QDialog):
         )
 
     def _configure_widgets(self) -> None:
-        if self.availableVarsetsListWidget is not None:
-            self.availableVarsetsListWidget.setSelectionMode(
-                QtWidgets.QAbstractItemView.ExtendedSelection
-            )
-            self.availableVarsetsListWidget.setSizeAdjustPolicy(
-                QtWidgets.QAbstractScrollArea.AdjustToContents
-            )
-
-        if self.varsetVariableNamesListWidget is not None:
-            self.varsetVariableNamesListWidget.setSelectionMode(
-                QtWidgets.QAbstractItemView.ExtendedSelection
-            )
-            self.varsetVariableNamesListWidget.setSizeAdjustPolicy(
-                QtWidgets.QAbstractScrollArea.AdjustToContents
-            )
-
-        if self.varsetExpressionsListWidget is not None:
-            self.varsetExpressionsListWidget.setSelectionMode(
-                QtWidgets.QAbstractItemView.SingleSelection
-            )
-
-        if self.removeUnusedVariablesPushButton is not None:
-            self.removeUnusedVariablesPushButton.setEnabled(False)
-
-        if self.availableSpreadsheetsListWidget is not None:
-            self.availableSpreadsheetsListWidget.setSelectionMode(
-                QtWidgets.QAbstractItemView.ExtendedSelection
-            )
-            self.availableSpreadsheetsListWidget.setSizeAdjustPolicy(
-                QtWidgets.QAbstractScrollArea.AdjustToContents
-            )
-
-        if self.aliasesVariableNamesListWidget is not None:
-            self.aliasesVariableNamesListWidget.setSelectionMode(
-                QtWidgets.QAbstractItemView.ExtendedSelection
-            )
-            self.aliasesVariableNamesListWidget.setSizeAdjustPolicy(
-                QtWidgets.QAbstractScrollArea.AdjustToContents
-            )
-
-        if self.aliasExpressionsListWidget is not None:
-            self.aliasExpressionsListWidget.setSelectionMode(
-                QtWidgets.QAbstractItemView.SingleSelection
-            )
-
-        if self.removeUnusedAliasesPushButton is not None:
-            self.removeUnusedAliasesPushButton.setEnabled(False)
-
+        self._configure_varsets_widgets()
+        self._configure_aliases_widgets()
         self._restore_object_display_mode_radio_state()
         self._restore_splitter_states()
+
+    def _configure_list_widget(
+        self,
+        widget: QtWidgets.QListWidget | None,
+        *,
+        selection_mode: QtWidgets.QAbstractItemView.SelectionMode,
+        adjust_to_contents: bool = False,
+    ) -> None:
+        if widget is None:
+            return
+        widget.setSelectionMode(selection_mode)
+        if adjust_to_contents:
+            widget.setSizeAdjustPolicy(QtWidgets.QAbstractScrollArea.AdjustToContents)
+
+    def _disable_button(self, button: QtWidgets.QPushButton | None) -> None:
+        if button is not None:
+            button.setEnabled(False)
+
+    def _configure_varsets_widgets(self) -> None:
+        self._configure_list_widget(
+            self.availableVarsetsListWidget,
+            selection_mode=QtWidgets.QAbstractItemView.ExtendedSelection,
+            adjust_to_contents=True,
+        )
+        self._configure_list_widget(
+            self.varsetVariableNamesListWidget,
+            selection_mode=QtWidgets.QAbstractItemView.ExtendedSelection,
+            adjust_to_contents=True,
+        )
+        self._configure_list_widget(
+            self.varsetExpressionsListWidget,
+            selection_mode=QtWidgets.QAbstractItemView.SingleSelection,
+        )
+        self._disable_button(self.removeUnusedVariablesPushButton)
+
+    def _configure_aliases_widgets(self) -> None:
+        self._configure_list_widget(
+            self.availableSpreadsheetsListWidget,
+            selection_mode=QtWidgets.QAbstractItemView.ExtendedSelection,
+            adjust_to_contents=True,
+        )
+        self._configure_list_widget(
+            self.aliasesVariableNamesListWidget,
+            selection_mode=QtWidgets.QAbstractItemView.ExtendedSelection,
+            adjust_to_contents=True,
+        )
+        self._configure_list_widget(
+            self.aliasExpressionsListWidget,
+            selection_mode=QtWidgets.QAbstractItemView.SingleSelection,
+        )
+        self._disable_button(self.removeUnusedAliasesPushButton)
 
     def _get_settings(self) -> QtCore.QSettings:
         return QtCore.QSettings(_SETTINGS_GROUP, _SETTINGS_APP)
@@ -303,74 +308,81 @@ class MainPanel(QtWidgets.QDialog):
         *,
         use_label: bool,
     ) -> str:
-        lhs = expression_item.lhs
-        rhs = expression_item.rhs
-        operator = expression_item.operator
-
         if not use_label:
-            return f"{lhs} {operator} {rhs}"
+            return self._format_expression_item_basic(expression_item)
 
-        doc = App.ActiveDocument
-        obj_label: str | None = None
-        if doc is not None:
-            obj = doc.getObject(expression_item.object_name)
-            if obj is not None:
-                try:
-                    obj_label = str(obj.Label)
-                except Exception:  # pylint: disable=broad-exception-caught
-                    obj_label = None
-
+        obj_label = self._try_get_object_label(expression_item.object_name)
         if not obj_label:
-            return f"{lhs} {operator} {rhs}"
+            return self._format_expression_item_basic(expression_item)
 
-        if "." in lhs:
-            _prefix, rest = lhs.split(".", 1)
-            lhs = f"{obj_label}.{rest}"
-        return f"{lhs} {operator} {rhs}"
+        lhs = self._replace_lhs_object_prefix(expression_item.lhs, obj_label)
+        return f"{lhs} {expression_item.operator} {expression_item.rhs}"
+
+    def _format_expression_item_basic(self, expression_item: ExpressionItem) -> str:
+        return f"{expression_item.lhs} {expression_item.operator} {expression_item.rhs}"
+
+    def _try_get_object_label(self, object_name: str) -> str | None:
+        doc = App.ActiveDocument
+        if doc is None:
+            return None
+        obj = doc.getObject(object_name)
+        if obj is None:
+            return None
+        try:
+            return str(obj.Label)
+        except Exception:  # pylint: disable=broad-exception-caught
+            return None
+
+    def _replace_lhs_object_prefix(self, lhs: str, obj_label: str) -> str:
+        if "." not in lhs:
+            return lhs
+        _prefix, rest = lhs.split(".", 1)
+        return f"{obj_label}.{rest}"
 
     def _populate_varsets(self) -> None:
-        if self.availableVarsetsListWidget is None:
+        widget = self.availableVarsetsListWidget
+        if widget is None:
             return
-
-        self.availableVarsetsListWidget.clear()
-
-        filter_text = ""
-        if self.avaliableVarsetsFilterLineEdit is not None:
-            filter_text = self.avaliableVarsetsFilterLineEdit.text() or ""
-
-        exclude_copy_on_change = False
-        if self.avaliableVarsetsExcludeClonesRadioButton is not None:
-            exclude_copy_on_change = self.avaliableVarsetsExcludeClonesRadioButton.isChecked()
-
-        for varset in self._controller.get_filtered_varsets(
+        widget.clear()
+        filter_text = self._get_line_edit_text(self.avaliableVarsetsFilterLineEdit)
+        exclude_copy_on_change = self._is_radio_checked(
+            self.avaliableVarsetsExcludeClonesRadioButton
+        )
+        items = self._controller.get_filtered_varsets(
             filter_text=filter_text,
             exclude_copy_on_change=exclude_copy_on_change,
-        ):
-            self.availableVarsetsListWidget.addItem(varset)
-
-        self._adjust_list_widget_width_to_contents(self.availableVarsetsListWidget)
+        )
+        self._populate_list_widget(widget, items)
 
     def _populate_spreadsheets(self) -> None:
-        if self.availableSpreadsheetsListWidget is None:
+        widget = self.availableSpreadsheetsListWidget
+        if widget is None:
             return
-
-        self.availableSpreadsheetsListWidget.clear()
-
-        filter_text = ""
-        if self.avaliableSpreadsheetsFilterLineEdit is not None:
-            filter_text = self.avaliableSpreadsheetsFilterLineEdit.text() or ""
-
-        exclude_copy_on_change = False
-        if self.excludeCopyOnChangeSpreadsheetsRadioButton is not None:
-            exclude_copy_on_change = self.excludeCopyOnChangeSpreadsheetsRadioButton.isChecked()
-
-        for sheet in self._controller.get_filtered_spreadsheets(
+        widget.clear()
+        filter_text = self._get_line_edit_text(self.avaliableSpreadsheetsFilterLineEdit)
+        exclude_copy_on_change = self._is_radio_checked(
+            self.excludeCopyOnChangeSpreadsheetsRadioButton
+        )
+        items = self._controller.get_filtered_spreadsheets(
             filter_text=filter_text,
             exclude_copy_on_change=exclude_copy_on_change,
-        ):
-            self.availableSpreadsheetsListWidget.addItem(sheet)
+        )
+        self._populate_list_widget(widget, items)
 
-        self._adjust_list_widget_width_to_contents(self.availableSpreadsheetsListWidget)
+    def _get_line_edit_text(self, widget: QtWidgets.QLineEdit | None) -> str:
+        if widget is None:
+            return ""
+        return widget.text() or ""
+
+    def _is_radio_checked(self, widget: QtWidgets.QRadioButton | None) -> bool:
+        if widget is None:
+            return False
+        return widget.isChecked()
+
+    def _populate_list_widget(self, widget: QtWidgets.QListWidget, items: list[str]) -> None:
+        for item in items:
+            widget.addItem(item)
+        self._adjust_list_widget_width_to_contents(widget)
 
     def _adjust_list_widget_width_to_contents(self, widget: QtWidgets.QListWidget) -> None:
         # NOTE: This relies on the list already being populated.
@@ -861,19 +873,14 @@ class MainPanel(QtWidgets.QDialog):
         return reply == QtWidgets.QMessageBox.Yes
 
     def _show_remove_unused_errors(self, result) -> None:
-        if not (result.still_used or result.failed):
+        if not self._has_remove_unused_errors(result):
             return
+        self._show_remove_unused_message()
 
-        details = []
-        if result.still_used:
-            details.append(translate("Workbench", "Still referenced (not removed):"))
-            details.extend(result.still_used)
-        if result.failed:
-            if details:
-                details.append("")
-            details.append(translate("Workbench", "Failed to remove:"))
-            details.extend(result.failed)
+    def _has_remove_unused_errors(self, result) -> bool:
+        return bool(getattr(result, "still_used", None) or getattr(result, "failed", None))
 
+    def _show_remove_unused_message(self) -> None:
         QtWidgets.QMessageBox.information(
             self._widget,
             translate("Workbench", "Remove variables"),

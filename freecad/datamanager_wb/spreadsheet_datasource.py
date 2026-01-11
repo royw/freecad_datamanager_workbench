@@ -3,6 +3,8 @@
 Adapts spreadsheet alias queries/mutations to the generic `TabController`.
 """
 
+from collections.abc import Iterator
+
 from .expression_item import ExpressionItem
 from .parent_child_ref import ParentChildRef
 from .spreadsheet_mutations import removeSpreadsheetAlias
@@ -12,6 +14,52 @@ from .spreadsheet_query import (
     getSpreadsheets,
 )
 from .tab_datasource import RemoveUnusedResult, TabDataSource
+
+
+def _parse_alias_ref(text: str) -> ParentChildRef | None:
+    if "." not in text:
+        return None
+    parent, child = text.split(".", 1)
+    if not parent or not child:
+        return None
+    return ParentChildRef(parent=parent, child=child)
+
+
+def _normalize_rhs(rhs: object) -> str:
+    normalized_rhs = str(rhs).strip()
+    if normalized_rhs.startswith("="):
+        normalized_rhs = normalized_rhs[1:].lstrip()
+    return normalized_rhs
+
+
+def _is_alias_definition(*, object_name: str, parent: str, alias: str, rhs_text: str) -> bool:
+    if object_name != parent:
+        return False
+    if not rhs_text.startswith("'"):
+        return False
+    return rhs_text.lstrip("'") == alias
+
+
+def _to_expression_item(
+    *,
+    parent: str,
+    alias: str,
+    lhs: str,
+    rhs: object,
+) -> ExpressionItem:
+    object_name = lhs.split(".", 1)[0].strip()
+    normalized_rhs = _normalize_rhs(rhs)
+    if _is_alias_definition(
+        object_name=object_name, parent=parent, alias=alias, rhs_text=normalized_rhs
+    ):
+        return ExpressionItem(object_name=object_name, lhs=lhs, rhs=normalized_rhs, operator=":=")
+    return ExpressionItem(object_name=object_name, lhs=lhs, rhs=normalized_rhs, operator="=")
+
+
+def _iter_expression_items_for_alias(ref: ParentChildRef) -> Iterator[ExpressionItem]:
+    refs = getSpreadsheetAliasReferences(ref.parent, ref.child)
+    for lhs, rhs in refs.items():
+        yield _to_expression_item(parent=ref.parent, alias=ref.child, lhs=lhs, rhs=rhs)
 
 
 class SpreadsheetDataSource(TabDataSource):
@@ -34,42 +82,12 @@ class SpreadsheetDataSource(TabDataSource):
         self, selected_children: list[ParentChildRef] | list[str]
     ) -> tuple[list[ExpressionItem], dict[str, int]]:
         """Return expression items referencing the selected aliases."""
-        expression_items: list[ExpressionItem] = []
         counts: dict[str, int] = {}
-
+        expression_items: list[ExpressionItem] = []
         for ref in _normalize_alias_refs(selected_children):
             refs = getSpreadsheetAliasReferences(ref.parent, ref.child)
             counts[ref.text] = len(refs)
-            for lhs, rhs in refs.items():
-                object_name = lhs.split(".", 1)[0].strip()
-                operator = "="
-                rhs_text = str(rhs)
-
-                normalized_rhs = rhs_text.strip()
-                if normalized_rhs.startswith("="):
-                    normalized_rhs = normalized_rhs[1:].lstrip()
-
-                # Alias definition rows on the spreadsheet itself are represented
-                # as a backtick-prefixed alias name (e.g. "'Alias"). Display them
-                # with ':=' to distinguish definition from a normal expression.
-                is_alias_definition = False
-                if object_name == ref.parent and normalized_rhs.startswith("'"):
-                    stripped = normalized_rhs.lstrip("'")
-                    if stripped == ref.child:
-                        is_alias_definition = True
-
-                if is_alias_definition:
-                    operator = ":="
-                    rhs_text = normalized_rhs
-                else:
-                    # Spreadsheet formulas often include a leading '=' in cell
-                    # contents; strip it so the UI doesn't show '= =...'.
-                    rhs_text = normalized_rhs
-                expression_items.append(
-                    ExpressionItem(
-                        object_name=object_name, lhs=lhs, rhs=rhs_text, operator=operator
-                    )
-                )
+            expression_items.extend(_iter_expression_items_for_alias(ref))
 
         expression_items.sort(key=lambda item: item.display_text)
         return expression_items, counts
@@ -113,9 +131,7 @@ def _normalize_alias_refs(items: list[ParentChildRef] | list[str]) -> list[Paren
         if isinstance(item, ParentChildRef):
             normalized.append(item)
         else:
-            if "." not in item:
-                continue
-            parent, child = item.split(".", 1)
-            if parent and child:
-                normalized.append(ParentChildRef(parent=parent, child=child))
+            parsed = _parse_alias_ref(item)
+            if parsed is not None:
+                normalized.append(parsed)
     return normalized

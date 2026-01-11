@@ -5,7 +5,7 @@ searching expressions for alias references.
 """
 
 import re
-from collections.abc import Iterator, Mapping
+from collections.abc import Iterable, Iterator, Mapping, Sequence
 from typing import cast
 
 import FreeCAD as App
@@ -50,41 +50,86 @@ def _iter_cell_coordinates(*, max_rows: int, max_cols: int) -> Iterator[str]:
             yield f"{prefix}{row}"
 
 
-def _try_get_cell_text(sheet_obj: object, cell: str) -> str | None:
-    getter = getattr(sheet_obj, "getContents", None)
-    if callable(getter):
-        try:
-            value = getter(cell)
-            if isinstance(value, str):
-                return value
-            return str(value)
-        except Exception:  # pylint: disable=broad-exception-caught
-            return None
+def _try_call_cell_getter(sheet_obj: object, *, getter_name: str, cell: str) -> str | None:
+    getter = getattr(sheet_obj, getter_name, None)
+    if not callable(getter):
+        return None
+    try:
+        value = getter(cell)
+    except Exception:  # pylint: disable=broad-exception-caught
+        return None
+    if isinstance(value, str):
+        return value
+    return str(value)
 
-    getter = getattr(sheet_obj, "get", None)
-    if callable(getter):
-        try:
-            value = getter(cell)
-            if isinstance(value, str):
-                return value
-            return str(value)
-        except Exception:  # pylint: disable=broad-exception-caught
-            return None
-    return None
+
+def _try_get_cell_text(sheet_obj: object, cell: str) -> str | None:
+    text = _try_call_cell_getter(sheet_obj, getter_name="getContents", cell=cell)
+    if text is not None:
+        return text
+    return _try_call_cell_getter(sheet_obj, getter_name="get", cell=cell)
+
+
+def _iter_doc_objects(doc: object) -> Iterator[object]:
+    for obj in getattr(doc, "Objects", []) or []:
+        if obj is not None:
+            yield obj
+
+
+def _iter_expression_engine(obj: object) -> Iterator[object]:
+    expressions = getattr(obj, "ExpressionEngine", None)
+    if not expressions or not isinstance(expressions, Iterable):
+        return
+    yield from expressions
+
+
+def _try_parse_expression(expr: object) -> tuple[object, object] | None:
+    if not isinstance(expr, Sequence) or len(expr) < 2:
+        return None
+    try:
+        lhs = expr[0]
+        expr_text = expr[1]
+    except Exception:  # pylint: disable=broad-exception-caught
+        return None
+    return lhs, expr_text
 
 
 def _iter_expression_engine_entries(doc: object) -> Iterator[tuple[object, object, object]]:
-    for obj in getattr(doc, "Objects", []) or []:
-        expressions = getattr(obj, "ExpressionEngine", None)
-        if not expressions:
-            continue
-        for expr in expressions:
-            try:
-                lhs = expr[0]
-                expr_text = expr[1]
-            except Exception:  # pylint: disable=broad-exception-caught
+    for obj in _iter_doc_objects(doc):
+        for expr in _iter_expression_engine(obj):
+            parsed = _try_parse_expression(expr)
+            if parsed is None:
                 continue
+            lhs, expr_text = parsed
             yield obj, lhs, expr_text
+
+
+def _get_object_name(obj: object) -> str | None:
+    name = getattr(obj, "Name", None)
+    if isinstance(name, str) and name:
+        return name
+    return None
+
+
+def _build_expression_key(*, obj_name: str, lhs: object) -> str:
+    if str(lhs).startswith("."):
+        return f"{obj_name}{lhs}"
+    return f"{obj_name}.{lhs}"
+
+
+def _iter_nonempty_cell_texts(sheet: object) -> Iterator[tuple[str, str]]:
+    for cell in _iter_candidate_cells(sheet):
+        text = _try_get_cell_text(sheet, cell)
+        if text:
+            yield cell, text
+
+
+def _iter_alias_referenced_cells(
+    sheet: object, *, alias_re: re.Pattern[str]
+) -> Iterator[tuple[str, str]]:
+    for cell, text in _iter_nonempty_cell_texts(sheet):
+        if alias_re.search(text) is not None:
+            yield cell, text
 
 
 def _add_internal_alias_refs(
@@ -95,15 +140,37 @@ def _add_internal_alias_refs(
 ) -> None:
     if alias_re is None:
         return
-    sheet_name = getattr(sheet, "Name", None)
-    if not isinstance(sheet_name, str) or not sheet_name:
+    sheet_name = _get_object_name(sheet)
+    if sheet_name is None:
         return
-    for cell in _iter_candidate_cells(sheet):
-        text = _try_get_cell_text(sheet, cell)
-        if not text:
+    for cell, text in _iter_alias_referenced_cells(sheet, alias_re=alias_re):
+        results[f"{sheet_name}.{cell}"] = text
+
+
+def _iter_cell_aliases(spreadsheet: object) -> Iterator[tuple[str, str]]:
+    getter_one = getattr(spreadsheet, "getAlias", None)
+    if not callable(getter_one):
+        return
+    for cell in _iter_candidate_cells(spreadsheet):
+        try:
+            alias = getter_one(cell)
+        except Exception:  # pylint: disable=broad-exception-caught
             continue
-        if alias_re.search(text) is not None:
-            results[f"{sheet_name}.{cell}"] = text
+        if alias:
+            yield str(cell), str(alias)
+
+
+def _try_resolve_cell_from_alias(spreadsheet: object, alias: str) -> str | None:
+    cell_from_alias = getattr(spreadsheet, "getCellFromAlias", None)
+    if not callable(cell_from_alias):
+        return None
+    try:
+        resolved = cell_from_alias(alias)
+    except Exception:  # pylint: disable=broad-exception-caught
+        return None
+    if resolved:
+        return str(resolved)
+    return None
 
 
 def _build_alias_search(
@@ -162,95 +229,117 @@ def _collect_expression_engine_refs(
 ) -> dict[str, str]:
     results: dict[str, str] = {}
     for obj, lhs, expr_text in _iter_expression_engine_entries(doc):
-        obj_name = getattr(obj, "Name", None)
-        if not isinstance(obj_name, str) or not obj_name:
+        obj_name = _get_object_name(obj)
+        if obj_name is None:
             continue
-        key = f"{obj_name}{lhs}" if str(lhs).startswith(".") else f"{obj_name}.{lhs}"
+        key = _build_expression_key(obj_name=obj_name, lhs=lhs)
         if _matches_expression(expr_text=expr_text, patterns=patterns, alias_re=alias_re):
             results[key] = str(expr_text)
     return results
 
 
 def _scan_aliases_via_getAlias(spreadsheet: object) -> dict[str, str]:
-    getter_one = getattr(spreadsheet, "getAlias", None)
-    if not callable(getter_one):
-        return {}
-
     aliases: dict[str, str] = {}
-    for cell in _iter_candidate_cells(spreadsheet):
-        try:
-            alias = getter_one(cell)
-        except Exception:  # pylint: disable=broad-exception-caught
-            continue
-        if alias:
-            aliases[str(alias)] = str(cell)
+    for cell, alias in _iter_cell_aliases(spreadsheet):
+        aliases[alias] = cell
     return aliases
 
 
-def _scan_aliases_via_cell_from_alias(spreadsheet: object) -> dict[str, str]:
-    getter_one = getattr(spreadsheet, "getAlias", None)
-    cell_from_alias = getattr(spreadsheet, "getCellFromAlias", None)
-    if not callable(getter_one) or not callable(cell_from_alias):
-        return {}
-
-    aliases: dict[str, str] = {}
-    for cell in _iter_candidate_cells(spreadsheet):
-        try:
-            alias = getter_one(cell)
-        except Exception:  # pylint: disable=broad-exception-caught
-            continue
-        if not alias:
-            continue
-        try:
-            resolved = cell_from_alias(alias)
-        except Exception:  # pylint: disable=broad-exception-caught
-            resolved = None
-
-        if resolved:
-            aliases[str(alias)] = str(resolved)
-        else:
-            aliases[str(alias)] = str(cell)
-    return aliases
-
-
-def _get_copy_on_change_spreadsheet_names(doc: "App.Document") -> set[str]:
+def _get_copy_on_change_groups(doc: "App.Document") -> list[object]:
     groups: list[object] = []
-
     direct = doc.getObject("CopyOnChangeGroup")
     if direct is not None:
         groups.append(direct)
-
     for obj in getattr(doc, "Objects", []):
         label = getattr(obj, "Label", None)
         if isinstance(label, str) and label.startswith("CopyOnChangeGroup"):
             groups.append(obj)
+    return groups
 
+
+def _scan_aliases_via_cell_from_alias(spreadsheet: object) -> dict[str, str]:
+    aliases: dict[str, str] = {}
+    for cell, alias in _iter_cell_aliases(spreadsheet):
+        resolved = _try_resolve_cell_from_alias(spreadsheet, alias)
+        aliases[alias] = resolved if resolved is not None else cell
+    return aliases
+
+
+def _add_sheet_name_from_object(o: object, names: set[str]) -> bool:
+    if getattr(o, "TypeId", None) != "Spreadsheet::Sheet":
+        return False
+    name = _get_object_name(o)
+    if name is not None:
+        names.add(name)
+    return True
+
+
+def _iter_object_children(o: object) -> Iterator[object]:
+    group = getattr(o, "Group", None)
+    if group:
+        for child in group:
+            yield child
+    out_list = getattr(o, "OutList", None)
+    if out_list:
+        for child in out_list:
+            yield child
+
+
+def _visit_copy_on_change(o: object, *, seen: set[int], names: set[str]) -> None:
+    oid = id(o)
+    if oid in seen:
+        return
+    seen.add(oid)
+    if _add_sheet_name_from_object(o, names):
+        return
+    for child in _iter_object_children(o):
+        _visit_copy_on_change(child, seen=seen, names=names)
+
+
+def _get_copy_on_change_spreadsheet_names(doc: "App.Document") -> set[str]:
     seen: set[int] = set()
     names: set[str] = set()
-
-    def visit(o: object) -> None:
-        oid = id(o)
-        if oid in seen:
-            return
-        seen.add(oid)
-
-        if getattr(o, "TypeId", None) == "Spreadsheet::Sheet":
-            name = getattr(o, "Name", None)
-            if isinstance(name, str) and name:
-                names.add(name)
-            return
-
-        if hasattr(o, "Group"):
-            for child in getattr(o, "Group", []) or []:
-                visit(child)
-
-        for child in getattr(o, "OutList", []) or []:
-            visit(child)
-
-    for group in groups:
-        visit(group)
-
+    for group in _get_copy_on_change_groups(doc):
+        _visit_copy_on_change(group, seen=seen, names=names)
     return names
+
+
+def _should_exclude_spreadsheet(
+    *,
+    exclude_copy_on_change: bool,
+    name: str,
+    excluded: set[str],
+) -> bool:
+    return bool(exclude_copy_on_change and name in excluded)
+
+
+def _iter_sheet_objects(doc: object) -> Iterator[object]:
+    for obj in _iter_doc_objects(doc):
+        if getattr(obj, "TypeId", None) == "Spreadsheet::Sheet":
+            yield obj
+
+
+def _iter_sheet_names(doc: object) -> Iterator[str]:
+    for obj in _iter_sheet_objects(doc):
+        name = _get_object_name(obj)
+        if name is not None:
+            yield name
+
+
+def _iter_filtered_sheet_names(
+    *,
+    doc: object,
+    excluded: set[str],
+    exclude_copy_on_change: bool,
+) -> Iterator[str]:
+    for name in _iter_sheet_names(doc):
+        if _should_exclude_spreadsheet(
+            exclude_copy_on_change=exclude_copy_on_change,
+            name=name,
+            excluded=excluded,
+        ):
+            continue
+        yield name
 
 
 def getSpreadsheets(*, exclude_copy_on_change: bool = False) -> Iterator[str]:
@@ -267,60 +356,79 @@ def getSpreadsheets(*, exclude_copy_on_change: bool = False) -> Iterator[str]:
     if doc is None:
         return
 
-    excluded: set[str] = set()
-    if exclude_copy_on_change:
-        excluded = _get_copy_on_change_spreadsheet_names(doc)
+    excluded: set[str] = (
+        _get_copy_on_change_spreadsheet_names(doc) if exclude_copy_on_change else set()
+    )
+    yield from _iter_filtered_sheet_names(
+        doc=doc,
+        excluded=excluded,
+        exclude_copy_on_change=exclude_copy_on_change,
+    )
 
-    for obj in getattr(doc, "Objects", []) or []:
-        if getattr(obj, "TypeId", None) == "Spreadsheet::Sheet":
-            if exclude_copy_on_change and getattr(obj, "Name", None) in excluded:
-                continue
-            yield obj.Name
 
-
-def _get_alias_map(spreadsheet: object) -> dict[str, str]:
+def _alias_map_from_getAliases(spreadsheet: object) -> dict[str, str]:
     getter = getattr(spreadsheet, "getAliases", None)
-    if callable(getter):
-        raw = _coerce_mapping(getter())
-        normalized = _normalize_alias_map(raw)
-        if normalized:
-            return normalized
+    if not callable(getter):
+        return {}
+    raw = _coerce_mapping(getter())
+    return _normalize_alias_map(raw)
 
-    # Property name differs across versions: try Alias then Aliases.
+
+def _alias_map_from_properties(spreadsheet: object) -> dict[str, str]:
     for prop_name in ("Alias", "Aliases"):
         raw = _coerce_mapping(getattr(spreadsheet, prop_name, None))
         normalized = _normalize_alias_map(raw)
         if normalized:
             return normalized
-
-    # Fallback for FreeCAD versions that only provide getAlias(cell) (no getAliases()).
-    aliases = _scan_aliases_via_cell_from_alias(spreadsheet)
-    if aliases:
-        return aliases
-    aliases = _scan_aliases_via_getAlias(spreadsheet)
-    if aliases:
-        return aliases
-
     return {}
 
 
-def _iter_candidate_cells(spreadsheet: object) -> Iterator[str]:
-    # Prefer built-in APIs if available.
-    for attr in ("getUsedCells", "getNonEmptyCells", "getCells"):
-        getter = getattr(spreadsheet, attr, None)
-        if callable(getter):
-            try:
-                cells = getter()
-                if cells:
-                    for cell in cells:
-                        if cell:
-                            yield str(cell)
-                    return
-            except Exception:  # pylint: disable=broad-exception-caught
-                pass
+def _get_alias_map(spreadsheet: object) -> dict[str, str]:
+    aliases = _alias_map_from_getAliases(spreadsheet)
+    if aliases:
+        return aliases
+    aliases = _alias_map_from_properties(spreadsheet)
+    if aliases:
+        return aliases
 
-    # Conservative fallback scan: enough for typical alias sheets.
-    # (Avoid scanning the entire spreadsheet which could be very large.)
+    aliases = _scan_aliases_via_cell_from_alias(spreadsheet)
+    if aliases:
+        return aliases
+    return _scan_aliases_via_getAlias(spreadsheet)
+
+
+def _try_get_cells_via_attr(spreadsheet: object, *, attr: str) -> list[str] | None:
+    getter = getattr(spreadsheet, attr, None)
+    if not callable(getter):
+        return None
+    try:
+        cells = getter()
+    except Exception:  # pylint: disable=broad-exception-caught
+        return None
+    return _coerce_cells(cells)
+
+
+def _coerce_cells(cells: object) -> list[str] | None:
+    if not cells:
+        return None
+    if not isinstance(cells, Iterable):
+        return None
+    return [str(cell) for cell in cells if cell]
+
+
+def _get_candidate_cells_from_api(spreadsheet: object) -> list[str] | None:
+    for attr in ("getUsedCells", "getNonEmptyCells", "getCells"):
+        cells = _try_get_cells_via_attr(spreadsheet, attr=attr)
+        if cells is not None:
+            return cells
+    return None
+
+
+def _iter_candidate_cells(spreadsheet: object) -> Iterator[str]:
+    cells = _get_candidate_cells_from_api(spreadsheet)
+    if cells is not None:
+        yield from cells
+        return
     yield from _iter_cell_coordinates(max_rows=200, max_cols=52)
 
 
