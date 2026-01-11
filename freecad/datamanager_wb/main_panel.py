@@ -58,6 +58,7 @@ class MainPanel(QtWidgets.QDialog):
         App.Console.PrintMessage(translate("Log", "Workbench MainPanel initialized.") + "\n")
         self._mdi_subwindow = None
         self._controller = PanelController()
+        self._copy_map: dict[QtWidgets.QListWidget, QtWidgets.QPushButton] = {}
 
         self.form = self._load_ui()
         self._widget = self._resolve_root_widget()
@@ -157,11 +158,102 @@ class MainPanel(QtWidgets.QDialog):
             QtWidgets.QRadioButton, "aliasesObjectLabelRadioButton"
         )
 
+        self.copyAvailableVarsetsPushButton = self._find_required_widget(
+            QtWidgets.QPushButton, "copyAvailableVarsetsPushButton"
+        )
+        self.copyVarsetVariablesPushButton = self._find_required_widget(
+            QtWidgets.QPushButton, "copyVarsetVariablesPushButton"
+        )
+        self.copyVarsetExpressionsPushButton = self._find_required_widget(
+            QtWidgets.QPushButton, "copyVarsetExpressionsPushButton"
+        )
+        self.copyAvailableSpreadsheetsPushButton = self._find_required_widget(
+            QtWidgets.QPushButton, "copyAvailableSpreadsheetsPushButton"
+        )
+        self.copyAliasesPushButton = self._find_required_widget(
+            QtWidgets.QPushButton, "copyAliasesPushButton"
+        )
+        self.copyAliasExpressionsPushButton = self._find_required_widget(
+            QtWidgets.QPushButton, "copyAliasExpressionsPushButton"
+        )
+
     def _configure_widgets(self) -> None:
         self._configure_varsets_widgets()
         self._configure_aliases_widgets()
+        self._configure_copy_controls()
         self._restore_object_display_mode_radio_state()
         self._restore_splitter_states()
+
+    def _configure_copy_controls(self) -> None:
+        self._copy_map = {
+            self.availableVarsetsListWidget: self.copyAvailableVarsetsPushButton,
+            self.varsetVariableNamesListWidget: self.copyVarsetVariablesPushButton,
+            self.varsetExpressionsListWidget: self.copyVarsetExpressionsPushButton,
+            self.availableSpreadsheetsListWidget: self.copyAvailableSpreadsheetsPushButton,
+            self.aliasesVariableNamesListWidget: self.copyAliasesPushButton,
+            self.aliasExpressionsListWidget: self.copyAliasExpressionsPushButton,
+        }
+
+        copy_icon = self.style().standardIcon(QtWidgets.QStyle.StandardPixmap.SP_DialogSaveButton)
+
+        for list_widget, button in self._copy_map.items():
+            if list_widget is None or button is None:
+                continue
+            button.setIcon(copy_icon)
+            button.setIconSize(QtCore.QSize(16, 16))
+            button.setFixedSize(QtCore.QSize(24, 24))
+            button.setEnabled(False)
+            list_widget.installEventFilter(self)
+
+    def eventFilter(self, watched: QtCore.QObject, event: QtCore.QEvent) -> bool:  # noqa: N802
+        if isinstance(watched, QtWidgets.QListWidget) and watched in self._copy_map:
+            if event.type() in (
+                QtCore.QEvent.Type.FocusIn,
+                QtCore.QEvent.Type.FocusOut,
+            ):
+                QtCore.QTimer.singleShot(0, self._update_copy_buttons_enabled_state)
+
+            if event.type() == QtCore.QEvent.Type.KeyPress:
+                key = getattr(event, "key", None)
+                mods = getattr(event, "modifiers", None)
+                if callable(key) and callable(mods):
+                    pressed_key = key()
+                    pressed_mods = mods()
+                    is_c = pressed_key in (QtCore.Qt.Key.Key_C,)
+                    has_ctrl = bool(pressed_mods & QtCore.Qt.KeyboardModifier.ControlModifier)
+                    has_meta = bool(pressed_mods & QtCore.Qt.KeyboardModifier.MetaModifier)
+                    if is_c and (has_ctrl or has_meta):
+                        if self._is_copy_enabled_for_list(watched):
+                            self._copy_list_selection_to_clipboard(watched)
+                            return True
+        return super().eventFilter(watched, event)
+
+    def _is_copy_enabled_for_list(self, widget: QtWidgets.QListWidget) -> bool:
+        if widget is None:
+            return False
+        if not widget.hasFocus():
+            return False
+        return len(widget.selectedItems()) > 0
+
+    def _update_copy_buttons_enabled_state(self) -> None:
+        for list_widget, button in self._copy_map.items():
+            if list_widget is None or button is None:
+                continue
+            button.setEnabled(self._is_copy_enabled_for_list(list_widget))
+
+    def _copy_list_selection_to_clipboard(self, widget: QtWidgets.QListWidget) -> None:
+        items = widget.selectedItems() if widget is not None else []
+        if not items:
+            return
+        text = "\n".join(i.text() for i in items)
+        QtWidgets.QApplication.clipboard().setText(text)
+
+    def _on_copy_button_clicked(self, widget: QtWidgets.QListWidget | None) -> None:
+        if widget is None:
+            return
+        if not self._is_copy_enabled_for_list(widget):
+            return
+        self._copy_list_selection_to_clipboard(widget)
 
     def _configure_list_widget(
         self,
@@ -402,6 +494,7 @@ class MainPanel(QtWidgets.QDialog):
                 self.availableVarsetsListWidget,
                 lambda w: (
                     w.itemSelectionChanged.connect(self._on_available_varsets_selection_changed),
+                    w.itemSelectionChanged.connect(self._update_copy_buttons_enabled_state),
                     App.Console.PrintMessage(
                         translate(
                             "Log",
@@ -412,11 +505,17 @@ class MainPanel(QtWidgets.QDialog):
             ),
             (
                 self.varsetVariableNamesListWidget,
-                lambda w: w.itemSelectionChanged.connect(self._on_variable_names_selection_changed),
+                lambda w: (
+                    w.itemSelectionChanged.connect(self._on_variable_names_selection_changed),
+                    w.itemSelectionChanged.connect(self._update_copy_buttons_enabled_state),
+                ),
             ),
             (
                 self.varsetExpressionsListWidget,
-                lambda w: w.itemSelectionChanged.connect(self._on_expressions_selection_changed),
+                lambda w: (
+                    w.itemSelectionChanged.connect(self._on_expressions_selection_changed),
+                    w.itemSelectionChanged.connect(self._update_copy_buttons_enabled_state),
+                ),
             ),
             (
                 self.avaliableVarsetsFilterLineEdit,
@@ -440,18 +539,25 @@ class MainPanel(QtWidgets.QDialog):
             ),
             (
                 self.availableSpreadsheetsListWidget,
-                lambda w: w.itemSelectionChanged.connect(
-                    self._on_available_spreadsheets_selection_changed
+                lambda w: (
+                    w.itemSelectionChanged.connect(
+                        self._on_available_spreadsheets_selection_changed
+                    ),
+                    w.itemSelectionChanged.connect(self._update_copy_buttons_enabled_state),
                 ),
             ),
             (
                 self.aliasesVariableNamesListWidget,
-                lambda w: w.itemSelectionChanged.connect(self._on_alias_names_selection_changed),
+                lambda w: (
+                    w.itemSelectionChanged.connect(self._on_alias_names_selection_changed),
+                    w.itemSelectionChanged.connect(self._update_copy_buttons_enabled_state),
+                ),
             ),
             (
                 self.aliasExpressionsListWidget,
-                lambda w: w.itemSelectionChanged.connect(
-                    self._on_alias_expressions_selection_changed
+                lambda w: (
+                    w.itemSelectionChanged.connect(self._on_alias_expressions_selection_changed),
+                    w.itemSelectionChanged.connect(self._update_copy_buttons_enabled_state),
                 ),
             ),
             (
@@ -497,6 +603,60 @@ class MainPanel(QtWidgets.QDialog):
             (
                 self.aliasesSplitter,
                 lambda w: w.splitterMoved.connect(self._on_aliases_splitter_moved),
+            ),
+            (
+                self.tabWidget,
+                lambda w: w.currentChanged.connect(
+                    lambda _idx: self._update_copy_buttons_enabled_state()
+                ),
+            ),
+            (
+                self.copyAvailableVarsetsPushButton,
+                lambda w: w.clicked.connect(
+                    lambda _checked=False: self._on_copy_button_clicked(
+                        self.availableVarsetsListWidget
+                    )
+                ),
+            ),
+            (
+                self.copyVarsetVariablesPushButton,
+                lambda w: w.clicked.connect(
+                    lambda _checked=False: self._on_copy_button_clicked(
+                        self.varsetVariableNamesListWidget
+                    )
+                ),
+            ),
+            (
+                self.copyVarsetExpressionsPushButton,
+                lambda w: w.clicked.connect(
+                    lambda _checked=False: self._on_copy_button_clicked(
+                        self.varsetExpressionsListWidget
+                    )
+                ),
+            ),
+            (
+                self.copyAvailableSpreadsheetsPushButton,
+                lambda w: w.clicked.connect(
+                    lambda _checked=False: self._on_copy_button_clicked(
+                        self.availableSpreadsheetsListWidget
+                    )
+                ),
+            ),
+            (
+                self.copyAliasesPushButton,
+                lambda w: w.clicked.connect(
+                    lambda _checked=False: self._on_copy_button_clicked(
+                        self.aliasesVariableNamesListWidget
+                    )
+                ),
+            ),
+            (
+                self.copyAliasExpressionsPushButton,
+                lambda w: w.clicked.connect(
+                    lambda _checked=False: self._on_copy_button_clicked(
+                        self.aliasExpressionsListWidget
+                    )
+                ),
             ),
         ]
 
