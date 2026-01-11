@@ -33,6 +33,7 @@ This document describes the current architecture of the **DataManager** FreeCAD 
 - **Shared types/helpers**
   - `freecad/datamanager_wb/tab_datasource.py` (`TabDataSource` protocol + shared result types)
   - `freecad/datamanager_wb/parent_child_ref.py` (`ParentChildRef` used for list items)
+  - `freecad/datamanager_wb/freecad_helpers.py` (shared FreeCAD document/query helpers)
   - `freecad/datamanager_wb/expression_item.py` (`ExpressionItem` for expression list UI)
   - `freecad/datamanager_wb/gui_selection.py` (select referenced objects from expression items)
   - `freecad/datamanager_wb/parsing_helpers.py` (parsing/format helpers for display strings)
@@ -137,6 +138,8 @@ Aliases tabs each store their mode independently.
 
 This keeps recompute/update behavior consistent and prevents the UI from sprinkling recompute calls throughout the code.
 
+`panel_controller.py` reuses the shared result/update dataclasses from `tab_datasource.py` rather than defining its own copies.
+
 ### `TabController` (generic tab logic)
 
 `tab_controller.py` contains tab-generic behaviors:
@@ -149,6 +152,8 @@ This keeps recompute/update behavior consistent and prevents the UI from sprinkl
 - Orchestrates the “remove unused + refresh list” operation by returning:
   - what was removed / still used / failed
   - how the UI should update after mutation
+
+Selections are normalized via the shared helper in `parent_child_ref.py` so callers can pass either `ParentChildRef` objects or raw `"Parent.Child"` strings.
 
 ## Data access architecture
 
@@ -171,6 +176,8 @@ VarSets are backed by FreeCAD’s `App::VarSet`. The repository keeps VarSet-spe
 - `varset_query.py` (thin wrappers around FreeCAD VarSet query APIs)
 - `varset_mutations.py` (thin wrappers around FreeCAD VarSet mutation APIs)
 - `varset_datasource.py` (adapter to the generic protocol)
+
+VarSet and spreadsheet query code shares common FreeCAD document helpers in `freecad_helpers.py` (expression engine iteration, copy-on-change filtering, typed object lookup).
 
 ### Spreadsheet aliases
 
