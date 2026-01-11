@@ -42,19 +42,31 @@ def build_expression_key(*, obj_name: str, lhs: object) -> str:
     return f"{obj_name}.{lhs}"
 
 
+def _iter_expression_engine(obj: object) -> Iterator[object]:
+    expressions = getattr(obj, "ExpressionEngine", None)
+    if not expressions or not isinstance(expressions, Iterable):
+        return
+    yield from expressions
+
+
+def _try_parse_expression(expr: object) -> tuple[object, object] | None:
+    if not isinstance(expr, Sequence) or len(expr) < 2:
+        return None
+    try:
+        lhs = expr[0]
+        expr_text = expr[1]
+    except Exception:  # pylint: disable=broad-exception-caught
+        return None
+    return lhs, expr_text
+
+
 def iter_expression_engine_entries(doc: object) -> Iterator[tuple[object, object, object]]:
     for obj in iter_document_objects(doc):
-        expressions = getattr(obj, "ExpressionEngine", None)
-        if not expressions or not isinstance(expressions, Iterable):
-            continue
-        for expr in expressions:
-            if not isinstance(expr, Sequence) or len(expr) < 2:
+        for expr in _iter_expression_engine(obj):
+            parsed = _try_parse_expression(expr)
+            if parsed is None:
                 continue
-            try:
-                lhs = expr[0]
-                expr_text = expr[1]
-            except Exception:  # pylint: disable=broad-exception-caught
-                continue
+            lhs, expr_text = parsed
             yield obj, lhs, expr_text
 
 
@@ -66,33 +78,49 @@ def iter_named_expression_engine_entries(doc: object) -> Iterator[tuple[str, obj
         yield obj_name, lhs, expr_text
 
 
-def get_copy_on_change_groups(doc: object) -> list[object]:
-    groups: list[object] = []
+def _get_direct_copy_on_change_group(doc: object) -> object | None:
     getter = getattr(doc, "getObject", None)
-    if callable(getter):
-        direct = getter("CopyOnChangeGroup")
-        if direct is not None:
-            groups.append(direct)
+    if not callable(getter):
+        return None
+    group = getter("CopyOnChangeGroup")
+    if group is None:
+        return None
+    return cast(object, group)
 
+
+def _iter_copy_on_change_named_groups(doc: object) -> Iterator[object]:
     for obj in getattr(doc, "Objects", []) or []:
         label = getattr(obj, "Label", None)
         if isinstance(label, str) and label.startswith("CopyOnChangeGroup"):
-            groups.append(obj)
+            yield cast(object, obj)
+
+
+def get_copy_on_change_groups(doc: object) -> list[object]:
+    groups: list[object] = []
+    direct = _get_direct_copy_on_change_group(doc)
+    if direct is not None:
+        groups.append(direct)
+    groups.extend(_iter_copy_on_change_named_groups(doc))
     return groups
 
 
-def iter_object_children(obj: object) -> Iterator[object]:
-    group = getattr(obj, "Group", None)
-    if group:
-        for child in group:
-            if child is not None:
-                yield child
+def _iter_non_null(values: object) -> Iterator[object]:
+    if not values:
+        return
+    if not isinstance(values, Iterable):
+        return
+    for item in values:
+        if item is not None:
+            yield cast(object, item)
 
-    out_list = getattr(obj, "OutList", None)
-    if out_list:
-        for child in out_list:
-            if child is not None:
-                yield child
+
+def _iter_children_from_attr(obj: object, attr: str) -> Iterator[object]:
+    yield from _iter_non_null(getattr(obj, attr, None))
+
+
+def iter_object_children(obj: object) -> Iterator[object]:
+    yield from _iter_children_from_attr(obj, "Group")
+    yield from _iter_children_from_attr(obj, "OutList")
 
 
 def get_copy_on_change_names(*, doc: object, type_id: str) -> set[str]:
