@@ -87,3 +87,7 @@ github_token.txt
 
 # pixi lock file
 pixi.lock
+
+# Something keeps trying to recreate InitGui.py
+# (old packaging structure, we use the new namespace structure)
+InitGui.py

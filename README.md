@@ -16,7 +16,7 @@ Tested on weekly dev release and v1.0.2 of FreeCAD on linux and MacOS. See [Test
 
 FreeCAD discovers user workbenches by scanning your FreeCAD `Mod/` directory. For development (and for installing
 from a cloned repo), the recommended workflow is to clone this repository and then create a link into your `Mod/`
-directory pointing at the repository’s `datamanager_wb` folder.
+directory pointing at the repository root.
 
 After adding/removing a workbench (or changing the link), **restart FreeCAD**.
 
@@ -92,6 +92,8 @@ New-Item -ItemType Junction -Path "$env:APPDATA\\FreeCAD\\<version>\\Mod\\datama
 
 ## Usage
 
+The workbench appears in the FreeCAD workbench selector as **Data Manager**.
+
 ### VarSets tab
 
 - **VarSets list**
@@ -118,6 +120,16 @@ New-Item -ItemType Junction -Path "$env:APPDATA\\FreeCAD\\<version>\\Mod\\datama
 - **Expressions list**
   - Shows the expressions that reference each variable.
   - Clicking an expression selects the Object in the Model tree.
+  - The list is resizable using a splitter.
+  - Use the **Show Objects as: Name/Label** radio buttons to control whether expression list entries display the
+    FreeCAD object internal name or its label. The choice is persisted.
+
+### Aliases tab
+
+- The Aliases tab mirrors the VarSets layout and is resizable using a splitter.
+- Alias definition rows are displayed using `:=` to distinguish definition from a normal expression (for example:
+  `Spreadsheet.A1 := 'MyAlias`).
+- The **Show Objects as: Name/Label** setting is independent from the VarSets tab and is persisted.
 
 ## Tested On
 

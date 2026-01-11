@@ -116,6 +116,11 @@ sequenceDiagram
 - Wires signals (selection changes, filter changes, button presses).
 - Delegates behavior (querying lists, remove-unused, expression discovery) to `PanelController`.
 
+The UI uses splitters inside each tab so the list panes and expressions pane can be resized.
+
+The expressions panes include a **Show Objects as: Name/Label** mode, persisted via Qt settings. The VarSets and
+Aliases tabs each store their mode independently.
+
 **Key principle:** the Qt layer should not directly reach into FreeCAD document APIs beyond what is needed for UI wiring; domain operations go through the controller.
 
 ## Controller architecture
@@ -178,6 +183,9 @@ The alias implementation is split into:
 - `spreadsheet_datasource.py` (adapter to the generic protocol)
 
 The query/mutation layer is designed to tolerate FreeCAD API differences across versions (for example, environments that only provide `getAlias(cell)` rather than bulk alias enumeration).
+
+In the UI, spreadsheet alias definition rows are displayed using `:=` (to distinguish definition from normal
+expressions).
 
 ## Key flows
 

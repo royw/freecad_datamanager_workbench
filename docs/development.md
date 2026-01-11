@@ -2,7 +2,7 @@
 
 ## Installing the workbench for development (symlink)
 
-FreeCAD discovers user workbenches by scanning your user `Mod/` directory. During development, the simplest workflow is to create a symbolic link from FreeCAD’s `Mod/` directory to this repository’s `datamanager_wb` folder.
+FreeCAD discovers user workbenches by scanning your user `Mod/` directory. During development, the simplest workflow is to create a symbolic link from FreeCAD’s `Mod/` directory to this repository root.
 
 FreeCAD generally discovers available workbenches only during startup. After adding or removing a workbench (or updating a symlink), restart FreeCAD to ensure the workbench is detected.
 
@@ -32,7 +32,7 @@ From your FreeCAD user `Mod/` directory:
 
 ```sh
 cd ~/.local/share/FreeCAD/v1-2/Mod
-ln -s {path to project}/datamanager_wb datamanager_wb
+ln -s {path to project} datamanager_wb
 ```
 
 After creating the symlink, restart FreeCAD. The workbench should appear in the workbench selector.
@@ -43,8 +43,8 @@ For iterative development, you can sometimes reload Python modules from the Free
 
 ```py
 import importlib
-import datamanager_wb
-importlib.reload(datamanager_wb)
+import freecad.datamanager_wb
+importlib.reload(freecad.datamanager_wb)
 ```
 
 Notes:
