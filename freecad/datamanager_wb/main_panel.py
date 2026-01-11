@@ -22,6 +22,8 @@ _SETTINGS_GROUP = "DataManager"
 _SETTINGS_APP = "DataManagerWorkbench"
 _SETTING_VARSETS_OBJECT_DISPLAY_MODE = "varsets/object_display_mode"
 _SETTING_ALIASES_OBJECT_DISPLAY_MODE = "aliases/object_display_mode"
+_SETTING_VARSETS_SPLITTER_STATE = "varsets/splitter_state"
+_SETTING_ALIASES_SPLITTER_STATE = "aliases/splitter_state"
 _DISPLAY_MODE_NAME = "name"
 _DISPLAY_MODE_LABEL = "label"
 
@@ -138,6 +140,11 @@ class MainPanel:
             QtWidgets.QPushButton, "removeUnusedAliasesPushButton"
         )
 
+        self.varsetsSplitter = self._find_required_widget(QtWidgets.QSplitter, "splitter")
+        self.aliasesSplitter = self._find_required_widget(
+            QtWidgets.QSplitter, "aliases_splitter"
+        )
+
         self.objectNameRadioButton = self._find_required_widget(
             QtWidgets.QRadioButton, "objectNameRadioButton"
         )
@@ -201,6 +208,7 @@ class MainPanel:
             self.removeUnusedAliasesPushButton.setEnabled(False)
 
         self._restore_object_display_mode_radio_state()
+        self._restore_splitter_states()
 
     def _get_settings(self) -> QtCore.QSettings:
         return QtCore.QSettings(_SETTINGS_GROUP, _SETTINGS_APP)
@@ -241,6 +249,36 @@ class MainPanel:
                 or self.aliasesObjectLabelRadioButton.isChecked()
             ):
                 self.aliasesObjectNameRadioButton.setChecked(True)
+
+    def _restore_splitter_states(self) -> None:
+        settings = self._get_settings()
+
+        if self.varsetsSplitter is not None:
+            raw = settings.value(_SETTING_VARSETS_SPLITTER_STATE, None)
+            state: QtCore.QByteArray | None = None
+            if isinstance(raw, QtCore.QByteArray):
+                state = raw
+            elif isinstance(raw, (bytes, bytearray)):
+                state = QtCore.QByteArray(raw)
+            if state is not None and not state.isEmpty():
+                self.varsetsSplitter.restoreState(state)
+
+        if self.aliasesSplitter is not None:
+            raw = settings.value(_SETTING_ALIASES_SPLITTER_STATE, None)
+            state: QtCore.QByteArray | None = None
+            if isinstance(raw, QtCore.QByteArray):
+                state = raw
+            elif isinstance(raw, (bytes, bytearray)):
+                state = QtCore.QByteArray(raw)
+            if state is not None and not state.isEmpty():
+                self.aliasesSplitter.restoreState(state)
+
+    def _save_splitter_states(self) -> None:
+        settings = self._get_settings()
+        if self.varsetsSplitter is not None:
+            settings.setValue(_SETTING_VARSETS_SPLITTER_STATE, self.varsetsSplitter.saveState())
+        if self.aliasesSplitter is not None:
+            settings.setValue(_SETTING_ALIASES_SPLITTER_STATE, self.aliasesSplitter.saveState())
 
     def _is_varsets_display_mode_label(self) -> bool:
         return bool(self.objectLabelRadioButton is not None and self.objectLabelRadioButton.isChecked())
@@ -430,6 +468,23 @@ class MainPanel:
             self.aliasesObjectLabelRadioButton.toggled.connect(
                 self._on_aliases_object_display_mode_toggled
             )
+
+        if self.varsetsSplitter is not None:
+            self.varsetsSplitter.splitterMoved.connect(self._on_varsets_splitter_moved)
+        if self.aliasesSplitter is not None:
+            self.aliasesSplitter.splitterMoved.connect(self._on_aliases_splitter_moved)
+
+    def _on_varsets_splitter_moved(self, _pos: int, _index: int) -> None:
+        if self.varsetsSplitter is None:
+            return
+        settings = self._get_settings()
+        settings.setValue(_SETTING_VARSETS_SPLITTER_STATE, self.varsetsSplitter.saveState())
+
+    def _on_aliases_splitter_moved(self, _pos: int, _index: int) -> None:
+        if self.aliasesSplitter is None:
+            return
+        settings = self._get_settings()
+        settings.setValue(_SETTING_ALIASES_SPLITTER_STATE, self.aliasesSplitter.saveState())
 
     def _persist_display_mode(self, *, setting_key: str, mode: str) -> None:
         settings = self._get_settings()
@@ -955,6 +1010,7 @@ class MainPanel:
         the top-level form.
         """
         App.Console.PrintMessage(translate("Log", "Workbench MainPanel accepted.") + "\n")
+        self._save_splitter_states()
         if self._mdi_subwindow is not None:
             self._mdi_subwindow.close()
         else:
@@ -963,6 +1019,7 @@ class MainPanel:
     def reject(self):
         """Close the panel (Qt dialog reject semantics)."""
         App.Console.PrintMessage(translate("Log", "Workbench MainPanel rejected.") + "\n")
+        self._save_splitter_states()
         if self._mdi_subwindow is not None:
             self._mdi_subwindow.close()
         else:
