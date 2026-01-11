@@ -161,8 +161,10 @@ def getVarsetReferences(varset_name: str, variable_name: str | None = None) -> d
             expressions = obj.ExpressionEngine
             for expr in expressions:
                 expr_text = expr[1]
+                lhs = expr[0]
+                key = f"{obj.Name}{lhs}" if str(lhs).startswith(".") else f"{obj.Name}.{lhs}"
                 if any(p in expr_text for p in patterns):
-                    results[f"{obj.Name}.{expr[0]}"] = expr_text
+                    results[key] = expr_text
                     continue
                 if (
                     internal_var_re is not None
@@ -170,6 +172,6 @@ def getVarsetReferences(varset_name: str, variable_name: str | None = None) -> d
                     and getattr(obj, "Name", None) == varset_name
                     and internal_var_re.search(expr_text) is not None
                 ):
-                    results[f"{obj.Name}.{expr[0]}"] = expr_text
+                    results[key] = expr_text
 
     return results

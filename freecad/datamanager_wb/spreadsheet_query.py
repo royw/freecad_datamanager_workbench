@@ -288,12 +288,14 @@ def getSpreadsheetAliasReferences(
             except Exception:  # pylint: disable=broad-exception-caught
                 continue
 
+            key = f"{obj.Name}{lhs}" if str(lhs).startswith(".") else f"{obj.Name}.{lhs}"
+
             text = str(expr_text)
             if alias_name:
                 if any(p in text for p in patterns) or (alias_re is not None and alias_re.search(text) is not None):
-                    results[f"{obj.Name}.{lhs}"] = expr_text
+                    results[key] = expr_text
             else:
                 if any(p in text for p in patterns):
-                    results[f"{obj.Name}.{lhs}"] = expr_text
+                    results[key] = expr_text
 
     return results
