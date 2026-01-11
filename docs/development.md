@@ -1,5 +1,11 @@
 # Development
 
+## Historical notes (template provenance)
+
+This repository was originally created from the FreeCAD Workbench-Starterkit template. The original template documentation is preserved here:
+
+- [HISTORICAL_README.md](HISTORICAL_README.md)
+
 ## Installing the workbench for development (symlink)
 
 FreeCAD discovers user workbenches by scanning your user `Mod/` directory. During development, the simplest workflow is to create a symbolic link from FreeCAD’s `Mod/` directory to this repository root.
