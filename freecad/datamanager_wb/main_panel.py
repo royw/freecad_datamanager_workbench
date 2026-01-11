@@ -55,6 +55,7 @@ class MainPanel(QtWidgets.QDialog):
     """
 
     def __init__(self):
+        super().__init__()
         App.Console.PrintMessage(translate("Log", "Workbench MainPanel initialized.") + "\n")
         self._mdi_subwindow = None
         self._controller = PanelController()
@@ -242,16 +243,19 @@ class MainPanel(QtWidgets.QDialog):
             button.setEnabled(self._is_copy_enabled_for_list(list_widget))
 
     def _copy_list_selection_to_clipboard(self, widget: QtWidgets.QListWidget) -> None:
-        items = widget.selectedItems() if widget is not None else []
+        items = widget.selectedItems()
         if not items:
             return
+
         text = "\n".join(i.text() for i in items)
         QtWidgets.QApplication.clipboard().setText(text)
 
     def _on_copy_button_clicked(self, widget: QtWidgets.QListWidget | None) -> None:
         if widget is None:
             return
-        if not self._is_copy_enabled_for_list(widget):
+        # Clicking the copy button moves focus away from the list widget, so we
+        # only require a selection here (enablement still depends on focus).
+        if len(widget.selectedItems()) == 0:
             return
         self._copy_list_selection_to_clipboard(widget)
 
