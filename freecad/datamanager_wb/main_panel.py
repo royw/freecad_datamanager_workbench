@@ -892,7 +892,7 @@ class MainPanel(QtWidgets.QDialog):
         )
 
     def _apply_post_remove_update(self, update) -> None:
-        self._render_variable_names(update.variable_items)
+        self._render_variable_names(update.child_items)
         if update.clear_expressions and self.varsetExpressionsListWidget is not None:
             self.varsetExpressionsListWidget.clear()
         self._update_remove_unused_button_enabled_state()
@@ -955,7 +955,7 @@ class MainPanel(QtWidgets.QDialog):
         return reply == QtWidgets.QMessageBox.Yes
 
     def _apply_post_remove_aliases_update(self, update) -> None:
-        self._render_alias_names(update.variable_items)
+        self._render_alias_names(update.child_items)
         if update.clear_expressions and self.aliasExpressionsListWidget is not None:
             self.aliasExpressionsListWidget.clear()
         self._update_remove_unused_aliases_button_enabled_state()

@@ -4,23 +4,11 @@ Adapts varset document-model operations to the generic `TabController`.
 """
 
 from .expression_item import ExpressionItem
-from .parent_child_ref import ParentChildRef
+from .parent_child_ref import ParentChildRef, normalize_parent_child_items
 from .parsing_helpers import parse_varset_variable_item
 from .tab_datasource import RemoveUnusedResult, TabDataSource
 from .varset_mutations import removeVarsetVariable
 from .varset_query import getVarsetReferences, getVarsets, getVarsetVariableNames
-
-
-def _normalize_varset_variable_items(
-    selected_varset_variable_items: list[ParentChildRef] | list[str],
-) -> list[str]:
-    normalized: list[str] = []
-    for item in selected_varset_variable_items:
-        if isinstance(item, ParentChildRef):
-            normalized.append(item.text)
-        else:
-            normalized.append(item)
-    return normalized
 
 
 class VarsetDataSource(TabDataSource):
@@ -58,7 +46,7 @@ class VarsetDataSource(TabDataSource):
         expression_items: list[ExpressionItem] = []
         counts: dict[str, int] = {}
 
-        for text in _normalize_varset_variable_items(selected_children):
+        for text in normalize_parent_child_items(selected_children):
             parsed = parse_varset_variable_item(text)
             if parsed is None:
                 continue
@@ -78,7 +66,7 @@ class VarsetDataSource(TabDataSource):
         """Return expression reference counts for the selected variables."""
         counts: dict[str, int] = {}
 
-        for text in _normalize_varset_variable_items(selected_children):
+        for text in normalize_parent_child_items(selected_children):
             parsed = parse_varset_variable_item(text)
             if parsed is None:
                 continue
@@ -96,7 +84,7 @@ class VarsetDataSource(TabDataSource):
         still_used: list[str] = []
         failed: list[str] = []
 
-        for text in _normalize_varset_variable_items(selected_children):
+        for text in normalize_parent_child_items(selected_children):
             parsed = parse_varset_variable_item(text)
             if parsed is None:
                 failed.append(text)

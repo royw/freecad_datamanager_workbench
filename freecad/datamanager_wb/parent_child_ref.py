@@ -45,3 +45,13 @@ def parse_parent_child_ref(text: str) -> ParentChildRef | None:
     if not parent or not child:
         return None
     return ParentChildRef(parent=parent, child=child)
+
+
+def normalize_parent_child_items(items: list[ParentChildRef] | list[str]) -> list[str]:
+    normalized: list[str] = []
+    for item in items:
+        if isinstance(item, ParentChildRef):
+            normalized.append(item.text)
+        else:
+            normalized.append(item)
+    return normalized

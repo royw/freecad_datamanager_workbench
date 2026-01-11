@@ -7,7 +7,7 @@ orchestration against a `TabDataSource`.
 import fnmatch
 
 from .expression_item import ExpressionItem
-from .parent_child_ref import ParentChildRef
+from .parent_child_ref import ParentChildRef, normalize_parent_child_items
 from .tab_datasource import (
     PostRemoveUpdate,
     RemoveUnusedAndUpdateResult,
@@ -63,13 +63,7 @@ class TabController:
         )
 
     def _normalize_items(self, items: list[ParentChildRef] | list[str]) -> list[str]:
-        normalized: list[str] = []
-        for item in items:
-            if isinstance(item, ParentChildRef):
-                normalized.append(item.text)
-            else:
-                normalized.append(item)
-        return normalized
+        return normalize_parent_child_items(items)
 
     def _normalize_glob_pattern(self, text: str) -> str | None:
         stripped = text.strip()

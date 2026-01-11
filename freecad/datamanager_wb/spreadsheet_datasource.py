@@ -6,7 +6,7 @@ Adapts spreadsheet alias queries/mutations to the generic `TabController`.
 from collections.abc import Iterator
 
 from .expression_item import ExpressionItem
-from .parent_child_ref import ParentChildRef
+from .parent_child_ref import ParentChildRef, parse_parent_child_ref
 from .spreadsheet_mutations import removeSpreadsheetAlias
 from .spreadsheet_query import (
     getSpreadsheetAliasNames,
@@ -14,15 +14,6 @@ from .spreadsheet_query import (
     getSpreadsheets,
 )
 from .tab_datasource import RemoveUnusedResult, TabDataSource
-
-
-def _parse_alias_ref(text: str) -> ParentChildRef | None:
-    if "." not in text:
-        return None
-    parent, child = text.split(".", 1)
-    if not parent or not child:
-        return None
-    return ParentChildRef(parent=parent, child=child)
 
 
 def _normalize_rhs(rhs: object) -> str:
@@ -131,7 +122,7 @@ def _normalize_alias_refs(items: list[ParentChildRef] | list[str]) -> list[Paren
         if isinstance(item, ParentChildRef):
             normalized.append(item)
         else:
-            parsed = _parse_alias_ref(item)
+            parsed = parse_parent_child_ref(item)
             if parsed is not None:
                 normalized.append(parsed)
     return normalized

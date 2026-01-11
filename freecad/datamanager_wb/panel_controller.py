@@ -5,8 +5,6 @@ tab-generic logic to `TabController` instances and owns document recompute and
 GUI refresh behavior.
 """
 
-from dataclasses import dataclass
-
 import FreeCAD as App
 import FreeCADGui as Gui
 
@@ -15,46 +13,8 @@ from .gui_selection import select_object_from_expression_item
 from .parent_child_ref import ParentChildRef
 from .spreadsheet_datasource import SpreadsheetDataSource
 from .tab_controller import TabController
+from .tab_datasource import PostRemoveUpdate, RemoveUnusedAndUpdateResult, RemoveUnusedResult
 from .varset_datasource import VarsetDataSource
-
-
-@dataclass(frozen=True)
-class RemoveUnusedResult:
-    """UI-friendly remove-unused outcome.
-
-    This mirrors `tab_datasource.RemoveUnusedResult` but is defined here as a
-    stable UI-facing type.
-
-    Attributes:
-        removed: Identifiers successfully removed.
-        still_used: Identifiers skipped because they still have references.
-        failed: Identifiers that could not be removed.
-    """
-
-    removed: list[str]
-    still_used: list[str]
-    failed: list[str]
-
-
-@dataclass(frozen=True)
-class PostRemoveUpdate:
-    """UI update payload after remove-unused.
-
-    Attributes:
-        variable_items: Updated list of child refs to display.
-        clear_expressions: Whether the expressions list should be cleared.
-    """
-
-    variable_items: list[ParentChildRef]
-    clear_expressions: bool
-
-
-@dataclass(frozen=True)
-class RemoveUnusedAndUpdateResult:
-    """Combined remove result and UI update."""
-
-    remove_result: RemoveUnusedResult
-    update: PostRemoveUpdate
 
 
 class PanelController:
@@ -153,13 +113,10 @@ class PanelController:
         only_unused: bool,
     ) -> PostRemoveUpdate:
         """Compute the post-mutation UI update for the VarSets tab."""
-        update = self._varsets_tab_controller.get_post_remove_unused_update(
+        return self._varsets_tab_controller.get_post_remove_unused_update(
             selected_parents=selected_varsets,
             child_filter_text=variable_filter_text,
             only_unused=only_unused,
-        )
-        return PostRemoveUpdate(
-            variable_items=update.child_items, clear_expressions=update.clear_expressions
         )
 
     def remove_unused_and_get_update(
@@ -178,17 +135,7 @@ class PanelController:
             only_unused=only_unused,
         )
         self.refresh_document()
-
-        remove_result = RemoveUnusedResult(
-            removed=combined.remove_result.removed,
-            still_used=combined.remove_result.still_used,
-            failed=combined.remove_result.failed,
-        )
-        update = PostRemoveUpdate(
-            variable_items=combined.update.child_items,
-            clear_expressions=combined.update.clear_expressions,
-        )
-        return RemoveUnusedAndUpdateResult(remove_result=remove_result, update=update)
+        return combined
 
     def get_expression_items(
         self, selected_vars: list[ParentChildRef] | list[str]
@@ -208,11 +155,7 @@ class PanelController:
         """Remove unused variables (VarSets tab) and refresh the document."""
         result = self._varsets_tab_controller.remove_unused_children(selected_varset_variable_items)
         self.refresh_document()
-        return RemoveUnusedResult(
-            removed=result.removed,
-            still_used=result.still_used,
-            failed=result.failed,
-        )
+        return result
 
     def get_sorted_spreadsheets(self, *, exclude_copy_on_change: bool = False) -> list[str]:
         """Return sorted spreadsheet names."""
@@ -266,13 +209,10 @@ class PanelController:
         only_unused: bool,
     ) -> PostRemoveUpdate:
         """Compute the post-mutation UI update for the Aliases tab."""
-        update = self._aliases_tab_controller.get_post_remove_unused_update(
+        return self._aliases_tab_controller.get_post_remove_unused_update(
             selected_parents=selected_spreadsheets,
             child_filter_text=alias_filter_text,
             only_unused=only_unused,
-        )
-        return PostRemoveUpdate(
-            variable_items=update.child_items, clear_expressions=update.clear_expressions
         )
 
     def remove_unused_aliases_and_get_update(
@@ -291,17 +231,7 @@ class PanelController:
             only_unused=only_unused,
         )
         self.refresh_document()
-
-        remove_result = RemoveUnusedResult(
-            removed=combined.remove_result.removed,
-            still_used=combined.remove_result.still_used,
-            failed=combined.remove_result.failed,
-        )
-        update = PostRemoveUpdate(
-            variable_items=combined.update.child_items,
-            clear_expressions=combined.update.clear_expressions,
-        )
-        return RemoveUnusedAndUpdateResult(remove_result=remove_result, update=update)
+        return combined
 
     def select_expression_item(self, expression_item: ExpressionItem | str) -> None:
         """Select the FreeCAD object referenced by an expression list entry."""
