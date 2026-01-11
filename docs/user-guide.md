@@ -9,6 +9,24 @@ This guide explains how to use the **DataManager** FreeCAD workbench to:
 
 This document intentionally does **not** include installation instructions.
 
+## Annotated UI overview
+
+![DataManager workbench annotated UI](images/datamanager_wb_annotated.png)
+
+Annotated UI legend:
+
+1. Workbench selection (workbench selector, Data Manager menu, and toolbar icons)
+1. VarSets and Aliases tabs
+1. Available VarSets
+1. VarSets filter
+1. Exclude CopyOnChanged varsets checkbox
+1. Variables list
+1. Only Unused checkbox
+1. Remove Selected Unused Variables button
+1. Splitter (resizable pane divider)
+1. Expressions list
+1. Show Objects as: Name/Label radio buttons
+
 ## Opening the DataManager panel
 
 The workbench provides two FreeCAD commands:
@@ -22,7 +40,7 @@ Depending on your FreeCAD setup, you can access these via:
 - The workbench menu
 - The command search
 
-[Screenshot: FreeCAD UI showing where to launch “Varset Management” and “Alias Management” commands]
+See the annotated screenshot above (1).
 
 When opened, the panel contains two tabs:
 
@@ -73,7 +91,7 @@ Each tab uses a splitter so you can resize:
 
 The splitter position is saved and restored.
 
-[Screenshot: Varsets tab showing the splitter handle between list pane and expressions pane]
+See the annotated screenshot above (9).
 
 ### “Show Objects as: Name / Label”
 
@@ -84,7 +102,7 @@ Each tab includes a **Name/Label** display toggle for expression items.
 
 This setting is remembered separately for the Varsets and Aliases tabs.
 
-[Screenshot: The Name/Label radio buttons on both tabs]
+See the annotated screenshot above (11).
 
 ### Selecting an object from an expression
 
@@ -106,7 +124,7 @@ The Varsets tab helps you audit variables stored in `App::VarSet` objects.
 - Use **Filter** to narrow the list.
 - Optionally enable **Exclude Copy-on-Change** to hide copy-on-change derived VarSets.
 
-[Screenshot: Varsets tab with the VarSets list, filter input, and exclude clones option]
+See the annotated screenshot above (3), (4), (5).
 
 ### 2) Select VarSets to view variables
 
@@ -122,7 +140,7 @@ Use the variable filter to narrow down variable names.
 
 This is useful when VarSets contain many properties.
 
-[Screenshot: Variable list filtered to a subset of variables]
+See the annotated screenshot above (6).
 
 ### 4) Inspect expression references
 
@@ -134,7 +152,7 @@ The list can include multiple objects/properties referencing the variable.
 
 If you enable **Show Objects as: Label**, the object prefix shown in expressions will use the FreeCAD label.
 
-[Screenshot: Expressions list showing references to selected VarSet variables]
+See the annotated screenshot above (10), (11).
 
 ### 5) Find unused variables (“Only Unused”)
 
@@ -145,7 +163,7 @@ Enable **Only Unused** to show only variables with **zero** expression reference
 
 This mode is intended to help you safely clean up unused variables.
 
-[Screenshot: Only Unused enabled with a short list of unused variables]
+See the annotated screenshot above (7).
 
 ### 6) Remove selected unused variables
 
@@ -169,7 +187,7 @@ Notes:
 - If a variable is actually referenced (or the system detects it as referenced), it may be reported as “still used” and left in place.
 - If a variable cannot be parsed or removed due to an error, it may be reported as “failed”.
 
-[Screenshot: Confirmation dialog for removing unused variables]
+See the annotated screenshot above (8).
 
 ## Aliases tab
 
@@ -181,7 +199,7 @@ The Aliases tab helps you audit spreadsheet aliases defined on `Spreadsheet::She
 - Use **Filter** to narrow the list.
 - Optionally enable **Exclude Copy-on-Change** to hide copy-on-change derived spreadsheets.
 
-[Screenshot: Aliases tab with spreadsheet list, filter input, and exclude clones option]
+See the annotated screenshot above (2) for the tab switch; the Aliases tab has the same layout.
 
 ### 2) Select spreadsheets to view alias names
 
@@ -193,7 +211,7 @@ Select one or more spreadsheets. The middle pane populates with alias items form
 
 Use the alias filter to narrow the list.
 
-[Screenshot: Alias list filtered to a subset of aliases]
+See the annotated screenshot above (6) for the child list area (the Aliases tab uses the same location).
 
 ### 4) Inspect alias references (expressions)
 
@@ -206,13 +224,13 @@ The expressions list can include:
 
 In the UI, alias “definition” style entries are displayed using `:=` to distinguish them from normal expressions.
 
-[Screenshot: Expressions list showing alias references and alias definition entries using :=]
+See the annotated screenshot above (10).
 
 ### 5) Find unused aliases (“Only Unused”)
 
 Enable **Only Unused** to show only alias names with **zero** expression references.
 
-[Screenshot: Only Unused enabled on the Aliases tab]
+See the annotated screenshot above (7) for the checkbox location (the Aliases tab uses the same control).
 
 ### 6) Remove selected unused aliases
 
@@ -231,7 +249,7 @@ Clicking the button:
 
 If some aliases could not be removed, the UI will show an informational message.
 
-[Screenshot: Confirmation dialog for removing unused aliases]
+See the annotated screenshot above (8) for the button location (the Aliases tab uses the same control).
 
 ## Practical workflows
 

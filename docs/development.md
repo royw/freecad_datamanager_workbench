@@ -59,9 +59,232 @@ Notes:
 1. FreeCAD’s workbench discovery and command registration are primarily done at startup; if you add/remove the workbench (e.g. create/remove the `Mod/` symlink), you still need to restart.
 1. GUI objects, registered commands, and existing Qt widgets may keep references to old classes/functions; after a reload you may need to close/re-open the panel or restart FreeCAD if you see inconsistent behavior.
 
-## VarSets and Copy-on-change (`CopyOnChangeGroup`)
+## Project layout and entrypoints
 
-When you create Links to objects that reference a `App::VarSet`, FreeCAD may create hidden *copy-on-change* groups (typically `CopyOnChangeGroup`, sometimes with suffixes) and generate copied VarSets (for example `VarSet001`, `myvars001`, etc.). These are internal implementation details used to make linked objects independent.
+This project is distributed primarily as a FreeCAD Addon (installed into `Mod/`), but it is also structured as a Python package under the `freecad/` namespace.
+
+Key entrypoints:
+
+- `freecad/datamanager_wb/init_gui.py`
+  - FreeCAD GUI initialization hook.
+  - Registers commands and adds the workbench (`Gui.addWorkbench`).
+- `freecad/datamanager_wb/workbench.py`
+  - Defines `DataManagerWorkbench(Gui.Workbench)` (menus/toolbars, activation logging).
+- `freecad/datamanager_wb/commands.py`
+  - Defines and registers FreeCAD commands.
+  - Commands open/activate the UI panel.
+- `freecad/datamanager_wb/main_panel.py`
+  - Loads the Qt `.ui` file and implements the panel widget.
+  - Persists small UI state via `QtCore.QSettings`.
+
+## Developer tooling
+
+The repository uses a `Taskfile.yml` to standardize common workflows.
+
+Common commands:
+
+- `task check`
+  - Runs formatting, linters, deadcode checks, complexity checks, and tests.
+- `task docs`
+  - Builds the MkDocs site.
+- `task lint:markdown`
+  - Runs markdown lint.
+
+TBD:
+
+- Whether a smaller “fast” task should exist (for example `task lint` without running tests).
+- Whether CI should run the full `task check` or a subset.
+
+## Testing
+
+The test suite is designed to run outside of FreeCAD when possible.
+
+Guidance:
+
+- Prefer unit tests for parsing/formatting helpers and query logic that can be exercised without a live FreeCAD GUI.
+- FreeCAD and Qt integration is inherently harder to test; keep GUI-facing behavior thin and delegate logic into testable helpers.
+
+Common commands:
+
+- `task test`
+- `uv run pytest`
+
+TBD:
+
+- Whether to add a dedicated “in-FreeCAD smoke test checklist” section (manual steps) per release.
+
+## Packaging and distribution (FreeCAD Addon)
+
+This workbench is intended to be installed via the FreeCAD Addon ecosystem.
+
+Notes:
+
+- The Addon install mechanism typically places the repository (or a ZIP snapshot) under the user `Mod/` directory.
+- Because of this, relative paths and packaged resources must work directly from the source tree.
+- UI/resources live under `freecad/datamanager_wb/resources/`.
+
+TBD:
+
+- Exact Addon Manager metadata requirements (for example which fields/files are required for listing).
+- Whether releases will be Git tags, GitHub releases, or both.
+
+## Versioning and release process
+
+The project version is defined in `pyproject.toml` and is the single source of truth.
+
+Suggested release checklist (TBD):
+
+1. Update `pyproject.toml` version.
+1. Update `CHANGELOG.md`.
+1. Run `task check`.
+1. Verify a clean install via Addon Manager or a ZIP install into `Mod/`.
+1. Tag the release in git (TBD: tag format).
+1. Publish/update Addon listing (TBD: process and where the listing lives).
+
+## Debugging and logging
+
+Logging is typically visible in FreeCAD’s Report View.
+
+Tips:
+
+- Use `App.Console.PrintMessage(...)` for lightweight logging.
+- For UI issues, verify the `.ui` file loads correctly and required widgets are found (missing widget names will raise at runtime).
+- When debugging selection behavior, confirm whether you’re working with `Object.Name` (internal) or `Object.Label` (user-facing).
+
+TBD:
+
+- Whether to add a debug flag / verbose mode toggle for more detailed logging.
+
+## Contributing
+
+Style and quality gates are enforced by the repo tasks.
+
+Expectations:
+
+- Keep `task check` passing.
+- Prefer small, focused changes.
+- Avoid adding FreeCAD-specific behavior deep inside generic helpers when it can be isolated.
+
+TBD:
+
+- Contribution workflow (issues/PRs, branching strategy).
+- Coding conventions that are specific to this workbench beyond the linters.
+
+## Features
+
+### How VarSets are discovered
+
+The workbench discovers VarSets by scanning the active document (`App.ActiveDocument`) and selecting objects with `TypeId == "App::VarSet"`.
+
+Implementation:
+
+- `freecad/datamanager_wb/varset_query.py:getVarsets`
+- `freecad/datamanager_wb/freecad_helpers.py:iter_document_objects`
+
+### How variables are discovered
+
+Variables are discovered from each selected VarSet’s properties.
+
+Implementation:
+
+- `freecad/datamanager_wb/varset_query.py:getVarsetVariableNames`
+
+Details:
+
+- Variables are derived from the VarSet’s `PropertiesList`.
+- A set of built-in/non-variable properties are excluded (for example `Label`, `Placement`, `ExpressionEngine`, etc.).
+- The result is a sorted list of variable names.
+
+### How expressions are discovered
+
+Expressions are discovered by scanning every document object’s `ExpressionEngine` entries.
+
+Implementation:
+
+- `freecad/datamanager_wb/freecad_helpers.py:iter_named_expression_engine_entries`
+
+Details:
+
+- The workbench iterates `doc.Objects` and reads each object’s `ExpressionEngine` iterable.
+- Each entry is expected to be sequence-like (`(lhs, rhs, ...)`), where `lhs` is a property (like `"Length"` or `".Constraints.Constraint1"`) and `rhs` is the expression text.
+- Expression rows are keyed as `ObjectName.Property` using `freecad/datamanager_wb/freecad_helpers.py:build_expression_key`.
+
+### How aliases are discovered
+
+Aliases are spreadsheet cell aliases.
+
+Implementation:
+
+- `freecad/datamanager_wb/spreadsheet_query.py:getAliases`
+
+Details:
+
+- Aliases are discovered from a selected `Spreadsheet::Sheet` using multiple fallbacks (for example `getAliases()`, `Aliases`/`Alias` properties, `getAlias(cell)` scans).
+- The workbench normalizes the alias map so it ends up as `alias_name -> cell` regardless of the FreeCAD API variant.
+
+### How spreadsheets are discovered
+
+The workbench discovers spreadsheets by scanning the active document and selecting objects with `TypeId == "Spreadsheet::Sheet"`.
+
+Implementation:
+
+- `freecad/datamanager_wb/spreadsheet_query.py:getSpreadsheets`
+
+### How alias references are discovered
+
+Alias references are discovered in two places:
+
+- Expression engine entries across the document (same mechanism as VarSets).
+- Direct spreadsheet cell contents (to detect aliases referenced within spreadsheets).
+
+Implementation:
+
+- `freecad/datamanager_wb/spreadsheet_query.py:getAliasReferences`
+
+Details:
+
+- Expression engine matching looks for patterns like `<<SpreadsheetLabelOrName>>.AliasName` and `SpreadsheetLabelOrName.AliasName`.
+- To handle internal spreadsheet usage, the workbench also scans non-empty cell contents and uses a word-boundary-style regex to detect the alias token.
+
+### Filtering (glob vs substring)
+
+Parent and child filters in the UI use glob matching. If you type no glob characters, the filter is treated as a substring match by implicitly wrapping your input in `*`.
+
+Implementation:
+
+- `freecad/datamanager_wb/tab_controller.py:_normalize_glob_pattern`
+- `freecad/datamanager_wb/tab_controller.py:get_filtered_parents`
+- `freecad/datamanager_wb/tab_controller.py:get_filtered_child_items`
+
+### Name normalization
+
+The workbench does not perform global name normalization (it does not lower-case object names, trim whitespace, etc.).
+
+In FreeCAD:
+
+- `Object.Name` is an internal identifier and is generally already normalized by FreeCAD.
+- `Object.Label` is user-facing and may contain spaces and mixed case.
+
+This matters most for aliases: the Aliases tab may use either spreadsheet `Label` or `Name` when building match patterns.
+
+### Copy-on-change (`CopyOnChangeGroup`)
+
+When you create Links to objects that reference a VarSet or Spreadsheet, FreeCAD may create hidden *copy-on-change* groups (typically named or labeled `CopyOnChangeGroup*`) and generate copied objects (for example `VarSet001`, `Spreadsheet001`, etc.). These are internal implementation details used to make linked objects independent.
+
+The workbench’s “exclude copy-on-change” filters are implemented by:
+
+- Finding copy-on-change groups by:
+  - Looking for an object literally named `CopyOnChangeGroup`, and
+  - Scanning for any object with `Label` that starts with `CopyOnChangeGroup`.
+- Walking each such group’s children via `Group` and `OutList`.
+- Collecting the `Name` of any objects of the relevant `TypeId` encountered.
+
+Implementation:
+
+- `freecad/datamanager_wb/freecad_helpers.py:get_copy_on_change_groups`
+- `freecad/datamanager_wb/freecad_helpers.py:get_copy_on_change_names`
+
+#### VarSets and copy-on-change
 
 In the DataManager UI, the option **"Exclude CopyOnChanged varsets"** filters out VarSets discovered under `CopyOnChangeGroup*` so the VarSets list focuses on the “real” VarSets you created.
 
@@ -72,6 +295,79 @@ To test:
 1. Open the DataManager panel.
 1. Toggle **"Exclude CopyOnChanged varsets"** and confirm that the copied VarSets disappear from the VarSets list.
 
-## Qt version (FreeCAD)
+#### Spreadsheets and copy-on-change
+
+The same mechanism applies to spreadsheets.
+
+To test:
+
+1. Create an object that uses a Spreadsheet.
+1. Create a Link to that object.
+1. Open the DataManager panel.
+1. Toggle **"Exclude CopyOnChanged spreadsheets"** and confirm that copied spreadsheets disappear from the list.
+
+### UI
+
+#### Auto-expanding tree items
+
+The workbench does not currently force-expand the FreeCAD model tree.
+
+If you want tree items to auto-expand when selecting objects in the 3D view, this is a FreeCAD preference:
+
+- `Edit` -> `Preferences` -> `General` -> `Selection` -> `Tree Selection Behavior` -> `Auto expand tree item when the corresponding object is selected in the 3D view`
+
+#### Persisting UI state
+
+The UI state is persisted using `QtCore.QSettings`.
+
+Implementation:
+
+- `freecad/datamanager_wb/main_panel.py:_get_settings`
+
+Persisted keys:
+
+- `varsets/object_display_mode` (`name` or `label`)
+- `aliases/object_display_mode` (`name` or `label`)
+- `varsets/splitter_state`
+- `aliases/splitter_state`
+
+## Development Notes
+
+### Qt version (FreeCAD)
 
 FreeCAD is transitioning from Qt5 to Qt6, with the 1.1 release planned to make Qt6 the default.
+
+### Tested On
+
+```text
+OS: Manjaro Linux (KDE/plasma/wayland)
+Architecture: x86_64
+Version: 1.2.0dev.20260106 (Git shallow) AppImage
+Build date: 2026/01/06 15:36:19
+Build type: Release
+Branch: (HEAD detached at 9b64da8)
+Hash: 9b64da827a112d88a025be26316e3d023ff491dc
+Python 3.11.14, Qt 6.8.3, Coin 4.0.3, Vtk 9.3.1, boost 1_86, Eigen3 3.4.0, PySide 6.8.3
+shiboken 6.8.3, xerces-c 3.3.0, IfcOpenShell 0.8.2, OCC 7.8.1
+Locale: English/United States (en_US)
+Navigation Style/Orbit Style/Rotation Mode: CAD/Rounded Arcball/Window center
+Stylesheet/Theme/QtStyle: FreeCAD.qss/FreeCAD Dark/
+Logical DPI/Physical DPI/Pixel Ratio: 96/40.64/1.5
+Installed mods:
+  * datamanager_wb
+  * OpenTheme 2025.5.20
+```
+
+```text
+OS: macOS 26.0.1
+Architecture: arm64
+Version: 1.0.2.39319 (Git) Conda
+Build type: Release
+Branch: (HEAD detached at 1.0.2)
+Hash: 256fc7eff3379911ab5daf88e10182c509aa8052
+Python 3.11.13, Qt 5.15.15, Coin 4.0.3, Vtk 9.3.0, OCC 7.8.1
+Locale: C/Default (C)
+Stylesheet/Theme/QtStyle: FreeCAD Dark.qss/FreeCAD Dark/Fusion
+Installed mods:
+  * datamanager_wb
+```
