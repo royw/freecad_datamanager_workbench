@@ -65,7 +65,7 @@
          <property name="orientation">
           <enum>Qt::Orientation::Horizontal</enum>
          </property>
-         <widget class="QWidget" name="">
+         <widget class="QWidget" name="layoutWidget">
           <layout class="QHBoxLayout" name="horizontalLayout_2">
            <item>
             <widget class="QGroupBox" name="varsets_groupBox">
@@ -201,6 +201,44 @@
              </property>
             </widget>
            </item>
+           <item>
+            <layout class="QHBoxLayout" name="horizontalLayout_11">
+             <item>
+              <widget class="QLabel" name="label_7">
+               <property name="text">
+                <string>Show Objects as:</string>
+               </property>
+              </widget>
+             </item>
+             <item>
+              <widget class="QRadioButton" name="objectNameRadioButton">
+               <property name="text">
+                <string>Name</string>
+               </property>
+              </widget>
+             </item>
+             <item>
+              <widget class="QRadioButton" name="objectLabelRadioButton">
+               <property name="text">
+                <string>Label</string>
+               </property>
+              </widget>
+             </item>
+             <item>
+              <spacer name="horizontalSpacer_2">
+               <property name="orientation">
+                <enum>Qt::Orientation::Horizontal</enum>
+               </property>
+               <property name="sizeHint" stdset="0">
+                <size>
+                 <width>40</width>
+                 <height>20</height>
+                </size>
+               </property>
+              </spacer>
+             </item>
+            </layout>
+           </item>
           </layout>
          </widget>
         </widget>
@@ -238,7 +276,7 @@
          <property name="orientation">
           <enum>Qt::Orientation::Horizontal</enum>
          </property>
-         <widget class="QWidget" name="">
+         <widget class="QWidget" name="layoutWidget">
           <layout class="QHBoxLayout" name="horizontalLayout_10">
            <item>
             <widget class="QGroupBox" name="spreadsheetsGroupBox">
@@ -374,6 +412,44 @@
              </property>
             </widget>
            </item>
+           <item>
+            <layout class="QHBoxLayout" name="horizontalLayout_12">
+             <item>
+              <widget class="QLabel" name="label_8">
+               <property name="text">
+                <string>Show Objects as:</string>
+               </property>
+              </widget>
+             </item>
+             <item>
+              <widget class="QRadioButton" name="aliasesObjectNameRadioButton">
+               <property name="text">
+                <string>Name</string>
+               </property>
+              </widget>
+             </item>
+             <item>
+              <widget class="QRadioButton" name="aliasesObjectLabelRadioButton">
+               <property name="text">
+                <string>Label</string>
+               </property>
+              </widget>
+             </item>
+             <item>
+              <spacer name="horizontalSpacer_3">
+               <property name="orientation">
+                <enum>Qt::Orientation::Horizontal</enum>
+               </property>
+               <property name="sizeHint" stdset="0">
+                <size>
+                 <width>40</width>
+                 <height>20</height>
+                </size>
+               </property>
+              </spacer>
+             </item>
+            </layout>
+           </item>
           </layout>
          </widget>
         </widget>
@@ -381,9 +457,9 @@
       </layout>
      </widget>
     </widget>
-   </item>
-  </layout>
- </widget>
+  </item>
+ </layout>
+</widget>
  <resources/>
  <connections/>
 </ui>

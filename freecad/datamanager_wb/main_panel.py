@@ -18,6 +18,13 @@ from .resources import UIPATH
 
 translate = App.Qt.translate
 
+_SETTINGS_GROUP = "DataManager"
+_SETTINGS_APP = "DataManagerWorkbench"
+_SETTING_VARSETS_OBJECT_DISPLAY_MODE = "varsets/object_display_mode"
+_SETTING_ALIASES_OBJECT_DISPLAY_MODE = "aliases/object_display_mode"
+_DISPLAY_MODE_NAME = "name"
+_DISPLAY_MODE_LABEL = "label"
+
 
 @functools.lru_cache(maxsize=1)
 def get_main_panel() -> "MainPanel":
@@ -131,6 +138,19 @@ class MainPanel:
             QtWidgets.QPushButton, "removeUnusedAliasesPushButton"
         )
 
+        self.objectNameRadioButton = self._find_required_widget(
+            QtWidgets.QRadioButton, "objectNameRadioButton"
+        )
+        self.objectLabelRadioButton = self._find_required_widget(
+            QtWidgets.QRadioButton, "objectLabelRadioButton"
+        )
+        self.aliasesObjectNameRadioButton = self._find_required_widget(
+            QtWidgets.QRadioButton, "aliasesObjectNameRadioButton"
+        )
+        self.aliasesObjectLabelRadioButton = self._find_required_widget(
+            QtWidgets.QRadioButton, "aliasesObjectLabelRadioButton"
+        )
+
     def _configure_widgets(self) -> None:
         if self.availableVarsetsListWidget is not None:
             self.availableVarsetsListWidget.setSelectionMode(
@@ -179,6 +199,88 @@ class MainPanel:
 
         if self.removeUnusedAliasesPushButton is not None:
             self.removeUnusedAliasesPushButton.setEnabled(False)
+
+        self._restore_object_display_mode_radio_state()
+
+    def _get_settings(self) -> QtCore.QSettings:
+        return QtCore.QSettings(_SETTINGS_GROUP, _SETTINGS_APP)
+
+    def _restore_object_display_mode_radio_state(self) -> None:
+        settings = self._get_settings()
+
+        varsets_mode = settings.value(
+            _SETTING_VARSETS_OBJECT_DISPLAY_MODE,
+            _DISPLAY_MODE_NAME,
+            type=str,
+        )
+        aliases_mode = settings.value(
+            _SETTING_ALIASES_OBJECT_DISPLAY_MODE,
+            _DISPLAY_MODE_NAME,
+            type=str,
+        )
+
+        if varsets_mode not in (_DISPLAY_MODE_NAME, _DISPLAY_MODE_LABEL):
+            varsets_mode = _DISPLAY_MODE_NAME
+        if aliases_mode not in (_DISPLAY_MODE_NAME, _DISPLAY_MODE_LABEL):
+            aliases_mode = _DISPLAY_MODE_NAME
+
+        if self.objectNameRadioButton is not None and self.objectLabelRadioButton is not None:
+            self.objectNameRadioButton.setChecked(varsets_mode == _DISPLAY_MODE_NAME)
+            self.objectLabelRadioButton.setChecked(varsets_mode == _DISPLAY_MODE_LABEL)
+            if not (self.objectNameRadioButton.isChecked() or self.objectLabelRadioButton.isChecked()):
+                self.objectNameRadioButton.setChecked(True)
+
+        if (
+            self.aliasesObjectNameRadioButton is not None
+            and self.aliasesObjectLabelRadioButton is not None
+        ):
+            self.aliasesObjectNameRadioButton.setChecked(aliases_mode == _DISPLAY_MODE_NAME)
+            self.aliasesObjectLabelRadioButton.setChecked(aliases_mode == _DISPLAY_MODE_LABEL)
+            if not (
+                self.aliasesObjectNameRadioButton.isChecked()
+                or self.aliasesObjectLabelRadioButton.isChecked()
+            ):
+                self.aliasesObjectNameRadioButton.setChecked(True)
+
+    def _is_varsets_display_mode_label(self) -> bool:
+        return bool(self.objectLabelRadioButton is not None and self.objectLabelRadioButton.isChecked())
+
+    def _is_aliases_display_mode_label(self) -> bool:
+        return bool(
+            self.aliasesObjectLabelRadioButton is not None
+            and self.aliasesObjectLabelRadioButton.isChecked()
+        )
+
+    def _format_expression_item_for_display(
+        self,
+        expression_item: ExpressionItem,
+        *,
+        use_label: bool,
+    ) -> str:
+        lhs = expression_item.lhs
+        rhs = expression_item.rhs
+        operator = expression_item.operator
+
+        if not use_label:
+            return f"{lhs} {operator} {rhs}"
+
+        doc = App.ActiveDocument
+        obj_label: str | None = None
+        if doc is not None:
+            obj = doc.getObject(expression_item.object_name)
+            if obj is not None:
+                try:
+                    obj_label = str(obj.Label)
+                except Exception:  # pylint: disable=broad-exception-caught
+                    obj_label = None
+
+        if not obj_label:
+            return f"{lhs} {operator} {rhs}"
+
+        if "." in lhs:
+            _prefix, rest = lhs.split(".", 1)
+            lhs = f"{obj_label}.{rest}"
+        return f"{lhs} {operator} {rhs}"
 
     def _populate_varsets(self) -> None:
         if self.availableVarsetsListWidget is None:
@@ -316,6 +418,52 @@ class MainPanel:
                 self._on_remove_unused_aliases_clicked
             )
 
+        if self.objectNameRadioButton is not None:
+            self.objectNameRadioButton.toggled.connect(self._on_varsets_object_display_mode_toggled)
+        if self.objectLabelRadioButton is not None:
+            self.objectLabelRadioButton.toggled.connect(self._on_varsets_object_display_mode_toggled)
+        if self.aliasesObjectNameRadioButton is not None:
+            self.aliasesObjectNameRadioButton.toggled.connect(
+                self._on_aliases_object_display_mode_toggled
+            )
+        if self.aliasesObjectLabelRadioButton is not None:
+            self.aliasesObjectLabelRadioButton.toggled.connect(
+                self._on_aliases_object_display_mode_toggled
+            )
+
+    def _persist_display_mode(self, *, setting_key: str, mode: str) -> None:
+        settings = self._get_settings()
+        settings.setValue(setting_key, mode)
+
+    def _on_varsets_object_display_mode_toggled(self, checked: bool) -> None:
+        if not checked:
+            return
+
+        mode = _DISPLAY_MODE_NAME
+        if self.objectLabelRadioButton is not None and self.objectLabelRadioButton.isChecked():
+            mode = _DISPLAY_MODE_LABEL
+        self._persist_display_mode(setting_key=_SETTING_VARSETS_OBJECT_DISPLAY_MODE, mode=mode)
+
+        selected_vars = self._get_selected_varset_variable_items()
+        if selected_vars:
+            self._populate_expressions(selected_vars)
+
+    def _on_aliases_object_display_mode_toggled(self, checked: bool) -> None:
+        if not checked:
+            return
+
+        mode = _DISPLAY_MODE_NAME
+        if (
+            self.aliasesObjectLabelRadioButton is not None
+            and self.aliasesObjectLabelRadioButton.isChecked()
+        ):
+            mode = _DISPLAY_MODE_LABEL
+        self._persist_display_mode(setting_key=_SETTING_ALIASES_OBJECT_DISPLAY_MODE, mode=mode)
+
+        selected_aliases = self._get_selected_alias_items()
+        if selected_aliases:
+            self._populate_alias_expressions(selected_aliases)
+
     def _get_selected_varsets(self) -> list[str]:
         if self.availableVarsetsListWidget is None:
             return []
@@ -422,8 +570,11 @@ class MainPanel:
         expression_items, _counts = self._controller.get_alias_expression_items(
             selected_alias_items
         )
+        use_label = self._is_aliases_display_mode_label()
         for expression_item in expression_items:
-            item = QtWidgets.QListWidgetItem(expression_item.display_text)
+            item = QtWidgets.QListWidgetItem(
+                self._format_expression_item_for_display(expression_item, use_label=use_label)
+            )
             item.setData(QtCore.Qt.UserRole, expression_item)
             self.aliasExpressionsListWidget.addItem(item)
 
@@ -488,8 +639,11 @@ class MainPanel:
         expression_items, _counts = self._controller.get_expression_items(
             selected_varset_variable_items
         )
+        use_label = self._is_varsets_display_mode_label()
         for expression_item in expression_items:
-            item = QtWidgets.QListWidgetItem(expression_item.display_text)
+            item = QtWidgets.QListWidgetItem(
+                self._format_expression_item_for_display(expression_item, use_label=use_label)
+            )
             item.setData(QtCore.Qt.UserRole, expression_item)
             self.varsetExpressionsListWidget.addItem(item)
 
@@ -552,6 +706,8 @@ class MainPanel:
 
         self.varsetExpressionsListWidget.clear()
 
+        use_label = self._is_varsets_display_mode_label()
+
         for ref in selected_vars:
             text = ref.text
             App.Console.PrintMessage(
@@ -567,7 +723,9 @@ class MainPanel:
             )
 
         for expression_item in expression_items:
-            item = QtWidgets.QListWidgetItem(expression_item.display_text)
+            item = QtWidgets.QListWidgetItem(
+                self._format_expression_item_for_display(expression_item, use_label=use_label)
+            )
             item.setData(QtCore.Qt.UserRole, expression_item)
             self.varsetExpressionsListWidget.addItem(item)
 
