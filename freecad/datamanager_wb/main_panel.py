@@ -528,6 +528,14 @@ class MainPanel(QtWidgets.QDialog):
                 lambda w: w.textChanged.connect(self._on_variable_filter_changed),
             ),
             (
+                self.varsetVariableNamesOnlyUnusedCheckBox,
+                lambda w: w.toggled.connect(self._on_only_unused_toggled),
+            ),
+            (
+                self.removeUnusedVariablesPushButton,
+                lambda w: w.clicked.connect(self._on_remove_unused_variables_clicked),
+            ),
+            (
                 self.avaliableSpreadsheetsFilterLineEdit,
                 lambda w: w.textChanged.connect(self._on_spreadsheets_filter_changed),
             ),
