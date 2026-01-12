@@ -20,6 +20,7 @@ Annotated UI legend:
 1. Available VarSets
 1. VarSets filter
 1. Exclude CopyOnChanged varsets checkbox
+1. Copy selection button (copies selected items from the adjacent list)
 1. Variables list
 1. Only Unused checkbox
 1. Remove Selected Unused Variables button
@@ -72,6 +73,14 @@ Examples:
 - `bolt` matches anything containing `bolt`
 - `Bolt*` matches names beginning with `Bolt`
 - `*Sketch??` matches names ending with `Sketch` followed by exactly two characters
+
+### Copy button
+
+Each list pane includes a copy button (icon-only).
+
+- Clicking it copies the current list selection to the clipboard.
+- For multi-selection lists, each selected item is copied on its own line.
+- The copy button is enabled only when the list has focus and at least one item is selected.
 
 ### “Exclude Copy-on-Change” / clone filtering
 
