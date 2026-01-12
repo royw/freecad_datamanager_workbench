@@ -16,7 +16,6 @@ from .expression_item import ExpressionItem
 from .panel_controller import PanelController
 from .parent_child_ref import ParentChildRef, parse_parent_child_ref
 from .resources import UIPATH
-from .workbench import get_active_workbench
 
 translate = App.Qt.translate
 
@@ -215,17 +214,6 @@ class MainPanel(QtWidgets.QDialog):
             ):
                 QtCore.QTimer.singleShot(0, self._update_copy_buttons_enabled_state)
         return super().eventFilter(watched, event)
-
-    def _set_pending_copy_from_list(self, widget: QtWidgets.QListWidget | None) -> None:
-        wb = get_active_workbench()
-        if wb is None:
-            return
-
-        if widget is None:
-            wb.pending_copy = []
-            return
-
-        wb.pending_copy = [i.text() for i in widget.selectedItems()]
 
     def _is_copy_enabled_for_list(self, widget: QtWidgets.QListWidget) -> bool:
         if widget is None:
@@ -530,37 +518,6 @@ class MainPanel(QtWidgets.QDialog):
             (
                 self.varsetVariableNamesFilterLineEdit,
                 lambda w: w.textChanged.connect(self._on_variable_filter_changed),
-            ),
-            (
-                self.varsetVariableNamesOnlyUnusedCheckBox,
-                lambda w: w.toggled.connect(self._on_only_unused_toggled),
-            ),
-            (
-                self.removeUnusedVariablesPushButton,
-                lambda w: w.clicked.connect(self._on_remove_unused_variables_clicked),
-            ),
-            (
-                self.availableSpreadsheetsListWidget,
-                lambda w: (
-                    w.itemSelectionChanged.connect(
-                        self._on_available_spreadsheets_selection_changed
-                    ),
-                    w.itemSelectionChanged.connect(self._update_copy_buttons_enabled_state),
-                ),
-            ),
-            (
-                self.aliasesVariableNamesListWidget,
-                lambda w: (
-                    w.itemSelectionChanged.connect(self._on_alias_names_selection_changed),
-                    w.itemSelectionChanged.connect(self._update_copy_buttons_enabled_state),
-                ),
-            ),
-            (
-                self.aliasExpressionsListWidget,
-                lambda w: (
-                    w.itemSelectionChanged.connect(self._on_alias_expressions_selection_changed),
-                    w.itemSelectionChanged.connect(self._update_copy_buttons_enabled_state),
-                ),
             ),
             (
                 self.avaliableSpreadsheetsFilterLineEdit,
