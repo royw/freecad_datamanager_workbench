@@ -29,6 +29,8 @@ Annotated UI legend:
 1. Splitter (resizable pane divider)
 1. Expressions list
 1. Show Objects as: Name/Label radio buttons
+1. Copy Selection Buttons
+1. Shows selected expression selects object in model view
 
 ### VarSets tab
 

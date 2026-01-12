@@ -20,13 +20,14 @@ Annotated UI legend:
 1. Available VarSets
 1. VarSets filter
 1. Exclude CopyOnChanged varsets checkbox
-1. Copy selection button (copies selected items from the adjacent list)
 1. Variables list
 1. Only Unused checkbox
 1. Remove Selected Unused Variables button
 1. Splitter (resizable pane divider)
 1. Expressions list
 1. Show Objects as: Name/Label radio buttons
+1. Copy Selection Buttons
+1. Shows selected expression selects object in model view
 
 ## Opening the DataManager panel
 
@@ -82,6 +83,8 @@ Each list pane includes a copy button (icon-only).
 - For multi-selection lists, each selected item is copied on its own line.
 - The copy button is enabled only when the list has focus and at least one item is selected.
 
+See the annotated screenshot above (12).
+
 ### “Exclude Copy-on-Change” / clone filtering
 
 Both tabs include an option to hide objects created by FreeCAD’s copy-on-change mechanism.
@@ -122,6 +125,8 @@ At the bottom of each expressions pane, the UI indicates:
 When you click an expression entry in the list, the workbench will attempt to select the referenced object in the FreeCAD model.
 
 Tip: If you don’t see anything selected, the expression may reference a property or sub-element that can’t be selected directly, or the object may no longer exist.
+
+See the annotated screenshot above (13).
 
 ## Varsets tab
 
