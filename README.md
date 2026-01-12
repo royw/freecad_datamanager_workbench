@@ -69,6 +69,15 @@ Annotated UI legend:
   - Use the **Show Objects as: Name/Label** radio buttons (11) to control whether expression list entries display
     the FreeCAD object internal name or its label. The choice is persisted.
 
+- **Copy Selected** (12)
+
+  - Each list pane includes a Copy Selected button.
+  - Clicking it copies the selected list items to the clipboard (one item per line).
+
+- **Select object in model tree from expression** (13)
+
+  - Clicking an expression entry attempts to select the referenced object in the FreeCAD model tree.
+
 ### Aliases tab
 
 - The Aliases tab mirrors the VarSets layout and is resizable using a splitter.
