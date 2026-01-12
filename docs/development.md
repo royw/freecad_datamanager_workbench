@@ -128,6 +128,56 @@ TBD:
 - Exact Addon Manager metadata requirements (for example which fields/files are required for listing).
 - Whether releases will be Git tags, GitHub releases, or both.
 
+## Publishing to FreeCAD Addon Manager
+
+The FreeCAD Addon Manager catalog is maintained in:
+
+- [FreeCAD/FreeCAD-addons](https://github.com/FreeCAD/FreeCAD-addons/)
+
+This repository is not the catalog itself. To publish/update the workbench in Addon Manager, you submit a pull request to the FreeCAD-addons repository.
+
+### Workflow
+
+1. Clone the addon catalog repository.
+1. Add this workbench as a git submodule.
+1. Ensure the submodule entry is inserted in sorted order in `.gitmodules`.
+1. Add the workbench entry to `AddonCatalog.json` (also in sorted order).
+1. Open a pull request.
+
+### Submodule entry (`.gitmodules`)
+
+Add an entry like this (sorted among existing submodules):
+
+```ini
+[submodule "DataManager"]
+    path = datamanager_wb
+    url = https://github.com/royw/freecad_datamanager_workbench
+    branch = master
+```
+
+In practice you typically create it via:
+
+```sh
+git submodule add -b master https://github.com/royw/freecad_datamanager_workbench datamanager_wb
+```
+
+### Addon catalog entry (`AddonCatalog.json`)
+
+Add an entry like this (sorted among existing addons):
+
+```json
+{
+  "DataManager": [
+    {
+      "repository": "https://github.com/royw/freecad_datamanager_workbench",
+      "git_ref": "master",
+      "branch_display_name": "master",
+      "zip_url": "https://github.com/royw/freecad_datamanager_workbench/archive/refs/heads/master.zip"
+    }
+  ]
+}
+```
+
 ## Versioning and release process
 
 The project version is defined in `pyproject.toml` and is the single source of truth.
