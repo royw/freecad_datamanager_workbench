@@ -16,6 +16,7 @@ from .expression_item import ExpressionItem
 from .panel_controller import PanelController
 from .parent_child_ref import ParentChildRef, parse_parent_child_ref
 from .resources import UIPATH
+from .workbench import get_active_workbench
 
 translate = App.Qt.translate
 
@@ -213,21 +214,18 @@ class MainPanel(QtWidgets.QDialog):
                 QtCore.QEvent.Type.FocusOut,
             ):
                 QtCore.QTimer.singleShot(0, self._update_copy_buttons_enabled_state)
-
-            if event.type() == QtCore.QEvent.Type.KeyPress:
-                key = getattr(event, "key", None)
-                mods = getattr(event, "modifiers", None)
-                if callable(key) and callable(mods):
-                    pressed_key = key()
-                    pressed_mods = mods()
-                    is_c = pressed_key in (QtCore.Qt.Key.Key_C,)
-                    has_ctrl = bool(pressed_mods & QtCore.Qt.KeyboardModifier.ControlModifier)
-                    has_meta = bool(pressed_mods & QtCore.Qt.KeyboardModifier.MetaModifier)
-                    if is_c and (has_ctrl or has_meta):
-                        if self._is_copy_enabled_for_list(watched):
-                            self._copy_list_selection_to_clipboard(watched)
-                            return True
         return super().eventFilter(watched, event)
+
+    def _set_pending_copy_from_list(self, widget: QtWidgets.QListWidget | None) -> None:
+        wb = get_active_workbench()
+        if wb is None:
+            return
+
+        if widget is None:
+            wb.pending_copy = []
+            return
+
+        wb.pending_copy = [i.text() for i in widget.selectedItems()]
 
     def _is_copy_enabled_for_list(self, widget: QtWidgets.QListWidget) -> bool:
         if widget is None:
