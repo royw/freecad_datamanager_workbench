@@ -138,20 +138,20 @@
                  </spacer>
                 </item>
                 <item>
-                 <widget class="QPushButton" name="copyAvailableVarsetsPushButton">
+                 <widget class="QToolButton" name="copyAvailableVarsetsPushButton">
                   <property name="enabled">
                    <bool>false</bool>
                   </property>
                   <property name="toolTip">
                    <string>Copy</string>
                   </property>
-                  <property name="text">
-                   <string/>
-                  </property>
                   <property name="icon">
-                   <iconset theme="QIcon::ThemeIcon::EditCopy"/>
+                   <iconset theme="edit-copy"/>
                   </property>
-                  <property name="flat">
+                  <property name="toolButtonStyle">
+                   <enum>Qt::ToolButtonStyle::ToolButtonIconOnly</enum>
+                  </property>
+                  <property name="autoRaise">
                    <bool>true</bool>
                   </property>
                  </widget>
@@ -220,7 +220,7 @@
                  </spacer>
                 </item>
                 <item>
-                 <widget class="QPushButton" name="copyVarsetVariablesPushButton">
+                 <widget class="QToolButton" name="copyVarsetVariablesPushButton">
                   <property name="enabled">
                    <bool>false</bool>
                   </property>
@@ -231,9 +231,12 @@
                    <string/>
                   </property>
                   <property name="icon">
-                   <iconset theme="QIcon::ThemeIcon::EditCopy"/>
+                   <iconset theme="edit-copy"/>
                   </property>
-                  <property name="flat">
+                  <property name="toolButtonStyle">
+                   <enum>Qt::ToolButtonStyle::ToolButtonIconOnly</enum>
+                  </property>
+                  <property name="autoRaise">
                    <bool>true</bool>
                   </property>
                  </widget>
@@ -301,29 +304,44 @@
                <property name="orientation">
                 <enum>Qt::Orientation::Horizontal</enum>
                </property>
+               <property name="sizeType">
+                <enum>QSizePolicy::Policy::Expanding</enum>
+               </property>
                <property name="sizeHint" stdset="0">
                 <size>
-                 <width>40</width>
+                 <width>10</width>
                  <height>20</height>
                 </size>
                </property>
               </spacer>
              </item>
              <item>
-              <widget class="QPushButton" name="copyVarsetExpressionsPushButton">
+              <widget class="QToolButton" name="copyVarsetExpressionsPushButton">
                <property name="enabled">
                 <bool>false</bool>
                </property>
+               <property name="sizePolicy">
+                <sizepolicy hsizetype="Fixed" vsizetype="Fixed">
+                 <horstretch>0</horstretch>
+                 <verstretch>0</verstretch>
+                </sizepolicy>
+               </property>
                <property name="toolTip">
                 <string>Copy</string>
+               </property>
+               <property name="layoutDirection">
+                <enum>Qt::LayoutDirection::LeftToRight</enum>
                </property>
                <property name="text">
                 <string/>
                </property>
                <property name="icon">
-                <iconset theme="QIcon::ThemeIcon::EditCopy"/>
+                <iconset theme="edit-copy"/>
                </property>
-               <property name="flat">
+               <property name="toolButtonStyle">
+                <enum>Qt::ToolButtonStyle::ToolButtonIconOnly</enum>
+               </property>
+               <property name="autoRaise">
                 <bool>true</bool>
                </property>
               </widget>
@@ -428,7 +446,7 @@
                  </spacer>
                 </item>
                 <item>
-                 <widget class="QPushButton" name="copyAvailableSpreadsheetsPushButton">
+                 <widget class="QToolButton" name="copyAvailableSpreadsheetsPushButton">
                   <property name="enabled">
                    <bool>false</bool>
                   </property>
@@ -439,9 +457,12 @@
                    <string/>
                   </property>
                   <property name="icon">
-                   <iconset theme="QIcon::ThemeIcon::EditCopy"/>
+                   <iconset theme="edit-copy"/>
                   </property>
-                  <property name="flat">
+                  <property name="toolButtonStyle">
+                   <enum>Qt::ToolButtonStyle::ToolButtonIconOnly</enum>
+                  </property>
+                  <property name="autoRaise">
                    <bool>true</bool>
                   </property>
                  </widget>
@@ -510,7 +531,7 @@
                  </spacer>
                 </item>
                 <item>
-                 <widget class="QPushButton" name="copyAliasesPushButton">
+                 <widget class="QToolButton" name="copyAliasesPushButton">
                   <property name="enabled">
                    <bool>false</bool>
                   </property>
@@ -521,9 +542,12 @@
                    <string/>
                   </property>
                   <property name="icon">
-                   <iconset theme="QIcon::ThemeIcon::EditCopy"/>
+                   <iconset theme="edit-copy"/>
                   </property>
-                  <property name="flat">
+                  <property name="toolButtonStyle">
+                   <enum>Qt::ToolButtonStyle::ToolButtonIconOnly</enum>
+                  </property>
+                  <property name="autoRaise">
                    <bool>true</bool>
                   </property>
                  </widget>
@@ -600,7 +624,7 @@
               </spacer>
              </item>
              <item>
-              <widget class="QPushButton" name="copyAliasExpressionsPushButton">
+              <widget class="QToolButton" name="copyAliasExpressionsPushButton">
                <property name="enabled">
                 <bool>false</bool>
                </property>
@@ -611,9 +635,12 @@
                 <string/>
                </property>
                <property name="icon">
-                <iconset theme="QIcon::ThemeIcon::EditCopy"/>
+                <iconset theme="edit-copy"/>
                </property>
-               <property name="flat">
+               <property name="toolButtonStyle">
+                <enum>Qt::ToolButtonStyle::ToolButtonIconOnly</enum>
+               </property>
+               <property name="autoRaise">
                 <bool>true</bool>
                </property>
               </widget>

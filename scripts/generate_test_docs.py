@@ -7,7 +7,6 @@ table for documentation purposes.
 
 import ast
 import re
-import tempfile
 from datetime import datetime
 from pathlib import Path
 from typing import NamedTuple

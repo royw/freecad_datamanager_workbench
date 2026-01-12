@@ -59,7 +59,7 @@ class MainPanel(QtWidgets.QDialog):
         App.Console.PrintMessage(translate("Log", "Workbench MainPanel initialized.") + "\n")
         self._mdi_subwindow = None
         self._controller = PanelController()
-        self._copy_map: dict[QtWidgets.QListWidget, QtWidgets.QPushButton] = {}
+        self._copy_map: dict[QtWidgets.QListWidget, QtWidgets.QAbstractButton] = {}
 
         self.form = self._load_ui()
         self._widget = self._resolve_root_widget()
@@ -160,22 +160,22 @@ class MainPanel(QtWidgets.QDialog):
         )
 
         self.copyAvailableVarsetsPushButton = self._find_required_widget(
-            QtWidgets.QPushButton, "copyAvailableVarsetsPushButton"
+            QtWidgets.QToolButton, "copyAvailableVarsetsPushButton"
         )
         self.copyVarsetVariablesPushButton = self._find_required_widget(
-            QtWidgets.QPushButton, "copyVarsetVariablesPushButton"
+            QtWidgets.QToolButton, "copyVarsetVariablesPushButton"
         )
         self.copyVarsetExpressionsPushButton = self._find_required_widget(
-            QtWidgets.QPushButton, "copyVarsetExpressionsPushButton"
+            QtWidgets.QToolButton, "copyVarsetExpressionsPushButton"
         )
         self.copyAvailableSpreadsheetsPushButton = self._find_required_widget(
-            QtWidgets.QPushButton, "copyAvailableSpreadsheetsPushButton"
+            QtWidgets.QToolButton, "copyAvailableSpreadsheetsPushButton"
         )
         self.copyAliasesPushButton = self._find_required_widget(
-            QtWidgets.QPushButton, "copyAliasesPushButton"
+            QtWidgets.QToolButton, "copyAliasesPushButton"
         )
         self.copyAliasExpressionsPushButton = self._find_required_widget(
-            QtWidgets.QPushButton, "copyAliasExpressionsPushButton"
+            QtWidgets.QToolButton, "copyAliasExpressionsPushButton"
         )
 
     def _configure_widgets(self) -> None:
@@ -195,17 +195,21 @@ class MainPanel(QtWidgets.QDialog):
             self.aliasExpressionsListWidget: self.copyAliasExpressionsPushButton,
         }
 
-        fallback_icon = self.style().standardIcon(
-            QtWidgets.QStyle.StandardPixmap.SP_DialogSaveButton
-        )
-
         for list_widget, button in self._copy_map.items():
             if list_widget is None or button is None:
                 continue
-            if button.icon().isNull():
-                button.setIcon(fallback_icon)
+
+            button.setText("")
+            button.setToolTip(translate("Workbench", "Copy selection"))
+            if isinstance(button, QtWidgets.QToolButton):
+                button.setAutoRaise(True)
+                button.setToolButtonStyle(QtCore.Qt.ToolButtonStyle.ToolButtonIconOnly)
+            button.setSizePolicy(
+                QtWidgets.QSizePolicy.Policy.Fixed,
+                QtWidgets.QSizePolicy.Policy.Fixed,
+            )
             button.setIconSize(QtCore.QSize(16, 16))
-            button.setFixedSize(QtCore.QSize(24, 24))
+            button.setFixedSize(QtCore.QSize(20, 20))
             button.setEnabled(False)
             list_widget.installEventFilter(self)
 
