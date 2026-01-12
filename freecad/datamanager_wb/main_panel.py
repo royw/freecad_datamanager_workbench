@@ -241,7 +241,8 @@ class MainPanel(QtWidgets.QDialog):
             return
         # Clicking the copy button moves focus away from the list widget, so we
         # only require a selection here (enablement still depends on focus).
-        if len(widget.selectedItems()) == 0:
+        selected_items = widget.selectedItems()
+        if len(selected_items) == 0:
             return
         self._copy_list_selection_to_clipboard(widget)
 
@@ -571,50 +572,134 @@ class MainPanel(QtWidgets.QDialog):
             ),
             (
                 self.copyAvailableVarsetsPushButton,
-                lambda w: w.clicked.connect(
-                    lambda _checked=False: self._on_copy_button_clicked(
-                        self.availableVarsetsListWidget
-                    )
+                lambda w: (
+                    App.Console.PrintMessage(
+                        translate(
+                            "Log",
+                            (
+                                f"DataManager(copy): connecting {w.objectName()} "
+                                "-> availableVarsetsListWidget\n"
+                            ),
+                        )
+                    ),
+                    w.pressed.connect(
+                        lambda: self._on_copy_button_clicked(self.availableVarsetsListWidget)
+                    ),
+                    w.clicked.connect(
+                        lambda _checked=False: self._on_copy_button_clicked(
+                            self.availableVarsetsListWidget
+                        )
+                    ),
                 ),
             ),
             (
                 self.copyVarsetVariablesPushButton,
-                lambda w: w.clicked.connect(
-                    lambda _checked=False: self._on_copy_button_clicked(
-                        self.varsetVariableNamesListWidget
-                    )
+                lambda w: (
+                    App.Console.PrintMessage(
+                        translate(
+                            "Log",
+                            (
+                                f"DataManager(copy): connecting {w.objectName()} "
+                                "-> varsetVariableNamesListWidget\n"
+                            ),
+                        )
+                    ),
+                    w.pressed.connect(
+                        lambda: self._on_copy_button_clicked(self.varsetVariableNamesListWidget)
+                    ),
+                    w.clicked.connect(
+                        lambda _checked=False: self._on_copy_button_clicked(
+                            self.varsetVariableNamesListWidget
+                        )
+                    ),
                 ),
             ),
             (
                 self.copyVarsetExpressionsPushButton,
-                lambda w: w.clicked.connect(
-                    lambda _checked=False: self._on_copy_button_clicked(
-                        self.varsetExpressionsListWidget
-                    )
+                lambda w: (
+                    App.Console.PrintMessage(
+                        translate(
+                            "Log",
+                            (
+                                f"DataManager(copy): connecting {w.objectName()} "
+                                "-> varsetExpressionsListWidget\n"
+                            ),
+                        )
+                    ),
+                    w.pressed.connect(
+                        lambda: self._on_copy_button_clicked(self.varsetExpressionsListWidget)
+                    ),
+                    w.clicked.connect(
+                        lambda _checked=False: self._on_copy_button_clicked(
+                            self.varsetExpressionsListWidget
+                        )
+                    ),
                 ),
             ),
             (
                 self.copyAvailableSpreadsheetsPushButton,
-                lambda w: w.clicked.connect(
-                    lambda _checked=False: self._on_copy_button_clicked(
-                        self.availableSpreadsheetsListWidget
-                    )
+                lambda w: (
+                    App.Console.PrintMessage(
+                        translate(
+                            "Log",
+                            (
+                                f"DataManager(copy): connecting {w.objectName()} "
+                                "-> availableSpreadsheetsListWidget\n"
+                            ),
+                        )
+                    ),
+                    w.pressed.connect(
+                        lambda: self._on_copy_button_clicked(self.availableSpreadsheetsListWidget)
+                    ),
+                    w.clicked.connect(
+                        lambda _checked=False: self._on_copy_button_clicked(
+                            self.availableSpreadsheetsListWidget
+                        )
+                    ),
                 ),
             ),
             (
                 self.copyAliasesPushButton,
-                lambda w: w.clicked.connect(
-                    lambda _checked=False: self._on_copy_button_clicked(
-                        self.aliasesVariableNamesListWidget
-                    )
+                lambda w: (
+                    App.Console.PrintMessage(
+                        translate(
+                            "Log",
+                            (
+                                f"DataManager(copy): connecting {w.objectName()} "
+                                "-> aliasesVariableNamesListWidget\n"
+                            ),
+                        )
+                    ),
+                    w.pressed.connect(
+                        lambda: self._on_copy_button_clicked(self.aliasesVariableNamesListWidget)
+                    ),
+                    w.clicked.connect(
+                        lambda _checked=False: self._on_copy_button_clicked(
+                            self.aliasesVariableNamesListWidget
+                        )
+                    ),
                 ),
             ),
             (
                 self.copyAliasExpressionsPushButton,
-                lambda w: w.clicked.connect(
-                    lambda _checked=False: self._on_copy_button_clicked(
-                        self.aliasExpressionsListWidget
-                    )
+                lambda w: (
+                    App.Console.PrintMessage(
+                        translate(
+                            "Log",
+                            (
+                                f"DataManager(copy): connecting {w.objectName()} "
+                                "-> aliasExpressionsListWidget\n"
+                            ),
+                        )
+                    ),
+                    w.pressed.connect(
+                        lambda: self._on_copy_button_clicked(self.aliasExpressionsListWidget)
+                    ),
+                    w.clicked.connect(
+                        lambda _checked=False: self._on_copy_button_clicked(
+                            self.aliasExpressionsListWidget
+                        )
+                    ),
                 ),
             ),
         ]
