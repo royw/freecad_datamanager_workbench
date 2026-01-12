@@ -195,12 +195,15 @@ class MainPanel(QtWidgets.QDialog):
             self.aliasExpressionsListWidget: self.copyAliasExpressionsPushButton,
         }
 
-        copy_icon = self.style().standardIcon(QtWidgets.QStyle.StandardPixmap.SP_DialogSaveButton)
+        fallback_icon = self.style().standardIcon(
+            QtWidgets.QStyle.StandardPixmap.SP_DialogSaveButton
+        )
 
         for list_widget, button in self._copy_map.items():
             if list_widget is None or button is None:
                 continue
-            button.setIcon(copy_icon)
+            if button.icon().isNull():
+                button.setIcon(fallback_icon)
             button.setIconSize(QtCore.QSize(16, 16))
             button.setFixedSize(QtCore.QSize(24, 24))
             button.setEnabled(False)
