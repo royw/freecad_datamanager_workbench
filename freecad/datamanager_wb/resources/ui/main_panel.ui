@@ -92,7 +92,38 @@
                <number>6</number>
               </property>
               <item>
+               <widget class="QListWidget" name="avaliableVarsetsListWidget">
+                <property name="sizePolicy">
+                 <sizepolicy hsizetype="Expanding" vsizetype="Expanding">
+                  <horstretch>0</horstretch>
+                  <verstretch>0</verstretch>
+                 </sizepolicy>
+                </property>
+               </widget>
+              </item>
+              <item>
+               <layout class="QHBoxLayout" name="horizontalLayout_3">
+                <item>
+                 <widget class="QLabel" name="label">
+                  <property name="text">
+                   <string>Filter:</string>
+                  </property>
+                 </widget>
+                </item>
+                <item>
+                 <widget class="QLineEdit" name="avaliableVarsetsFilterLineEdit"/>
+                </item>
+               </layout>
+              </item>
+              <item>
                <layout class="QHBoxLayout" name="horizontalLayout_copy_varsets">
+                <item>
+                 <widget class="QRadioButton" name="avaliableVarsetsExcludeClonesRadioButton">
+                  <property name="text">
+                   <string>Exclude CopyOnChanged varsets</string>
+                  </property>
+                 </widget>
+                </item>
                 <item>
                  <spacer name="horizontalSpacer_copy_varsets">
                   <property name="orientation">
@@ -124,37 +155,6 @@
                 </item>
                </layout>
               </item>
-              <item>
-               <widget class="QListWidget" name="avaliableVarsetsListWidget">
-                <property name="sizePolicy">
-                 <sizepolicy hsizetype="Expanding" vsizetype="Expanding">
-                  <horstretch>0</horstretch>
-                  <verstretch>0</verstretch>
-                 </sizepolicy>
-                </property>
-               </widget>
-              </item>
-              <item>
-               <layout class="QHBoxLayout" name="horizontalLayout_3">
-                <item>
-                 <widget class="QLabel" name="label">
-                  <property name="text">
-                   <string>Filter:</string>
-                  </property>
-                 </widget>
-                </item>
-                <item>
-                 <widget class="QLineEdit" name="avaliableVarsetsFilterLineEdit"/>
-                </item>
-               </layout>
-              </item>
-              <item>
-               <widget class="QRadioButton" name="avaliableVarsetsExcludeClonesRadioButton">
-                <property name="text">
-                 <string>Exclude CopyOnChanged varsets</string>
-                </property>
-               </widget>
-              </item>
              </layout>
             </widget>
            </item>
@@ -171,7 +171,38 @@
              </property>
              <layout class="QVBoxLayout" name="verticalLayout_2">
               <item>
+               <widget class="QListWidget" name="varsetVariableNamesListWidget"/>
+              </item>
+              <item>
+               <layout class="QHBoxLayout" name="horizontalLayout_4">
+                <item>
+                 <widget class="QLabel" name="label_2">
+                  <property name="text">
+                   <string>Filter:</string>
+                  </property>
+                 </widget>
+                </item>
+                <item>
+                 <widget class="QLineEdit" name="varsetVariableNamesFilterLineEdit"/>
+                </item>
+               </layout>
+              </item>
+              <item>
+               <widget class="QCheckBox" name="varsetVariableNamesOnlyUnusedCheckBox">
+                <property name="text">
+                 <string>Only Unused</string>
+                </property>
+               </widget>
+              </item>
+              <item>
                <layout class="QHBoxLayout" name="horizontalLayout_copy_variables">
+                <item>
+                 <widget class="QPushButton" name="removeUnusedVariablesPushButton">
+                  <property name="text">
+                   <string>Remove Selected Unused Variable(s)</string>
+                  </property>
+                 </widget>
+                </item>
                 <item>
                  <spacer name="horizontalSpacer_copy_variables">
                   <property name="orientation">
@@ -203,37 +234,6 @@
                 </item>
                </layout>
               </item>
-              <item>
-               <widget class="QListWidget" name="varsetVariableNamesListWidget"/>
-              </item>
-              <item>
-               <layout class="QHBoxLayout" name="horizontalLayout_4">
-                <item>
-                 <widget class="QLabel" name="label_2">
-                  <property name="text">
-                   <string>Filter:</string>
-                  </property>
-                 </widget>
-                </item>
-                <item>
-                 <widget class="QLineEdit" name="varsetVariableNamesFilterLineEdit"/>
-                </item>
-               </layout>
-              </item>
-              <item>
-               <widget class="QCheckBox" name="varsetVariableNamesOnlyUnusedCheckBox">
-                <property name="text">
-                 <string>Only Unused</string>
-                </property>
-               </widget>
-              </item>
-              <item>
-               <widget class="QPushButton" name="removeUnusedVariablesPushButton">
-                <property name="text">
-                 <string>Remove Selected Unused Variable(s)</string>
-                </property>
-               </widget>
-              </item>
              </layout>
             </widget>
            </item>
@@ -250,39 +250,6 @@
            <string>Expressions</string>
           </property>
           <layout class="QVBoxLayout" name="verticalLayout_3">
-           <item>
-            <layout class="QHBoxLayout" name="horizontalLayout_copy_varset_expressions">
-             <item>
-              <spacer name="horizontalSpacer_copy_varset_expressions">
-               <property name="orientation">
-                <enum>Qt::Orientation::Horizontal</enum>
-               </property>
-               <property name="sizeHint" stdset="0">
-                <size>
-                 <width>40</width>
-                 <height>20</height>
-                </size>
-               </property>
-              </spacer>
-             </item>
-             <item>
-              <widget class="QPushButton" name="copyVarsetExpressionsPushButton">
-               <property name="enabled">
-                <bool>false</bool>
-               </property>
-               <property name="toolTip">
-                <string>Copy</string>
-               </property>
-               <property name="text">
-                <string/>
-               </property>
-               <property name="flat">
-                <bool>true</bool>
-               </property>
-              </widget>
-             </item>
-            </layout>
-           </item>
            <item>
             <widget class="QListWidget" name="varsetExpressionsListWidget">
              <property name="sizePolicy">
@@ -335,6 +302,22 @@
                 </size>
                </property>
               </spacer>
+             </item>
+             <item>
+              <widget class="QPushButton" name="copyVarsetExpressionsPushButton">
+               <property name="enabled">
+                <bool>false</bool>
+               </property>
+               <property name="toolTip">
+                <string>Copy</string>
+               </property>
+               <property name="text">
+                <string/>
+               </property>
+               <property name="flat">
+                <bool>true</bool>
+               </property>
+              </widget>
              </item>
             </layout>
            </item>
@@ -390,7 +373,38 @@
              </property>
              <layout class="QVBoxLayout" name="verticalLayout_4">
               <item>
+               <widget class="QListWidget" name="avaliableSpreadsheetsListWidget">
+                <property name="sizePolicy">
+                 <sizepolicy hsizetype="Expanding" vsizetype="Expanding">
+                  <horstretch>0</horstretch>
+                  <verstretch>0</verstretch>
+                 </sizepolicy>
+                </property>
+               </widget>
+              </item>
+              <item>
+               <layout class="QHBoxLayout" name="horizontalLayout_7">
+                <item>
+                 <widget class="QLabel" name="label_4">
+                  <property name="text">
+                   <string>Filter:</string>
+                  </property>
+                 </widget>
+                </item>
+                <item>
+                 <widget class="QLineEdit" name="avaliableSpreadsheetsFilterLineEdit"/>
+                </item>
+               </layout>
+              </item>
+              <item>
                <layout class="QHBoxLayout" name="horizontalLayout_copy_spreadsheets">
+                <item>
+                 <widget class="QRadioButton" name="excludeCopyOnChangeSpreadsheetsRadioButton">
+                  <property name="text">
+                   <string>Exclude CopyOnChanged spreadsheets</string>
+                  </property>
+                 </widget>
+                </item>
                 <item>
                  <spacer name="horizontalSpacer_copy_spreadsheets">
                   <property name="orientation">
@@ -422,37 +436,6 @@
                 </item>
                </layout>
               </item>
-              <item>
-               <widget class="QListWidget" name="avaliableSpreadsheetsListWidget">
-                <property name="sizePolicy">
-                 <sizepolicy hsizetype="Expanding" vsizetype="Expanding">
-                  <horstretch>0</horstretch>
-                  <verstretch>0</verstretch>
-                 </sizepolicy>
-                </property>
-               </widget>
-              </item>
-              <item>
-               <layout class="QHBoxLayout" name="horizontalLayout_7">
-                <item>
-                 <widget class="QLabel" name="label_4">
-                  <property name="text">
-                   <string>Filter:</string>
-                  </property>
-                 </widget>
-                </item>
-                <item>
-                 <widget class="QLineEdit" name="avaliableSpreadsheetsFilterLineEdit"/>
-                </item>
-               </layout>
-              </item>
-              <item>
-               <widget class="QRadioButton" name="excludeCopyOnChangeSpreadsheetsRadioButton">
-                <property name="text">
-                 <string>Exclude CopyOnChanged spreadsheets</string>
-                </property>
-               </widget>
-              </item>
              </layout>
             </widget>
            </item>
@@ -469,7 +452,38 @@
              </property>
              <layout class="QVBoxLayout" name="verticalLayout_5">
               <item>
+               <widget class="QListWidget" name="aliasesVariableNamesListWidget"/>
+              </item>
+              <item>
+               <layout class="QHBoxLayout" name="horizontalLayout_8">
+                <item>
+                 <widget class="QLabel" name="label_5">
+                  <property name="text">
+                   <string>Filter:</string>
+                  </property>
+                 </widget>
+                </item>
+                <item>
+                 <widget class="QLineEdit" name="aliasesVariableNamesFilterLineEdit"/>
+                </item>
+               </layout>
+              </item>
+              <item>
+               <widget class="QCheckBox" name="aliasesOnlyUnusedCheckBox">
+                <property name="text">
+                 <string>Only Unused</string>
+                </property>
+               </widget>
+              </item>
+              <item>
                <layout class="QHBoxLayout" name="horizontalLayout_copy_aliases">
+                <item>
+                 <widget class="QPushButton" name="removeUnusedAliasesPushButton">
+                  <property name="text">
+                   <string>Remove Selected Unused Alias(es)</string>
+                  </property>
+                 </widget>
+                </item>
                 <item>
                  <spacer name="horizontalSpacer_copy_aliases">
                   <property name="orientation">
@@ -501,37 +515,6 @@
                 </item>
                </layout>
               </item>
-              <item>
-               <widget class="QListWidget" name="aliasesVariableNamesListWidget"/>
-              </item>
-              <item>
-               <layout class="QHBoxLayout" name="horizontalLayout_8">
-                <item>
-                 <widget class="QLabel" name="label_5">
-                  <property name="text">
-                   <string>Filter:</string>
-                  </property>
-                 </widget>
-                </item>
-                <item>
-                 <widget class="QLineEdit" name="aliasesVariableNamesFilterLineEdit"/>
-                </item>
-               </layout>
-              </item>
-              <item>
-               <widget class="QCheckBox" name="aliasesOnlyUnusedCheckBox">
-                <property name="text">
-                 <string>Only Unused</string>
-                </property>
-               </widget>
-              </item>
-              <item>
-               <widget class="QPushButton" name="removeUnusedAliasesPushButton">
-                <property name="text">
-                 <string>Remove Selected Unused Alias(es)</string>
-                </property>
-               </widget>
-              </item>
              </layout>
             </widget>
            </item>
@@ -548,39 +531,6 @@
            <string>Expressions</string>
           </property>
           <layout class="QVBoxLayout" name="verticalLayout_6">
-           <item>
-            <layout class="QHBoxLayout" name="horizontalLayout_copy_alias_expressions">
-             <item>
-              <spacer name="horizontalSpacer_copy_alias_expressions">
-               <property name="orientation">
-                <enum>Qt::Orientation::Horizontal</enum>
-               </property>
-               <property name="sizeHint" stdset="0">
-                <size>
-                 <width>40</width>
-                 <height>20</height>
-                </size>
-               </property>
-              </spacer>
-             </item>
-             <item>
-              <widget class="QPushButton" name="copyAliasExpressionsPushButton">
-               <property name="enabled">
-                <bool>false</bool>
-               </property>
-               <property name="toolTip">
-                <string>Copy</string>
-               </property>
-               <property name="text">
-                <string/>
-               </property>
-               <property name="flat">
-                <bool>true</bool>
-               </property>
-              </widget>
-             </item>
-            </layout>
-           </item>
            <item>
             <widget class="QListWidget" name="aliasExpressionsListWidget">
              <property name="sizePolicy">
@@ -633,6 +583,22 @@
                 </size>
                </property>
               </spacer>
+             </item>
+             <item>
+              <widget class="QPushButton" name="copyAliasExpressionsPushButton">
+               <property name="enabled">
+                <bool>false</bool>
+               </property>
+               <property name="toolTip">
+                <string>Copy</string>
+               </property>
+               <property name="text">
+                <string/>
+               </property>
+               <property name="flat">
+                <bool>true</bool>
+               </property>
+              </widget>
              </item>
             </layout>
            </item>
