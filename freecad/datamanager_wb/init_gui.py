@@ -17,11 +17,6 @@ translate = App.Qt.translate
 Gui.addLanguagePath(TRANSLATIONSPATH)
 Gui.updateLocale()
 
-
 check_python_and_freecad_version()
-
-
 register_commands(get_main_panel)
-
-
 Gui.addWorkbench(DataManagerWorkbench())
