@@ -514,9 +514,7 @@ class MainPanel(QtWidgets.QDialog):
         obj_label = self._try_get_object_label(object_name)
         return obj_label if obj_label else object_name
 
-    def _format_parent_child_ref_for_display(
-        self, ref: ParentChildRef, *, use_label: bool
-    ) -> str:
+    def _format_parent_child_ref_for_display(self, ref: ParentChildRef, *, use_label: bool) -> str:
         if not use_label:
             return ref.text
         obj_label = self._try_get_object_label(ref.parent)
@@ -565,7 +563,9 @@ class MainPanel(QtWidgets.QDialog):
             filter_text=filter_text,
             exclude_copy_on_change=exclude_copy_on_change,
         )
-        self._populate_parent_list_widget(widget, items, use_label=self._is_varsets_display_mode_label())
+        self._populate_parent_list_widget(
+            widget, items, use_label=self._is_varsets_display_mode_label()
+        )
         self._restore_list_selection(widget, selected_keys=selected)
 
     def _populate_spreadsheets(self) -> None:
@@ -598,11 +598,6 @@ class MainPanel(QtWidgets.QDialog):
         if widget is None:
             return False
         return widget.isChecked()
-
-    def _populate_list_widget(self, widget: QtWidgets.QListWidget, items: list[str]) -> None:
-        for item in items:
-            widget.addItem(item)
-        self._adjust_list_widget_width_to_contents(widget)
 
     def _populate_parent_list_widget(
         self, widget: QtWidgets.QListWidget, items: list[str], *, use_label: bool

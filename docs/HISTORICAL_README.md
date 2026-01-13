@@ -29,7 +29,7 @@ To agilize this task there is a `Makefile` ready with some substitutions command
 - Execute `make` on the command line, this replaces strings and rename file/directory
 - With the help of `git status` and `git diff` you can verify the changes, if you don't like them use `git restore .`
 
-## Structure of a namespace-workbench:
+## Structure of a namespace-workbench
 
 ### Initialization Files
 
@@ -42,7 +42,7 @@ Both of these initialization files are called when the FreeCAD-gui is launched. 
 
 This is the minimal structure of a namespace-package to add a workbench to FreeCAD.
 
-```
+```text
 freecad/
 └── workbench_starterkit/
     ├── __init__.py
