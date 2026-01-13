@@ -563,6 +563,24 @@ class MainPanel(QtWidgets.QDialog):
                 ),
             ),
             (
+                self.availableSpreadsheetsListWidget,
+                lambda w: (
+                    w.itemSelectionChanged.connect(
+                        self._on_available_spreadsheets_selection_changed
+                    ),
+                    w.itemSelectionChanged.connect(self._update_copy_buttons_enabled_state),
+                    App.Console.PrintMessage(
+                        translate(
+                            "Log",
+                            (
+                                "Workbench MainPanel: connected available spreadsheets "
+                                "selection handler\n"
+                            ),
+                        )
+                    ),
+                ),
+            ),
+            (
                 self.varsetVariableNamesListWidget,
                 lambda w: (
                     w.itemSelectionChanged.connect(self._on_variable_names_selection_changed),
@@ -570,9 +588,23 @@ class MainPanel(QtWidgets.QDialog):
                 ),
             ),
             (
+                self.aliasesVariableNamesListWidget,
+                lambda w: (
+                    w.itemSelectionChanged.connect(self._on_alias_names_selection_changed),
+                    w.itemSelectionChanged.connect(self._update_copy_buttons_enabled_state),
+                ),
+            ),
+            (
                 self.varsetExpressionsListWidget,
                 lambda w: (
                     w.itemSelectionChanged.connect(self._on_expressions_selection_changed),
+                    w.itemSelectionChanged.connect(self._update_copy_buttons_enabled_state),
+                ),
+            ),
+            (
+                self.aliasExpressionsListWidget,
+                lambda w: (
+                    w.itemSelectionChanged.connect(self._on_alias_expressions_selection_changed),
                     w.itemSelectionChanged.connect(self._update_copy_buttons_enabled_state),
                 ),
             ),
