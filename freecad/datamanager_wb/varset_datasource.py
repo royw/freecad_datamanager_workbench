@@ -42,31 +42,40 @@ class VarsetDataSource(TabDataSource):
                 parents.append(f"{varset_name}.{group}")
         return parents
 
-    def _parse_virtual_varset(self, text: str) -> tuple[str, str] | None:
+    def _get_varset_groups(self, varset_name: str) -> set[str]:
+        return set(getVarsetVariableGroups(varset_name).values())
+
+    def _split_virtual_parent(self, text: str) -> tuple[str, str] | None:
         if "." not in text:
             return None
         varset_name, group = text.split(".", 1)
         if not varset_name or not group:
             return None
-
-        groups = set(getVarsetVariableGroups(varset_name).values())
-        if len(groups) <= 1:
-            return None
-        if group not in groups:
-            return None
         return varset_name, group
+
+    def _parse_virtual_varset(self, text: str) -> tuple[str, str] | None:
+        parsed = self._split_virtual_parent(text)
+        if parsed is None:
+            return None
+        varset_name, group = parsed
+
+        groups = self._get_varset_groups(varset_name)
+        if len(groups) <= 1 or group not in groups:
+            return None
+        return parsed
+
+    def _get_var_names_for_parent(self, parent: str) -> tuple[str, list[str]]:
+        parsed_virtual = self._parse_virtual_varset(parent)
+        if parsed_virtual is None:
+            return parent, getVarsetVariableNames(parent)
+        varset_name, group = parsed_virtual
+        return varset_name, getVarsetVariableNamesForGroup(varset_name, group)
 
     def get_child_refs(self, selected_parents: list[str]) -> list[ParentChildRef]:
         """Return variable refs for the selected VarSets."""
         variable_items: list[str] = []
         for parent in selected_parents:
-            parsed_virtual = self._parse_virtual_varset(parent)
-            if parsed_virtual is not None:
-                varset_name, group = parsed_virtual
-                var_names = getVarsetVariableNamesForGroup(varset_name, group)
-            else:
-                varset_name = parent
-                var_names = getVarsetVariableNames(varset_name)
+            varset_name, var_names = self._get_var_names_for_parent(parent)
 
             for var_name in var_names:
                 variable_items.append(f"{varset_name}.{var_name}")

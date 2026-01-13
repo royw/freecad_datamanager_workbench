@@ -98,23 +98,27 @@ class MainPanel(QtWidgets.QDialog):
         self._active_doc_name = name
         self._refresh_for_active_document_change()
 
+    def _clear_list_selection(self, widget: QtWidgets.QListWidget | None) -> None:
+        if widget is None:
+            return
+        widget.clearSelection()
+
+    def _clear_list_contents(self, widget: QtWidgets.QListWidget | None) -> None:
+        if widget is None:
+            return
+        widget.clear()
+
     def _refresh_for_active_document_change(self) -> None:
-        if self.availableVarsetsListWidget is not None:
-            self.availableVarsetsListWidget.clearSelection()
-        if self.availableSpreadsheetsListWidget is not None:
-            self.availableSpreadsheetsListWidget.clearSelection()
+        self._clear_list_selection(self.availableVarsetsListWidget)
+        self._clear_list_selection(self.availableSpreadsheetsListWidget)
 
         self._populate_varsets()
         self._populate_spreadsheets()
 
-        if self.varsetVariableNamesListWidget is not None:
-            self.varsetVariableNamesListWidget.clear()
-        if self.varsetExpressionsListWidget is not None:
-            self.varsetExpressionsListWidget.clear()
-        if self.aliasesVariableNamesListWidget is not None:
-            self.aliasesVariableNamesListWidget.clear()
-        if self.aliasExpressionsListWidget is not None:
-            self.aliasExpressionsListWidget.clear()
+        self._clear_list_contents(self.varsetVariableNamesListWidget)
+        self._clear_list_contents(self.varsetExpressionsListWidget)
+        self._clear_list_contents(self.aliasesVariableNamesListWidget)
+        self._clear_list_contents(self.aliasExpressionsListWidget)
 
         self._update_copy_buttons_enabled_state()
 
@@ -522,32 +526,48 @@ class MainPanel(QtWidgets.QDialog):
             return ref.text
         return f"{obj_label}.{ref.child}"
 
+    def _restore_list_selection_by_predicate(
+        self,
+        widget: QtWidgets.QListWidget,
+        *,
+        should_select: Callable[[QtWidgets.QListWidgetItem], bool],
+    ) -> None:
+        for idx in range(widget.count()):
+            item = widget.item(idx)
+            if item is None:
+                continue
+            if should_select(item):
+                item.setSelected(True)
+
     def _restore_list_selection(
         self, widget: QtWidgets.QListWidget, *, selected_keys: set[str]
     ) -> None:
         if not selected_keys:
             return
-        for idx in range(widget.count()):
-            item = widget.item(idx)
-            if item is None:
-                continue
-            data = item.data(QtCore.Qt.UserRole)
-            key = data if isinstance(data, str) else item.text()
-            if key in selected_keys:
-                item.setSelected(True)
+        self._restore_list_selection_by_predicate(
+            widget,
+            should_select=lambda item: (
+                (
+                    item.data(QtCore.Qt.UserRole)
+                    if isinstance(item.data(QtCore.Qt.UserRole), str)
+                    else item.text()
+                )
+                in selected_keys
+            ),
+        )
 
     def _restore_parent_child_ref_selection(
         self, widget: QtWidgets.QListWidget, *, selected_refs: set[ParentChildRef]
     ) -> None:
         if not selected_refs:
             return
-        for idx in range(widget.count()):
-            item = widget.item(idx)
-            if item is None:
-                continue
-            data = item.data(QtCore.Qt.UserRole)
-            if isinstance(data, ParentChildRef) and data in selected_refs:
-                item.setSelected(True)
+        self._restore_list_selection_by_predicate(
+            widget,
+            should_select=lambda item: (
+                isinstance(item.data(QtCore.Qt.UserRole), ParentChildRef)
+                and item.data(QtCore.Qt.UserRole) in selected_refs
+            ),
+        )
 
     def _populate_varsets(self) -> None:
         widget = self.availableVarsetsListWidget
