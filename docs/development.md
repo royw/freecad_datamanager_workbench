@@ -104,6 +104,22 @@ Guidance:
 - Prefer unit tests for parsing/formatting helpers and query logic that can be exercised without a live FreeCAD GUI.
 - FreeCAD and Qt integration is inherently harder to test; keep GUI-facing behavior thin and delegate logic into testable helpers.
 
+### Dependency injection for FreeCAD runtime access
+
+Non-UI modules avoid importing `FreeCAD` / `FreeCADGui` at module import time. Instead, functions and classes that need access to the FreeCAD runtime accept an optional `ctx: FreeCadContext | None` argument.
+
+Notes:
+
+1. When `ctx` is omitted, the code falls back to the live FreeCAD runtime via `get_runtime_context()`.
+1. In unit tests, you can pass a fake `FreeCadContext` (or `None` if the test only exercises pure logic).
+1. For code that delegates through the query/mutation layer, passing `ctx` at the controller/data-source level ensures the entire call chain stays testable.
+
+Common patterns:
+
+- `PanelController(ctx=...)` (threads `ctx` into both tab data sources).
+- `VarsetDataSource(ctx=...)` / `SpreadsheetDataSource(ctx=...)`.
+- For tests that only need to validate higher-level behavior, it is often simplest to monkeypatch query functions (e.g. `getVarsets`, `getSpreadsheetAliasReferences`) and assert that the datasource/controller produces the expected results.
+
 Common commands:
 
 - `task test`
