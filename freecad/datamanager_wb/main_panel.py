@@ -429,10 +429,54 @@ class MainPanel(QtWidgets.QDialog):
         _prefix, rest = lhs.split(".", 1)
         return f"{obj_label}.{rest}"
 
+    def _format_named_object_for_display(self, object_name: str, *, use_label: bool) -> str:
+        if not use_label:
+            return object_name
+        obj_label = self._try_get_object_label(object_name)
+        return obj_label if obj_label else object_name
+
+    def _format_parent_child_ref_for_display(
+        self, ref: ParentChildRef, *, use_label: bool
+    ) -> str:
+        if not use_label:
+            return ref.text
+        obj_label = self._try_get_object_label(ref.parent)
+        if not obj_label:
+            return ref.text
+        return f"{obj_label}.{ref.child}"
+
+    def _restore_list_selection(
+        self, widget: QtWidgets.QListWidget, *, selected_keys: set[str]
+    ) -> None:
+        if not selected_keys:
+            return
+        for idx in range(widget.count()):
+            item = widget.item(idx)
+            if item is None:
+                continue
+            data = item.data(QtCore.Qt.UserRole)
+            key = data if isinstance(data, str) else item.text()
+            if key in selected_keys:
+                item.setSelected(True)
+
+    def _restore_parent_child_ref_selection(
+        self, widget: QtWidgets.QListWidget, *, selected_refs: set[ParentChildRef]
+    ) -> None:
+        if not selected_refs:
+            return
+        for idx in range(widget.count()):
+            item = widget.item(idx)
+            if item is None:
+                continue
+            data = item.data(QtCore.Qt.UserRole)
+            if isinstance(data, ParentChildRef) and data in selected_refs:
+                item.setSelected(True)
+
     def _populate_varsets(self) -> None:
         widget = self.availableVarsetsListWidget
         if widget is None:
             return
+        selected = set(self._get_selected_varsets())
         widget.clear()
         filter_text = self._get_line_edit_text(self.avaliableVarsetsFilterLineEdit)
         exclude_copy_on_change = self._is_radio_checked(
@@ -442,12 +486,14 @@ class MainPanel(QtWidgets.QDialog):
             filter_text=filter_text,
             exclude_copy_on_change=exclude_copy_on_change,
         )
-        self._populate_list_widget(widget, items)
+        self._populate_parent_list_widget(widget, items, use_label=self._is_varsets_display_mode_label())
+        self._restore_list_selection(widget, selected_keys=selected)
 
     def _populate_spreadsheets(self) -> None:
         widget = self.availableSpreadsheetsListWidget
         if widget is None:
             return
+        selected = set(self._get_selected_spreadsheets())
         widget.clear()
         filter_text = self._get_line_edit_text(self.avaliableSpreadsheetsFilterLineEdit)
         exclude_copy_on_change = self._is_radio_checked(
@@ -457,7 +503,12 @@ class MainPanel(QtWidgets.QDialog):
             filter_text=filter_text,
             exclude_copy_on_change=exclude_copy_on_change,
         )
-        self._populate_list_widget(widget, items)
+        self._populate_parent_list_widget(
+            widget,
+            items,
+            use_label=self._is_aliases_display_mode_label(),
+        )
+        self._restore_list_selection(widget, selected_keys=selected)
 
     def _get_line_edit_text(self, widget: QtWidgets.QLineEdit | None) -> str:
         if widget is None:
@@ -471,6 +522,16 @@ class MainPanel(QtWidgets.QDialog):
 
     def _populate_list_widget(self, widget: QtWidgets.QListWidget, items: list[str]) -> None:
         for item in items:
+            widget.addItem(item)
+        self._adjust_list_widget_width_to_contents(widget)
+
+    def _populate_parent_list_widget(
+        self, widget: QtWidgets.QListWidget, items: list[str], *, use_label: bool
+    ) -> None:
+        for object_name in items:
+            display = self._format_named_object_for_display(object_name, use_label=use_label)
+            item = QtWidgets.QListWidgetItem(display)
+            item.setData(QtCore.Qt.UserRole, object_name)
             widget.addItem(item)
         self._adjust_list_widget_width_to_contents(widget)
 
@@ -749,9 +810,16 @@ class MainPanel(QtWidgets.QDialog):
             mode = _DISPLAY_MODE_LABEL
         self._persist_display_mode(setting_key=_SETTING_VARSETS_OBJECT_DISPLAY_MODE, mode=mode)
 
-        selected_vars = self._get_selected_varset_variable_items()
-        if selected_vars:
-            self._populate_expressions(selected_vars)
+        selected_varsets = self._get_selected_varsets()
+        selected_vars = set(self._get_selected_varset_variable_items())
+        self._populate_varsets()
+        self._populate_variable_names(selected_varsets)
+        if self.varsetVariableNamesListWidget is not None:
+            self._restore_parent_child_ref_selection(
+                self.varsetVariableNamesListWidget,
+                selected_refs=selected_vars,
+            )
+        self._populate_expressions(self._get_selected_varset_variable_items())
 
     def _on_aliases_object_display_mode_toggled(self, checked: bool) -> None:
         if not checked:
@@ -765,19 +833,40 @@ class MainPanel(QtWidgets.QDialog):
             mode = _DISPLAY_MODE_LABEL
         self._persist_display_mode(setting_key=_SETTING_ALIASES_OBJECT_DISPLAY_MODE, mode=mode)
 
-        selected_aliases = self._get_selected_alias_items()
-        if selected_aliases:
-            self._populate_alias_expressions(selected_aliases)
+        selected_sheets = self._get_selected_spreadsheets()
+        selected_aliases = set(self._get_selected_alias_items())
+        self._populate_spreadsheets()
+        self._populate_alias_names(selected_sheets)
+        if self.aliasesVariableNamesListWidget is not None:
+            self._restore_parent_child_ref_selection(
+                self.aliasesVariableNamesListWidget,
+                selected_refs=selected_aliases,
+            )
+        self._populate_alias_expressions(self._get_selected_alias_items())
 
     def _get_selected_varsets(self) -> list[str]:
         if self.availableVarsetsListWidget is None:
             return []
-        return [item.text() for item in self.availableVarsetsListWidget.selectedItems()]
+        selected: list[str] = []
+        for item in self.availableVarsetsListWidget.selectedItems():
+            data = item.data(QtCore.Qt.UserRole)
+            if isinstance(data, str) and data:
+                selected.append(data)
+            else:
+                selected.append(item.text())
+        return selected
 
     def _get_selected_spreadsheets(self) -> list[str]:
         if self.availableSpreadsheetsListWidget is None:
             return []
-        return [item.text() for item in self.availableSpreadsheetsListWidget.selectedItems()]
+        selected: list[str] = []
+        for item in self.availableSpreadsheetsListWidget.selectedItems():
+            data = item.data(QtCore.Qt.UserRole)
+            if isinstance(data, str) and data:
+                selected.append(data)
+            else:
+                selected.append(item.text())
+        return selected
 
     def _get_selected_varset_variable_items(self) -> list[ParentChildRef]:
         if self.varsetVariableNamesListWidget is None:
@@ -856,9 +945,12 @@ class MainPanel(QtWidgets.QDialog):
         if self.varsetVariableNamesListWidget is None:
             return
 
+        use_label = self._is_varsets_display_mode_label()
         self.varsetVariableNamesListWidget.clear()
         for ref in items:
-            item = QtWidgets.QListWidgetItem(ref.text)
+            item = QtWidgets.QListWidgetItem(
+                self._format_parent_child_ref_for_display(ref, use_label=use_label)
+            )
             item.setData(QtCore.Qt.UserRole, ref)
             self.varsetVariableNamesListWidget.addItem(item)
 
@@ -889,9 +981,12 @@ class MainPanel(QtWidgets.QDialog):
         if self.aliasesVariableNamesListWidget is None:
             return
 
+        use_label = self._is_aliases_display_mode_label()
         self.aliasesVariableNamesListWidget.clear()
         for ref in items:
-            item = QtWidgets.QListWidgetItem(ref.text)
+            item = QtWidgets.QListWidgetItem(
+                self._format_parent_child_ref_for_display(ref, use_label=use_label)
+            )
             item.setData(QtCore.Qt.UserRole, ref)
             self.aliasesVariableNamesListWidget.addItem(item)
 
