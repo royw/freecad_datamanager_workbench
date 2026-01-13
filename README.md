@@ -1,8 +1,10 @@
+[![Docs](https://github.com/royw/freecad_datamanager_workbench/actions/workflows/docs.yml/badge.svg)](https://github.com/royw/freecad_datamanager_workbench/actions/workflows/docs.yml)
+
 # DataManager FreeCAD Workbench
 
 Manages FreeCAD VarSets and aliases.
 
-Documentation: [royw.github.io/freecad_datamanager_wb](https://royw.github.io/freecad_datamanager_wb/)
+Documentation: [royw.github.io/freecad_datamanager_workbench](https://royw.github.io/freecad_datamanager_workbench/)
 
 ## Suggestion FreeCAD Preferences
 

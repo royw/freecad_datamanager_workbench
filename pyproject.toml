@@ -3,7 +3,7 @@ requires = ["hatchling >= 1.26"]
 build-backend = "hatchling.build"
 
 [project]
-name = "freecad.datamanager_wb"
+name = "freecad.datamanager_workbench"
 version = "0.1.0"
 description = "A FreeCAD workbench for managing varsets and aliases"
 readme = "README.md"
@@ -56,12 +56,12 @@ packages = ["freecad/datamanager_wb"]
 "freecad/datamanager_wb/resources" = "freecad/datamanager_wb/resources"
 
 [project.urls]
-Homepage = "https://github.com/royw/freecad_datamanager_wb"
-Documentation = "https://royw.github.io/freecad_datamanager_wb/"
-Repository = "https://github.com/royw/freecad_datamanager_wb"
+Homepage = "https://github.com/royw/freecad_datamanager_workbench"
+Documentation = "https://royw.github.io/freecad_datamanager_workbench/"
+Repository = "https://github.com/royw/freecad_datamanager_workbench"
 source = "https://github.com/royw/freecad_datamanager_workbench"
-Issues = "https://github.com/royw/freecad_datamanager_wb/issues"
-Changelog = "https://github.com/royw/freecad_datamanager_wb/blob/main/CHANGELOG.md"
+Issues = "https://github.com/royw/freecad_datamanager_workbench/issues"
+Changelog = "https://github.com/royw/freecad_datamanager_workbench/blob/main/CHANGELOG.md"
 
 [tool.mypy]
 python_version = "3.12"

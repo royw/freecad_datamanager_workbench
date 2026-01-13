@@ -1,8 +1,8 @@
 site_name: Data Manager Workbench for FreeCAD
 site_description: A FreeCAD workbench for managing VarSets and aliases
-site_url: https://royw.github.io/freecad_datamanager_wb
-repo_url: https://github.com/royw/freecad_datamanager_wb
-repo_name: royw/freecad_datamanager_wb
+site_url: https://royw.github.io/freecad_datamanager_workbench
+repo_url: https://github.com/royw/freecad_datamanager_workbench
+repo_name: royw/freecad_datamanager_workbench
 
 copyright: Copyright &copy; 2026 Roy Wright
 
@@ -145,7 +145,7 @@ nav:
     - Development: development.md
     - Starterkit Historical README: HISTORICAL_README.md
   - API Reference: reference/
-  - Repository on GitHub: https://github.com/royw/freecad_datamanager_wb
+  - Repository on GitHub: https://github.com/royw/freecad_datamanager_workbench
 
 hooks:
   - docs/version_hook.py
