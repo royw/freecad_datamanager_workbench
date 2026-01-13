@@ -117,6 +117,11 @@ sequenceDiagram
 - Wires signals (selection changes, filter changes, button presses).
 - Delegates behavior (querying lists, remove-unused, expression discovery) to `PanelController`.
 
+In addition, the panel is responsible for a few UI-only behaviors:
+
+- Keeping list panes in sync with the **active FreeCAD document** when multiple documents are open.
+- Providing right-click **context menus** for list widgets (for common actions like copy).
+
 The UI uses splitters inside each tab so the list panes and expressions pane can be resized.
 
 The expressions panes include a **Show Objects as: Name/Label** mode, persisted via Qt settings. The VarSets and
@@ -176,6 +181,18 @@ VarSets are backed by FreeCAD’s `App::VarSet`. The repository keeps VarSet-spe
 - `varset_query.py` (thin wrappers around FreeCAD VarSet query APIs)
 - `varset_mutations.py` (thin wrappers around FreeCAD VarSet mutation APIs)
 - `varset_datasource.py` (adapter to the generic protocol)
+
+VarSets can organize variables into **property groups** (for example, the default `Base` group). When a VarSet
+contains variables in more than one group, the VarSets tab exposes **virtual parent entries**:
+
+- `VarSetName.GroupName`
+
+Selecting a virtual parent filters the variables list to only variables from that group.
+
+Implementation detail:
+
+- Group discovery lives in `varset_query.py` (property group mapping / filtering helpers).
+- Virtual parent generation and group filtering is implemented in `varset_datasource.py`.
 
 VarSet and spreadsheet query code shares common FreeCAD document helpers in `freecad_helpers.py` (expression engine iteration, copy-on-change filtering, typed object lookup).
 

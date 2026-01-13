@@ -39,6 +39,8 @@ Annotated UI legend:
 - **VarSets list** (3)
 
   - Select one or more VarSets to populate the Variables list.
+  - If a VarSet contains variables in multiple groups, the list may also include virtual entries like
+    `VarSetName.GroupName`. Selecting a virtual entry filters the Variables list to that group.
 
 - **VarSets filter** (4)
 
@@ -75,6 +77,7 @@ Annotated UI legend:
 
   - Each list pane includes a Copy Selected button.
   - Clicking it copies the selected list items to the clipboard (one item per line).
+  - You can also right-click a list to use **Copy** (and **Select All** where applicable).
 
 - **Select object in model tree from expression** (13)
 
@@ -86,3 +89,8 @@ Annotated UI legend:
 - Alias definition rows are displayed using `:=` to distinguish definition from a normal expression (for example:
   `Spreadsheet.A1 := 'MyAlias`).
 - The **Show Objects as: Name/Label** setting is independent from the VarSets tab and is persisted.
+
+### Multiple open documents
+
+If you have multiple FreeCAD documents open, the panel follows the currently active document in the model view and
+refreshes the lists when you switch documents.

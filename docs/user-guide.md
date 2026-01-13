@@ -85,6 +85,15 @@ Each list pane includes a copy button (icon-only).
 
 See the annotated screenshot above (12).
 
+### Right-click list menu
+
+All list widgets support a right-click context menu with:
+
+- **Select All** (for multi-selection lists)
+- **Copy**
+
+This is a convenience alternative to the copy button.
+
 ### “Exclude Copy-on-Change” / clone filtering
 
 Both tabs include an option to hide objects created by FreeCAD’s copy-on-change mechanism.
@@ -147,6 +156,13 @@ Select one or more VarSets. The middle pane populates with variable items format
 - `VarSetName.VariableName`
 
 These entries are shown as structured list items, but you can treat them as plain “VarSet.Variable” identifiers.
+
+If your VarSet variables are organized into multiple **property groups**, the VarSets list may also include
+virtual entries of the form:
+
+- `VarSetName.GroupName`
+
+Selecting a virtual entry filters the Variables list to only variables from that group.
 
 ### 3) Filter variables
 
@@ -294,6 +310,11 @@ Recommended steps:
   - Confirm the document contains VarSets or Spreadsheets.
   - Clear the filter fields.
   - Disable “Exclude Copy-on-Change” to see everything.
+
+- If you have multiple FreeCAD documents open:
+
+  - The panel follows the **active document**. If you switch the active document in the model view, the workbench
+    refreshes to show VarSets/Aliases for that document.
 
 - If “Remove Selected Unused …” is disabled:
 
