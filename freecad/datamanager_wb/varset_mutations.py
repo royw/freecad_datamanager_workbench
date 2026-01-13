@@ -5,13 +5,13 @@ Contains operations that modify VarSets, such as removing a variable property.
 
 from typing import cast
 
-import FreeCAD as App
-
-translate = App.Qt.translate
+from .freecad_context import FreeCadContext, get_runtime_context
 
 
-def _get_active_doc() -> object | None:
-    doc = App.ActiveDocument
+def _get_active_doc(*, ctx: FreeCadContext | None = None) -> object | None:
+    if ctx is None:
+        ctx = get_runtime_context()
+    doc = ctx.app.ActiveDocument
     if doc is None:
         return None
     return cast(object, doc)
@@ -43,7 +43,12 @@ def _try_remove_property(obj: object, property_name: str) -> bool:
     return True
 
 
-def removeVarsetVariable(varset_name: str, variable_name: str) -> bool:
+def removeVarsetVariable(
+    varset_name: str,
+    variable_name: str,
+    *,
+    ctx: FreeCadContext | None = None,
+) -> bool:
     """Remove a variable/property from a VarSet.
 
     Args:
@@ -53,7 +58,7 @@ def removeVarsetVariable(varset_name: str, variable_name: str) -> bool:
     Returns:
         ``True`` if the property was removed, otherwise ``False``.
     """
-    doc = _get_active_doc()
+    doc = _get_active_doc(ctx=ctx)
     if doc is None:
         return False
 

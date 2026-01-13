@@ -7,8 +7,7 @@ references to varset variables.
 import re
 from collections.abc import Iterator
 
-import FreeCAD as App
-
+from .freecad_context import FreeCadContext
 from .freecad_helpers import (
     build_expression_key,
     get_active_document,
@@ -19,11 +18,9 @@ from .freecad_helpers import (
     iter_named_expression_engine_entries,
 )
 
-translate = App.Qt.translate
 
-
-def _get_active_doc() -> object | None:
-    doc = get_active_document()
+def _get_active_doc(*, ctx: FreeCadContext | None = None) -> object | None:
+    doc = get_active_document(ctx=ctx)
     if doc is None:
         return None
     return doc
@@ -100,7 +97,7 @@ def _matches_internal_var_ref(
     return internal_var_re.search(text) is not None
 
 
-def _get_copy_on_change_varset_names(doc: "App.Document") -> set[str]:
+def _get_copy_on_change_varset_names(doc: object) -> set[str]:
     return get_copy_on_change_names(doc=doc, type_id="App::VarSet")
 
 
@@ -110,7 +107,11 @@ def _iter_varset_objects(doc: object) -> Iterator[object]:
             yield obj
 
 
-def getVarsets(*, exclude_copy_on_change: bool = False) -> Iterator[str]:
+def getVarsets(
+    *,
+    exclude_copy_on_change: bool = False,
+    ctx: FreeCadContext | None = None,
+) -> Iterator[str]:
     """Yield VarSet object names from the active document.
 
     Args:
@@ -120,7 +121,7 @@ def getVarsets(*, exclude_copy_on_change: bool = False) -> Iterator[str]:
     Yields:
         The `Name` of each `App::VarSet` object.
     """
-    doc = _get_active_doc()
+    doc = _get_active_doc(ctx=ctx)
     if doc is None:
         return
 
@@ -177,14 +178,18 @@ def _get_varset_property_group(varset: object, prop: str) -> str:
     return group or "Base"
 
 
-def getVarsetVariableGroups(varset_name: str) -> dict[str, str]:
+def getVarsetVariableGroups(
+    varset_name: str,
+    *,
+    ctx: FreeCadContext | None = None,
+) -> dict[str, str]:
     """Return mapping of variable/property name -> group for a VarSet.
 
     FreeCAD VarSet variables are stored as properties and may be organized into
     groups (property group). When no group is defined, FreeCAD uses "Base".
     """
 
-    doc = _get_active_doc()
+    doc = _get_active_doc(ctx=ctx)
     if doc is None:
         return {}
 
@@ -201,21 +206,30 @@ def getVarsetVariableGroups(varset_name: str) -> dict[str, str]:
     return groups
 
 
-def getVarsetVariableNamesForGroup(varset_name: str, group_name: str | None) -> list[str]:
+def getVarsetVariableNamesForGroup(
+    varset_name: str,
+    group_name: str | None,
+    *,
+    ctx: FreeCadContext | None = None,
+) -> list[str]:
     """Return variable/property names defined on a VarSet, optionally filtered by group."""
 
-    names = getVarsetVariableNames(varset_name)
+    names = getVarsetVariableNames(varset_name, ctx=ctx)
     if not group_name:
         return names
 
     wanted = group_name.strip() or "Base"
-    groups = getVarsetVariableGroups(varset_name)
+    groups = getVarsetVariableGroups(varset_name, ctx=ctx)
     filtered = [n for n in names if groups.get(n, "Base") == wanted]
     filtered.sort()
     return filtered
 
 
-def getVarsetVariableNames(varset_name: str) -> list[str]:
+def getVarsetVariableNames(
+    varset_name: str,
+    *,
+    ctx: FreeCadContext | None = None,
+) -> list[str]:
     """Return variable/property names defined on a VarSet.
 
     Args:
@@ -225,7 +239,7 @@ def getVarsetVariableNames(varset_name: str) -> list[str]:
         Sorted list of variable/property names. Built-in FreeCAD properties
         (Label, Placement, etc.) are excluded.
     """
-    doc = _get_active_doc()
+    doc = _get_active_doc(ctx=ctx)
     if doc is None:
         return []
 
@@ -236,7 +250,12 @@ def getVarsetVariableNames(varset_name: str) -> list[str]:
     return _collect_varset_variable_names(varset)
 
 
-def getVarsetReferences(varset_name: str, variable_name: str | None = None) -> dict[str, str]:
+def getVarsetReferences(
+    varset_name: str,
+    variable_name: str | None = None,
+    *,
+    ctx: FreeCadContext | None = None,
+) -> dict[str, str]:
     """Find expression engine entries that reference a VarSet or variable.
 
     Args:
@@ -247,7 +266,7 @@ def getVarsetReferences(varset_name: str, variable_name: str | None = None) -> d
     Returns:
         Mapping of ``"Object.Property"`` -> expression string.
     """
-    doc = get_active_document()
+    doc = get_active_document(ctx=ctx)
     if doc is None:
         return {}
 

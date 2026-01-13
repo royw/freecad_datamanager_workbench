@@ -7,8 +7,7 @@ searching expressions for alias references.
 import re
 from collections.abc import Iterable, Iterator, Mapping
 
-import FreeCAD as App
-
+from .freecad_context import FreeCadContext
 from .freecad_helpers import (
     build_expression_key,
     get_active_document,
@@ -18,9 +17,6 @@ from .freecad_helpers import (
     iter_document_objects,
     iter_named_expression_engine_entries,
 )
-
-translate = App.Qt.translate
-
 
 _CELL_RE = re.compile(r"^[A-Z]+[0-9]+$")
 
@@ -175,8 +171,12 @@ def _matches_expression(
     return alias_re.search(text) is not None
 
 
-def _get_active_spreadsheet(spreadsheet_name: str) -> object | None:
-    doc = get_active_document()
+def _get_active_spreadsheet(
+    spreadsheet_name: str,
+    *,
+    ctx: FreeCadContext | None = None,
+) -> object | None:
+    doc = get_active_document(ctx=ctx)
     if doc is None:
         return None
     sheet = get_typed_object(doc, spreadsheet_name, type_id="Spreadsheet::Sheet")
@@ -251,7 +251,7 @@ def _alias_map_from_properties(spreadsheet: object) -> dict[str, str]:
     return {}
 
 
-def _get_copy_on_change_spreadsheet_names(doc: "App.Document") -> set[str]:
+def _get_copy_on_change_spreadsheet_names(doc: object) -> set[str]:
     return get_copy_on_change_names(doc=doc, type_id="Spreadsheet::Sheet")
 
 
@@ -280,7 +280,11 @@ def _iter_filtered_sheet_names(
         yield name
 
 
-def getSpreadsheets(*, exclude_copy_on_change: bool = False) -> Iterator[str]:
+def getSpreadsheets(
+    *,
+    exclude_copy_on_change: bool = False,
+    ctx: FreeCadContext | None = None,
+) -> Iterator[str]:
     """Yield spreadsheet object names from the active document.
 
     Args:
@@ -290,7 +294,7 @@ def getSpreadsheets(*, exclude_copy_on_change: bool = False) -> Iterator[str]:
     Yields:
         The `Name` of each `Spreadsheet::Sheet` object.
     """
-    doc = App.ActiveDocument
+    doc = get_active_document(ctx=ctx)
     if doc is None:
         return
 
@@ -339,7 +343,11 @@ def _iter_candidate_cells(spreadsheet: object) -> Iterator[str]:
     yield from _iter_cell_coordinates(max_rows=200, max_cols=52)
 
 
-def getSpreadsheetAliasNames(spreadsheet_name: str) -> list[str]:
+def getSpreadsheetAliasNames(
+    spreadsheet_name: str,
+    *,
+    ctx: FreeCadContext | None = None,
+) -> list[str]:
     """Return all alias names defined on a spreadsheet.
 
     Args:
@@ -348,12 +356,12 @@ def getSpreadsheetAliasNames(spreadsheet_name: str) -> list[str]:
     Returns:
         Sorted list of alias names.
     """
-    doc = App.ActiveDocument
+    doc = get_active_document(ctx=ctx)
     if doc is None:
         return []
 
-    sheet = doc.getObject(spreadsheet_name)
-    if sheet is None or getattr(sheet, "TypeId", None) != "Spreadsheet::Sheet":
+    sheet = get_typed_object(doc, spreadsheet_name, type_id="Spreadsheet::Sheet")
+    if sheet is None:
         return []
 
     names = sorted(_get_alias_map(sheet).keys())
@@ -363,6 +371,8 @@ def getSpreadsheetAliasNames(spreadsheet_name: str) -> list[str]:
 def getSpreadsheetAliasReferences(
     spreadsheet_name: str,
     alias_name: str | None = None,
+    *,
+    ctx: FreeCadContext | None = None,
 ) -> dict[str, str]:
     """Find expressions that reference a spreadsheet or a specific alias.
 
@@ -374,11 +384,11 @@ def getSpreadsheetAliasReferences(
     Returns:
         Mapping of ``"Object.Property"`` -> expression string.
     """
-    doc = App.ActiveDocument
+    doc = get_active_document(ctx=ctx)
     if doc is None:
         return {}
 
-    sheet = _get_active_spreadsheet(spreadsheet_name)
+    sheet = _get_active_spreadsheet(spreadsheet_name, ctx=ctx)
     if sheet is None:
         return {}
 

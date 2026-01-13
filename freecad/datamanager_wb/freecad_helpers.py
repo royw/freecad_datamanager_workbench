@@ -3,7 +3,7 @@ from __future__ import annotations
 from collections.abc import Iterable, Iterator, Sequence
 from typing import cast
 
-import FreeCAD as App
+from .freecad_context import FreeCadContext, get_runtime_context
 
 
 def iter_document_objects(doc: object) -> Iterator[object]:
@@ -12,8 +12,11 @@ def iter_document_objects(doc: object) -> Iterator[object]:
             yield obj
 
 
-def get_active_document() -> object | None:
-    doc = App.ActiveDocument
+def get_active_document(*, ctx: FreeCadContext | None = None) -> object | None:
+    if ctx is None:
+        ctx = get_runtime_context()
+    _ = ctx.gui
+    doc = ctx.app.ActiveDocument
     if doc is None:
         return None
     return cast(object, doc)

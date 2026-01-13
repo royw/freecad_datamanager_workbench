@@ -5,11 +5,8 @@ alias definition.
 """
 
 from collections.abc import Mapping
-from typing import cast
 
-import FreeCAD as App
-
-translate = App.Qt.translate
+from .freecad_context import FreeCadContext, get_runtime_context
 
 
 def _iter_cell_coordinates(*, max_rows: int, max_cols: int) -> list[str]:
@@ -57,14 +54,20 @@ def _alias_map_from_properties(spreadsheet: object) -> dict[str, str]:
     return {}
 
 
-def _try_get_spreadsheet(spreadsheet_name: str) -> object | None:
-    doc = App.ActiveDocument
+def _try_get_spreadsheet(
+    spreadsheet_name: str,
+    *,
+    ctx: FreeCadContext | None = None,
+) -> object | None:
+    if ctx is None:
+        ctx = get_runtime_context()
+    doc = ctx.app.ActiveDocument
     if doc is None:
         return None
     sheet = doc.getObject(spreadsheet_name)
     if sheet is None or getattr(sheet, "TypeId", None) != "Spreadsheet::Sheet":
         return None
-    return cast(object, sheet)
+    return sheet
 
 
 def _try_get_cell_from_alias(sheet: object, alias_name: str) -> str | None:
@@ -111,7 +114,12 @@ def _get_alias_map(spreadsheet: object) -> dict[str, str]:
     return _scan_aliases_via_getAlias(spreadsheet)
 
 
-def removeSpreadsheetAlias(spreadsheet_name: str, alias_name: str) -> bool:
+def removeSpreadsheetAlias(
+    spreadsheet_name: str,
+    alias_name: str,
+    *,
+    ctx: FreeCadContext | None = None,
+) -> bool:
     """Remove (clear) a spreadsheet alias definition.
 
     This function resolves the cell associated with an alias and then clears the
@@ -129,7 +137,7 @@ def removeSpreadsheetAlias(spreadsheet_name: str, alias_name: str) -> bool:
     Returns:
         ``True`` if the alias was cleared, otherwise ``False``.
     """
-    sheet = _try_get_spreadsheet(spreadsheet_name)
+    sheet = _try_get_spreadsheet(spreadsheet_name, ctx=ctx)
     if sheet is None:
         return False
 
