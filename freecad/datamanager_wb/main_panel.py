@@ -60,6 +60,8 @@ class MainPanel(QtWidgets.QDialog):
         self._mdi_subwindow = None
         self._controller = PanelController()
         self._copy_map: dict[QtWidgets.QListWidget, QtWidgets.QAbstractButton] = {}
+        self._active_doc_name: str | None = None
+        self._active_doc_timer: QtCore.QTimer | None = None
 
         self.form = self._load_ui()
         self._widget = self._resolve_root_widget()
@@ -69,6 +71,52 @@ class MainPanel(QtWidgets.QDialog):
         self._populate_varsets()
         self._populate_spreadsheets()
         self._connect_signals()
+        self._start_active_document_watch()
+
+    def _start_active_document_watch(self) -> None:
+        doc = App.ActiveDocument
+        self._active_doc_name = getattr(doc, "Name", None) if doc is not None else None
+
+        timer = QtCore.QTimer(self)
+        timer.setInterval(250)
+        timer.timeout.connect(self._check_active_document_changed)
+        timer.start()
+        self._active_doc_timer = timer
+
+    def _stop_active_document_watch(self) -> None:
+        if self._active_doc_timer is None:
+            return
+        self._active_doc_timer.stop()
+        self._active_doc_timer.deleteLater()
+        self._active_doc_timer = None
+
+    def _check_active_document_changed(self) -> None:
+        doc = App.ActiveDocument
+        name = getattr(doc, "Name", None) if doc is not None else None
+        if name == self._active_doc_name:
+            return
+        self._active_doc_name = name
+        self._refresh_for_active_document_change()
+
+    def _refresh_for_active_document_change(self) -> None:
+        if self.availableVarsetsListWidget is not None:
+            self.availableVarsetsListWidget.clearSelection()
+        if self.availableSpreadsheetsListWidget is not None:
+            self.availableSpreadsheetsListWidget.clearSelection()
+
+        self._populate_varsets()
+        self._populate_spreadsheets()
+
+        if self.varsetVariableNamesListWidget is not None:
+            self.varsetVariableNamesListWidget.clear()
+        if self.varsetExpressionsListWidget is not None:
+            self.varsetExpressionsListWidget.clear()
+        if self.aliasesVariableNamesListWidget is not None:
+            self.aliasesVariableNamesListWidget.clear()
+        if self.aliasExpressionsListWidget is not None:
+            self.aliasExpressionsListWidget.clear()
+
+        self._update_copy_buttons_enabled_state()
 
     def _find_required_widget(self, widget_type: type, object_name: str):
         widget = self._widget.findChild(widget_type, object_name)
@@ -1413,6 +1461,7 @@ class MainPanel(QtWidgets.QDialog):
         the top-level form.
         """
         App.Console.PrintMessage(translate("Log", "Workbench MainPanel accepted.") + "\n")
+        self._stop_active_document_watch()
         self._save_splitter_states()
         if self._mdi_subwindow is not None:
             self._mdi_subwindow.close()
@@ -1422,6 +1471,7 @@ class MainPanel(QtWidgets.QDialog):
     def reject(self):
         """Close the panel (Qt dialog reject semantics)."""
         App.Console.PrintMessage(translate("Log", "Workbench MainPanel rejected.") + "\n")
+        self._stop_active_document_watch()
         self._save_splitter_states()
         if self._mdi_subwindow is not None:
             self._mdi_subwindow.close()
