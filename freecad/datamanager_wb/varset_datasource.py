@@ -4,6 +4,7 @@ Adapts varset document-model operations to the generic `TabController`.
 """
 
 from .expression_item import ExpressionItem
+from .freecad_context import FreeCadContext
 from .parent_child_ref import ParentChildRef, normalize_parent_child_items
 from .parsing_helpers import parse_varset_variable_item
 from .tab_datasource import RemoveUnusedResult, TabDataSource
@@ -24,6 +25,9 @@ class VarsetDataSource(TabDataSource):
     queries, remove-unused) onto the VarSet-specific document model.
     """
 
+    def __init__(self, *, ctx: FreeCadContext | None = None) -> None:
+        self._ctx = ctx
+
     def get_sorted_parents(self, *, exclude_copy_on_change: bool = False) -> list[str]:
         """Return sorted VarSet names.
 
@@ -32,10 +36,12 @@ class VarsetDataSource(TabDataSource):
         """
 
         parents: list[str] = []
-        for varset_name in sorted(getVarsets(exclude_copy_on_change=exclude_copy_on_change)):
+        for varset_name in sorted(
+            getVarsets(exclude_copy_on_change=exclude_copy_on_change, ctx=self._ctx)
+        ):
             parents.append(varset_name)
 
-            groups = set(getVarsetVariableGroups(varset_name).values())
+            groups = set(getVarsetVariableGroups(varset_name, ctx=self._ctx).values())
             if len(groups) <= 1:
                 continue
             for group in sorted(groups):
@@ -43,7 +49,7 @@ class VarsetDataSource(TabDataSource):
         return parents
 
     def _get_varset_groups(self, varset_name: str) -> set[str]:
-        return set(getVarsetVariableGroups(varset_name).values())
+        return set(getVarsetVariableGroups(varset_name, ctx=self._ctx).values())
 
     def _split_virtual_parent(self, text: str) -> tuple[str, str] | None:
         if "." not in text:
@@ -67,9 +73,9 @@ class VarsetDataSource(TabDataSource):
     def _get_var_names_for_parent(self, parent: str) -> tuple[str, list[str]]:
         parsed_virtual = self._parse_virtual_varset(parent)
         if parsed_virtual is None:
-            return parent, getVarsetVariableNames(parent)
+            return parent, getVarsetVariableNames(parent, ctx=self._ctx)
         varset_name, group = parsed_virtual
-        return varset_name, getVarsetVariableNamesForGroup(varset_name, group)
+        return varset_name, getVarsetVariableNamesForGroup(varset_name, group, ctx=self._ctx)
 
     def get_child_refs(self, selected_parents: list[str]) -> list[ParentChildRef]:
         """Return variable refs for the selected VarSets."""
@@ -102,7 +108,7 @@ class VarsetDataSource(TabDataSource):
             if parsed is None:
                 continue
             varset_name, variable_name = parsed
-            refs = getVarsetReferences(varset_name, variable_name)
+            refs = getVarsetReferences(varset_name, variable_name, ctx=self._ctx)
             counts[text] = len(refs)
             for k, v in refs.items():
                 object_name = k.split(".", 1)[0].strip()
@@ -122,7 +128,7 @@ class VarsetDataSource(TabDataSource):
             if parsed is None:
                 continue
             varset_name, variable_name = parsed
-            refs = getVarsetReferences(varset_name, variable_name)
+            refs = getVarsetReferences(varset_name, variable_name, ctx=self._ctx)
             counts[text] = len(refs)
 
         return counts
@@ -141,11 +147,11 @@ class VarsetDataSource(TabDataSource):
                 failed.append(text)
                 continue
             varset_name, variable_name = parsed
-            refs = getVarsetReferences(varset_name, variable_name)
+            refs = getVarsetReferences(varset_name, variable_name, ctx=self._ctx)
             if refs:
                 still_used.append(text)
                 continue
-            ok = removeVarsetVariable(varset_name, variable_name)
+            ok = removeVarsetVariable(varset_name, variable_name, ctx=self._ctx)
             if ok:
                 removed.append(text)
             else:

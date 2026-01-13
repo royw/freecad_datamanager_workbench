@@ -3,9 +3,8 @@
 Adapts spreadsheet alias queries/mutations to the generic `TabController`.
 """
 
-from collections.abc import Iterator
-
 from .expression_item import ExpressionItem
+from .freecad_context import FreeCadContext
 from .parent_child_ref import ParentChildRef, parse_parent_child_ref
 from .spreadsheet_mutations import removeSpreadsheetAlias
 from .spreadsheet_query import (
@@ -47,24 +46,21 @@ def _to_expression_item(
     return ExpressionItem(object_name=object_name, lhs=lhs, rhs=normalized_rhs, operator="=")
 
 
-def _iter_expression_items_for_alias(ref: ParentChildRef) -> Iterator[ExpressionItem]:
-    refs = getSpreadsheetAliasReferences(ref.parent, ref.child)
-    for lhs, rhs in refs.items():
-        yield _to_expression_item(parent=ref.parent, alias=ref.child, lhs=lhs, rhs=rhs)
-
-
 class SpreadsheetDataSource(TabDataSource):
     """Adapter that exposes spreadsheet aliases through the `TabDataSource` protocol."""
 
+    def __init__(self, *, ctx: FreeCadContext | None = None) -> None:
+        self._ctx = ctx
+
     def get_sorted_parents(self, *, exclude_copy_on_change: bool = False) -> list[str]:
         """Return sorted spreadsheet names."""
-        return sorted(getSpreadsheets(exclude_copy_on_change=exclude_copy_on_change))
+        return sorted(getSpreadsheets(exclude_copy_on_change=exclude_copy_on_change, ctx=self._ctx))
 
     def get_child_refs(self, selected_parents: list[str]) -> list[ParentChildRef]:
         """Return alias refs for the selected spreadsheets."""
         items: list[ParentChildRef] = []
         for sheet_name in selected_parents:
-            for alias_name in getSpreadsheetAliasNames(sheet_name):
+            for alias_name in getSpreadsheetAliasNames(sheet_name, ctx=self._ctx):
                 items.append(ParentChildRef(parent=sheet_name, child=alias_name))
         items.sort(key=lambda ref: ref.text)
         return items
@@ -76,9 +72,12 @@ class SpreadsheetDataSource(TabDataSource):
         counts: dict[str, int] = {}
         expression_items: list[ExpressionItem] = []
         for ref in _normalize_alias_refs(selected_children):
-            refs = getSpreadsheetAliasReferences(ref.parent, ref.child)
+            refs = getSpreadsheetAliasReferences(ref.parent, ref.child, ctx=self._ctx)
             counts[ref.text] = len(refs)
-            expression_items.extend(_iter_expression_items_for_alias(ref))
+            for lhs, rhs in refs.items():
+                expression_items.append(
+                    _to_expression_item(parent=ref.parent, alias=ref.child, lhs=lhs, rhs=rhs)
+                )
 
         expression_items.sort(key=lambda item: item.display_text)
         return expression_items, counts
@@ -89,7 +88,7 @@ class SpreadsheetDataSource(TabDataSource):
         """Return expression reference counts for the selected aliases."""
         counts: dict[str, int] = {}
         for ref in _normalize_alias_refs(selected_children):
-            refs = getSpreadsheetAliasReferences(ref.parent, ref.child)
+            refs = getSpreadsheetAliasReferences(ref.parent, ref.child, ctx=self._ctx)
             counts[ref.text] = len(refs)
         return counts
 
@@ -102,12 +101,12 @@ class SpreadsheetDataSource(TabDataSource):
         failed: list[str] = []
 
         for ref in _normalize_alias_refs(selected_children):
-            refs = getSpreadsheetAliasReferences(ref.parent, ref.child)
+            refs = getSpreadsheetAliasReferences(ref.parent, ref.child, ctx=self._ctx)
             if refs:
                 still_used.append(ref.text)
                 continue
 
-            ok = removeSpreadsheetAlias(ref.parent, ref.child)
+            ok = removeSpreadsheetAlias(ref.parent, ref.child, ctx=self._ctx)
             if ok:
                 removed.append(ref.text)
             else:

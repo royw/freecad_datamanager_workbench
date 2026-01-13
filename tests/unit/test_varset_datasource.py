@@ -12,18 +12,18 @@ from freecad.datamanager_wb.varset_datasource import VarsetDataSource
 def test_get_child_refs_for_virtual_varset_filters_by_group(monkeypatch) -> None:
     ds = VarsetDataSource()
 
-    def fake_groups(varset_name: str):
+    def fake_groups(varset_name: str, *, ctx=None):
         assert varset_name == "VS"
         return {"a": "Base", "b": "Group1"}
 
     monkeypatch.setattr("freecad.datamanager_wb.varset_datasource.getVarsetVariableGroups", fake_groups)
     monkeypatch.setattr(
         "freecad.datamanager_wb.varset_datasource.getVarsetVariableNamesForGroup",
-        lambda varset_name, group: ["x"] if group == "Group1" else ["base_only"],
+        lambda varset_name, group, *, ctx=None: ["x"] if group == "Group1" else ["base_only"],
     )
     monkeypatch.setattr(
         "freecad.datamanager_wb.varset_datasource.getVarsetVariableNames",
-        lambda varset_name: ["x", "y"],
+        lambda varset_name, *, ctx=None: ["x", "y"],
     )
 
     refs = ds.get_child_refs(["VS.Group1"])
@@ -35,11 +35,11 @@ def test_get_child_refs_for_non_virtual_parent_includes_all(monkeypatch) -> None
 
     monkeypatch.setattr(
         "freecad.datamanager_wb.varset_datasource.getVarsetVariableGroups",
-        lambda varset_name: {"a": "Base"},
+        lambda varset_name, *, ctx=None: {"a": "Base", "b": "Group1"},
     )
     monkeypatch.setattr(
         "freecad.datamanager_wb.varset_datasource.getVarsetVariableNames",
-        lambda varset_name: ["b", "a"],
+        lambda varset_name, *, ctx=None: ["b", "a"],
     )
 
     refs = ds.get_child_refs(["VS"])
@@ -51,11 +51,11 @@ def test_virtual_parent_with_unknown_group_falls_back_to_normal(monkeypatch) -> 
 
     monkeypatch.setattr(
         "freecad.datamanager_wb.varset_datasource.getVarsetVariableGroups",
-        lambda varset_name: {"a": "Base", "b": "Group1"},
+        lambda varset_name, *, ctx=None: {"a": "Base", "b": "Group1"},
     )
     monkeypatch.setattr(
         "freecad.datamanager_wb.varset_datasource.getVarsetVariableNames",
-        lambda varset_name: ["x"],
+        lambda varset_name, *, ctx=None: ["x"],
     )
 
     refs = ds.get_child_refs(["VS.Unknown"])

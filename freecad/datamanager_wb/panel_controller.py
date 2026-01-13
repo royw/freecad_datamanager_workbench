@@ -5,10 +5,8 @@ tab-generic logic to `TabController` instances and owns document recompute and
 GUI refresh behavior.
 """
 
-import FreeCAD as App
-import FreeCADGui as Gui
-
 from .expression_item import ExpressionItem
+from .freecad_context import FreeCadContext, get_runtime_context
 from .gui_selection import select_object_from_expression_item
 from .parent_child_ref import ParentChildRef
 from .spreadsheet_datasource import SpreadsheetDataSource
@@ -26,23 +24,29 @@ class PanelController:
     - Own the document refresh boundary (`doc.recompute()` + `Gui.updateGui()`).
     """
 
-    def __init__(self) -> None:
-        self._varsets_tab_controller = TabController(VarsetDataSource())
-        self._aliases_tab_controller = TabController(SpreadsheetDataSource())
+    def __init__(self, *, ctx: FreeCadContext | None = None) -> None:
+        self._ctx = ctx or get_runtime_context()
+        self._varsets_tab_controller = TabController(VarsetDataSource(ctx=self._ctx))
+        self._aliases_tab_controller = TabController(SpreadsheetDataSource(ctx=self._ctx))
 
     def refresh_document(self) -> None:
         """Recompute the active document and refresh the FreeCAD GUI.
 
         Any exceptions are swallowed to keep the UI responsive.
         """
-        doc = App.ActiveDocument
+        doc = self._ctx.app.ActiveDocument
         if doc is not None:
             try:
-                doc.recompute()
+                recompute = getattr(doc, "recompute", None)
+                if callable(recompute):
+                    recompute()
             except Exception:  # pylint: disable=broad-exception-caught
                 pass
         try:
-            Gui.updateGui()
+            gui = self._ctx.gui
+            updater = getattr(gui, "updateGui", None) if gui is not None else None
+            if callable(updater):
+                updater()
         except Exception:  # pylint: disable=broad-exception-caught
             pass
 
