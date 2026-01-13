@@ -432,6 +432,12 @@ class MainPanel(QtWidgets.QDialog):
     def _format_named_object_for_display(self, object_name: str, *, use_label: bool) -> str:
         if not use_label:
             return object_name
+        if "." in object_name:
+            base_name, suffix = object_name.split(".", 1)
+            base_label = self._try_get_object_label(base_name)
+            if base_label:
+                return f"{base_label}.{suffix}"
+            return object_name
         obj_label = self._try_get_object_label(object_name)
         return obj_label if obj_label else object_name
 

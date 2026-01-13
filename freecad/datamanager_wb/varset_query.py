@@ -166,6 +166,55 @@ def _collect_varset_variable_names(varset: object) -> list[str]:
     return names
 
 
+def _get_varset_property_group(varset: object, prop: str) -> str:
+    get_group = getattr(varset, "getGroupOfProperty", None)
+    if not callable(get_group):
+        return "Base"
+    try:
+        group = str(get_group(prop) or "").strip()
+    except Exception:  # pylint: disable=broad-exception-caught
+        return "Base"
+    return group or "Base"
+
+
+def getVarsetVariableGroups(varset_name: str) -> dict[str, str]:
+    """Return mapping of variable/property name -> group for a VarSet.
+
+    FreeCAD VarSet variables are stored as properties and may be organized into
+    groups (property group). When no group is defined, FreeCAD uses "Base".
+    """
+
+    doc = _get_active_doc()
+    if doc is None:
+        return {}
+
+    varset = _get_varset(doc, varset_name)
+    if varset is None:
+        return {}
+
+    groups: dict[str, str] = {}
+    for prop in getattr(varset, "PropertiesList", []):
+        if _is_excluded_varset_property(prop):
+            continue
+        name = str(prop)
+        groups[name] = _get_varset_property_group(varset, name)
+    return groups
+
+
+def getVarsetVariableNamesForGroup(varset_name: str, group_name: str | None) -> list[str]:
+    """Return variable/property names defined on a VarSet, optionally filtered by group."""
+
+    names = getVarsetVariableNames(varset_name)
+    if not group_name:
+        return names
+
+    wanted = group_name.strip() or "Base"
+    groups = getVarsetVariableGroups(varset_name)
+    filtered = [n for n in names if groups.get(n, "Base") == wanted]
+    filtered.sort()
+    return filtered
+
+
 def getVarsetVariableNames(varset_name: str) -> list[str]:
     """Return variable/property names defined on a VarSet.
 

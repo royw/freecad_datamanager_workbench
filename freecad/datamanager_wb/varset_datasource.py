@@ -8,7 +8,13 @@ from .parent_child_ref import ParentChildRef, normalize_parent_child_items
 from .parsing_helpers import parse_varset_variable_item
 from .tab_datasource import RemoveUnusedResult, TabDataSource
 from .varset_mutations import removeVarsetVariable
-from .varset_query import getVarsetReferences, getVarsets, getVarsetVariableNames
+from .varset_query import (
+    getVarsetReferences,
+    getVarsets,
+    getVarsetVariableGroups,
+    getVarsetVariableNames,
+    getVarsetVariableNamesForGroup,
+)
 
 
 class VarsetDataSource(TabDataSource):
@@ -19,14 +25,50 @@ class VarsetDataSource(TabDataSource):
     """
 
     def get_sorted_parents(self, *, exclude_copy_on_change: bool = False) -> list[str]:
-        """Return sorted VarSet names."""
-        return sorted(getVarsets(exclude_copy_on_change=exclude_copy_on_change))
+        """Return sorted VarSet names.
+
+        If a VarSet contains variables in more than one group, also include
+        virtual VarSet entries of the form "{varset}.{group}".
+        """
+
+        parents: list[str] = []
+        for varset_name in sorted(getVarsets(exclude_copy_on_change=exclude_copy_on_change)):
+            parents.append(varset_name)
+
+            groups = set(getVarsetVariableGroups(varset_name).values())
+            if len(groups) <= 1:
+                continue
+            for group in sorted(groups):
+                parents.append(f"{varset_name}.{group}")
+        return parents
+
+    def _parse_virtual_varset(self, text: str) -> tuple[str, str] | None:
+        if "." not in text:
+            return None
+        varset_name, group = text.split(".", 1)
+        if not varset_name or not group:
+            return None
+
+        groups = set(getVarsetVariableGroups(varset_name).values())
+        if len(groups) <= 1:
+            return None
+        if group not in groups:
+            return None
+        return varset_name, group
 
     def get_child_refs(self, selected_parents: list[str]) -> list[ParentChildRef]:
         """Return variable refs for the selected VarSets."""
         variable_items: list[str] = []
-        for varset_name in selected_parents:
-            for var_name in getVarsetVariableNames(varset_name):
+        for parent in selected_parents:
+            parsed_virtual = self._parse_virtual_varset(parent)
+            if parsed_virtual is not None:
+                varset_name, group = parsed_virtual
+                var_names = getVarsetVariableNamesForGroup(varset_name, group)
+            else:
+                varset_name = parent
+                var_names = getVarsetVariableNames(varset_name)
+
+            for var_name in var_names:
                 variable_items.append(f"{varset_name}.{var_name}")
 
         variable_items.sort()
