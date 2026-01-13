@@ -243,6 +243,26 @@ class MainPanel(QtWidgets.QDialog):
         text = "\n".join(i.text() for i in items)
         QtWidgets.QApplication.clipboard().setText(text)
 
+    def _on_list_context_menu_requested(
+        self, widget: QtWidgets.QListWidget, pos: QtCore.QPoint
+    ) -> None:
+        menu = QtWidgets.QMenu(widget)
+
+        can_select_all = widget.selectionMode() in (
+            QtWidgets.QAbstractItemView.SelectionMode.MultiSelection,
+            QtWidgets.QAbstractItemView.SelectionMode.ExtendedSelection,
+        )
+
+        select_all_action = menu.addAction(translate("Workbench", "Select All"))
+        select_all_action.setEnabled(can_select_all and widget.count() > 0)
+        select_all_action.triggered.connect(widget.selectAll)
+
+        copy_action = menu.addAction(translate("Workbench", "Copy"))
+        copy_action.setEnabled(len(widget.selectedItems()) > 0)
+        copy_action.triggered.connect(lambda _checked=False: self._on_copy_button_clicked(widget))
+
+        menu.exec(widget.mapToGlobal(pos))
+
     def _on_copy_button_clicked(self, widget: QtWidgets.QListWidget | None) -> None:
         if widget is None:
             return
@@ -265,6 +285,11 @@ class MainPanel(QtWidgets.QDialog):
         widget.setSelectionMode(selection_mode)
         if adjust_to_contents:
             widget.setSizeAdjustPolicy(QtWidgets.QAbstractScrollArea.AdjustToContents)
+
+        widget.setContextMenuPolicy(QtCore.Qt.ContextMenuPolicy.CustomContextMenu)
+        widget.customContextMenuRequested.connect(
+            lambda pos, w=widget: self._on_list_context_menu_requested(w, pos)
+        )
 
     def _disable_button(self, button: QtWidgets.QPushButton | None) -> None:
         if button is not None:
