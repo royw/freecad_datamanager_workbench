@@ -287,18 +287,16 @@ class MainPanel(QtWidgets.QDialog):
                 QtCore.QTimer.singleShot(0, self._update_copy_buttons_enabled_state)
         return super().eventFilter(watched, event)
 
-    def _is_copy_enabled_for_list(self, widget: QtWidgets.QListWidget) -> bool:
-        if widget is None:
-            return False
-        if not widget.hasFocus():
-            return False
-        return len(widget.selectedItems()) > 0
-
     def _update_copy_buttons_enabled_state(self) -> None:
         for list_widget, button in self._copy_map.items():
             if list_widget is None or button is None:
                 continue
-            button.setEnabled(self._is_copy_enabled_for_list(list_widget))
+            button.setEnabled(
+                self._presenter.should_enable_copy_button(
+                    list_has_focus=list_widget.hasFocus(),
+                    selected_count=len(list_widget.selectedItems()),
+                )
+            )
 
     def _copy_list_selection_to_clipboard(self, widget: QtWidgets.QListWidget) -> None:
         items = widget.selectedItems()
@@ -1138,7 +1136,7 @@ class MainPanel(QtWidgets.QDialog):
         if self.varsetVariableNamesListWidget is not None:
             selected_count = len(self.varsetVariableNamesListWidget.selectedItems())
         self.removeUnusedVariablesPushButton.setEnabled(
-            self._controller.should_enable_remove_unused(
+            self._presenter.should_enable_remove_unused(
                 only_unused=only_unused,
                 selected_count=selected_count,
             )
@@ -1156,7 +1154,7 @@ class MainPanel(QtWidgets.QDialog):
         if self.aliasesVariableNamesListWidget is not None:
             selected_count = len(self.aliasesVariableNamesListWidget.selectedItems())
         self.removeUnusedAliasesPushButton.setEnabled(
-            self._controller.should_enable_remove_unused(
+            self._presenter.should_enable_remove_unused(
                 only_unused=only_unused,
                 selected_count=selected_count,
             )

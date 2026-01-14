@@ -14,12 +14,18 @@ class FakeController:
     def get_object_label(self, object_name: str) -> str | None:
         return self.labels.get(object_name)
 
-    def get_filtered_varsets(self, *, filter_text: str, exclude_copy_on_change: bool = False) -> list[str]:
+    def get_filtered_varsets(
+        self, *, filter_text: str, exclude_copy_on_change: bool = False
+    ) -> list[str]:
+        _filter_text = filter_text
+        _exclude_copy_on_change = exclude_copy_on_change
         return list(self.varsets)
 
     def get_filtered_spreadsheets(
         self, *, filter_text: str, exclude_copy_on_change: bool = False
     ) -> list[str]:
+        _filter_text = filter_text
+        _exclude_copy_on_change = exclude_copy_on_change
         return list(self.sheets)
 
     def get_filtered_varset_variable_items(
@@ -29,9 +35,12 @@ class FakeController:
         variable_filter_text: str,
         only_unused: bool,
     ) -> list[ParentChildRef]:
+        _variable_filter_text = variable_filter_text
+        _only_unused = only_unused
         return [ParentChildRef(parent=v, child="X") for v in selected_varsets]
 
     def get_expression_items(self, selected_vars: list[ParentChildRef] | list[str]):
+        _selected_vars = selected_vars
         return [ExpressionItem(object_name="Box", lhs="Box.Length", rhs="1")], {}
 
     def get_filtered_spreadsheet_alias_items(
@@ -41,10 +50,16 @@ class FakeController:
         alias_filter_text: str,
         only_unused: bool,
     ) -> list[ParentChildRef]:
+        _alias_filter_text = alias_filter_text
+        _only_unused = only_unused
         return [ParentChildRef(parent=s, child="Alias") for s in selected_spreadsheets]
 
     def get_alias_expression_items(self, selected_aliases: list[ParentChildRef] | list[str]):
+        _selected_aliases = selected_aliases
         return [ExpressionItem(object_name="Sheet", lhs="Sheet.Alias", rhs="42")], {}
+
+    def should_enable_remove_unused(self, *, only_unused: bool, selected_count: int) -> bool:
+        return bool(only_unused and selected_count > 0)
 
 
 def test_format_object_name_label_mode_uses_label() -> None:
@@ -157,3 +172,17 @@ def test_get_active_document_change_plan_clears_and_repopulates() -> None:
     assert plan.clear_varset_expressions
     assert plan.clear_alias_names
     assert plan.clear_alias_expressions
+
+
+def test_should_enable_remove_unused_delegates_to_controller() -> None:
+    p = MainPanelPresenter(FakeController())
+    assert not p.should_enable_remove_unused(only_unused=False, selected_count=1)
+    assert not p.should_enable_remove_unused(only_unused=True, selected_count=0)
+    assert p.should_enable_remove_unused(only_unused=True, selected_count=2)
+
+
+def test_should_enable_copy_button_requires_focus_and_selection() -> None:
+    p = MainPanelPresenter(FakeController())
+    assert not p.should_enable_copy_button(list_has_focus=False, selected_count=1)
+    assert not p.should_enable_copy_button(list_has_focus=True, selected_count=0)
+    assert p.should_enable_copy_button(list_has_focus=True, selected_count=2)

@@ -74,6 +74,20 @@ class MainPanelPresenter:
             clear_alias_expressions=True,
         )
 
+    def should_enable_remove_unused(self, *, only_unused: bool, selected_count: int) -> bool:
+        """Return whether the remove-unused action should be enabled."""
+
+        getter = getattr(self._controller, "should_enable_remove_unused", None)
+        if not callable(getter):
+            return False
+        value: object = getter(only_unused=only_unused, selected_count=selected_count)
+        return bool(value)
+
+    def should_enable_copy_button(self, *, list_has_focus: bool, selected_count: int) -> bool:
+        """Return whether a copy button for a list should be enabled."""
+
+        return bool(list_has_focus and selected_count > 0)
+
     def _get_object_label(self, object_name: str) -> str | None:
         getter = getattr(self._controller, "get_object_label", None)
         if not callable(getter):
