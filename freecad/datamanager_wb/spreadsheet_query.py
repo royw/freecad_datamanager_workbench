@@ -7,18 +7,24 @@ searching expressions for alias references.
 import re
 from collections.abc import Iterable, Iterator, Mapping
 
-from .freecad_context import FreeCadContext
+from .freecad_context import FreeCadContext, get_runtime_context
 from .freecad_helpers import (
     build_expression_key,
-    get_active_document,
     get_copy_on_change_names,
     get_object_name,
-    get_typed_object,
     iter_document_objects,
     iter_named_expression_engine_entries,
 )
+from .freecad_port import FreeCadContextAdapter
 
 _CELL_RE = re.compile(r"^[A-Z]+[0-9]+$")
+
+
+def _get_active_doc(*, ctx: FreeCadContext | None = None) -> object | None:
+    if ctx is None:
+        ctx = get_runtime_context()
+    port = FreeCadContextAdapter(ctx)
+    return port.get_active_document()
 
 
 def _coerce_mapping(value: object) -> dict[str, str]:
@@ -176,13 +182,13 @@ def _get_active_spreadsheet(
     *,
     ctx: FreeCadContext | None = None,
 ) -> object | None:
-    doc = get_active_document(ctx=ctx)
+    if ctx is None:
+        ctx = get_runtime_context()
+    port = FreeCadContextAdapter(ctx)
+    doc = port.get_active_document()
     if doc is None:
         return None
-    sheet = get_typed_object(doc, spreadsheet_name, type_id="Spreadsheet::Sheet")
-    if sheet is None:
-        return None
-    return sheet
+    return port.get_typed_object(doc, spreadsheet_name, type_id="Spreadsheet::Sheet")
 
 
 def _sheet_label_or_name(sheet: object) -> str:
@@ -294,7 +300,7 @@ def getSpreadsheets(
     Yields:
         The `Name` of each `Spreadsheet::Sheet` object.
     """
-    doc = get_active_document(ctx=ctx)
+    doc = _get_active_doc(ctx=ctx)
     if doc is None:
         return
 
@@ -356,11 +362,14 @@ def getSpreadsheetAliasNames(
     Returns:
         Sorted list of alias names.
     """
-    doc = get_active_document(ctx=ctx)
+    if ctx is None:
+        ctx = get_runtime_context()
+    port = FreeCadContextAdapter(ctx)
+    doc = port.get_active_document()
     if doc is None:
         return []
 
-    sheet = get_typed_object(doc, spreadsheet_name, type_id="Spreadsheet::Sheet")
+    sheet = port.get_typed_object(doc, spreadsheet_name, type_id="Spreadsheet::Sheet")
     if sheet is None:
         return []
 
@@ -384,7 +393,7 @@ def getSpreadsheetAliasReferences(
     Returns:
         Mapping of ``"Object.Property"`` -> expression string.
     """
-    doc = get_active_document(ctx=ctx)
+    doc = _get_active_doc(ctx=ctx)
     if doc is None:
         return {}
 

@@ -7,6 +7,7 @@ alias definition.
 from collections.abc import Mapping
 
 from .freecad_context import FreeCadContext, get_runtime_context
+from .freecad_port import FreeCadContextAdapter
 
 
 def _iter_cell_coordinates(*, max_rows: int, max_cols: int) -> list[str]:
@@ -61,13 +62,11 @@ def _try_get_spreadsheet(
 ) -> object | None:
     if ctx is None:
         ctx = get_runtime_context()
-    doc = ctx.app.ActiveDocument
+    port = FreeCadContextAdapter(ctx)
+    doc = port.get_active_document()
     if doc is None:
         return None
-    sheet = doc.getObject(spreadsheet_name)
-    if sheet is None or getattr(sheet, "TypeId", None) != "Spreadsheet::Sheet":
-        return None
-    return sheet
+    return port.get_typed_object(doc, spreadsheet_name, type_id="Spreadsheet::Sheet")
 
 
 def _try_get_cell_from_alias(sheet: object, alias_name: str) -> str | None:

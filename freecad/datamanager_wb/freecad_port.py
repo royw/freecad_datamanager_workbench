@@ -10,7 +10,7 @@ objects, and defensive `getattr` usage) localized to a single adapter.
 from __future__ import annotations
 
 from dataclasses import dataclass
-from typing import Protocol
+from typing import Protocol, cast
 
 from .freecad_context import FreeCadContext
 
@@ -20,6 +20,12 @@ class FreeCadPort(Protocol):
 
     def get_active_document(self) -> object | None:
         """Return the active document, if any."""
+
+    def get_object(self, doc: object, name: str) -> object | None:
+        """Return an object by name from the given document, if possible."""
+
+    def get_typed_object(self, doc: object, name: str, *, type_id: str) -> object | None:
+        """Return an object by name only if its `TypeId` matches."""
 
     def try_recompute_active_document(self) -> None:
         """Attempt to recompute the active document.
@@ -46,6 +52,23 @@ class FreeCadContextAdapter:
         if doc is None:
             return None
         return doc
+
+    def get_object(self, doc: object, name: str) -> object | None:
+        """Return an object by name from the given document, if possible."""
+        getter = getattr(doc, "getObject", None)
+        if not callable(getter):
+            return None
+        try:
+            return cast(object | None, getter(name))
+        except Exception:  # pylint: disable=broad-exception-caught
+            return None
+
+    def get_typed_object(self, doc: object, name: str, *, type_id: str) -> object | None:
+        """Return an object by name only if its `TypeId` matches."""
+        obj = self.get_object(doc, name)
+        if obj is None or getattr(obj, "TypeId", None) != type_id:
+            return None
+        return obj
 
     def try_recompute_active_document(self) -> None:
         """Attempt to recompute the active document, swallowing exceptions."""
