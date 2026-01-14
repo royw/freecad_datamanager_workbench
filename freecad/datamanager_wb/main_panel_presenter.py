@@ -54,6 +54,15 @@ class ActiveDocumentChangePlan:
     clear_alias_expressions: bool
 
 
+@dataclass(frozen=True)
+class ShowPlan:
+    """Presenter-defined plan for showing the panel."""
+
+    show_standalone: bool
+    reuse_subwindow: bool
+    create_subwindow: bool
+
+
 class MainPanelPresenter:
     """Presenter for `MainPanel` interactions and formatting."""
 
@@ -87,6 +96,15 @@ class MainPanelPresenter:
         """Return whether a copy button for a list should be enabled."""
 
         return bool(list_has_focus and selected_count > 0)
+
+    def get_show_plan(self, *, mdi_available: bool, has_existing_subwindow: bool) -> ShowPlan:
+        """Return a plan for showing the panel given the available UI host."""
+
+        if not mdi_available:
+            return ShowPlan(show_standalone=True, reuse_subwindow=False, create_subwindow=False)
+        if has_existing_subwindow:
+            return ShowPlan(show_standalone=False, reuse_subwindow=True, create_subwindow=False)
+        return ShowPlan(show_standalone=False, reuse_subwindow=False, create_subwindow=True)
 
     def _get_object_label(self, object_name: str) -> str | None:
         getter = getattr(self._controller, "get_object_label", None)

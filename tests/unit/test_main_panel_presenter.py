@@ -186,3 +186,27 @@ def test_should_enable_copy_button_requires_focus_and_selection() -> None:
     assert not p.should_enable_copy_button(list_has_focus=False, selected_count=1)
     assert not p.should_enable_copy_button(list_has_focus=True, selected_count=0)
     assert p.should_enable_copy_button(list_has_focus=True, selected_count=2)
+
+
+def test_get_show_plan_without_mdi_shows_standalone() -> None:
+    p = MainPanelPresenter(FakeController())
+    plan = p.get_show_plan(mdi_available=False, has_existing_subwindow=False)
+    assert plan.show_standalone
+    assert not plan.reuse_subwindow
+    assert not plan.create_subwindow
+
+
+def test_get_show_plan_with_existing_subwindow_reuses() -> None:
+    p = MainPanelPresenter(FakeController())
+    plan = p.get_show_plan(mdi_available=True, has_existing_subwindow=True)
+    assert not plan.show_standalone
+    assert plan.reuse_subwindow
+    assert not plan.create_subwindow
+
+
+def test_get_show_plan_with_mdi_creates_subwindow() -> None:
+    p = MainPanelPresenter(FakeController())
+    plan = p.get_show_plan(mdi_available=True, has_existing_subwindow=False)
+    assert not plan.show_standalone
+    assert not plan.reuse_subwindow
+    assert plan.create_subwindow

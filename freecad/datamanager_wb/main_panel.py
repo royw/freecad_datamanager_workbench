@@ -9,10 +9,10 @@ import os
 from collections.abc import Callable
 
 import FreeCAD as App
-import FreeCADGui as Gui
 from PySide import QtCore, QtWidgets
 
 from .expression_item import ExpressionItem
+from .gui_port import FreeCadGuiAdapter, GuiPort
 from .main_panel_presenter import MainPanelPresenter
 from .panel_controller import PanelController
 from .parent_child_ref import ParentChildRef, parse_parent_child_ref
@@ -55,8 +55,9 @@ class MainPanel(QtWidgets.QDialog):
     workbench controller/data layers.
     """
 
-    def __init__(self):
+    def __init__(self, *, gui_port: GuiPort | None = None):
         super().__init__()
+        self._gui_port: GuiPort = gui_port or FreeCadGuiAdapter()
         self._mdi_subwindow = None
         self._controller = PanelController()
         self._presenter = MainPanelPresenter(self._controller)
@@ -143,7 +144,7 @@ class MainPanel(QtWidgets.QDialog):
         return widget
 
     def _load_ui(self):
-        return Gui.PySideUic.loadUi(os.path.join(UIPATH, "main_panel.ui"))
+        return self._gui_port.load_ui(os.path.join(UIPATH, "main_panel.ui"))
 
     def _resolve_root_widget(self):
         if isinstance(self.form, QtWidgets.QMainWindow):
@@ -1326,18 +1327,27 @@ class MainPanel(QtWidgets.QDialog):
         if tab_index is not None and self.tabWidget is not None:
             self.tabWidget.setCurrentIndex(tab_index)
 
-        main_window = Gui.getMainWindow()
-        mdi = main_window.findChild(QtWidgets.QMdiArea)
-        if mdi is None:
+        mdi = self._gui_port.get_mdi_area()
+        plan = self._presenter.get_show_plan(
+            mdi_available=mdi is not None,
+            has_existing_subwindow=self._mdi_subwindow is not None,
+        )
+
+        if plan.show_standalone:
             self._widget.show()
             return
 
-        if self._mdi_subwindow is not None:
+        if plan.reuse_subwindow and self._mdi_subwindow is not None:
             self._mdi_subwindow.showMaximized()
             self._mdi_subwindow.setFocus()
             return
 
-        self._mdi_subwindow = mdi.addSubWindow(self._widget)
+        if plan.create_subwindow:
+            if mdi is None:
+                self._widget.show()
+                return
+
+            self._mdi_subwindow = self._gui_port.add_subwindow(mdi_area=mdi, widget=self._widget)
         self._mdi_subwindow.setWindowTitle(translate("Workbench", "Data Manager"))
         self._mdi_subwindow._dm_main_panel = self  # pylint: disable=protected-access
         self._mdi_subwindow.setAttribute(QtCore.Qt.WA_DeleteOnClose, True)
