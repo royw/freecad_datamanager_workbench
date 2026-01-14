@@ -163,6 +163,12 @@ def main(argv: list[str] | None = None) -> int:
         )
     )
     parser.add_argument(
+        "-v",
+        "--verbose",
+        action="store_true",
+        help="Print each Python filename as it is checked",
+    )
+    parser.add_argument(
         "paths",
         nargs="+",
         help="File(s) and/or directory path(s) to scan recursively for *.py files",
@@ -174,6 +180,8 @@ def main(argv: list[str] | None = None) -> int:
 
     missing: list[MissingDocstring] = []
     for f in py_files:
+        if args.verbose:
+            sys.stdout.write(f"{f}\n")
         missing.extend(check_file(f))
 
     if missing:
