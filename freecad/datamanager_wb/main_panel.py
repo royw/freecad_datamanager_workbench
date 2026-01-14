@@ -57,7 +57,6 @@ class MainPanel(QtWidgets.QDialog):
 
     def __init__(self):
         super().__init__()
-        App.Console.PrintMessage(translate("Log", "Workbench MainPanel initialized.") + "\n")
         self._mdi_subwindow = None
         self._controller = PanelController()
         self._presenter = MainPanelPresenter(self._controller)
@@ -76,8 +75,7 @@ class MainPanel(QtWidgets.QDialog):
         self._start_active_document_watch()
 
     def _start_active_document_watch(self) -> None:
-        doc = App.ActiveDocument
-        self._active_doc_name = getattr(doc, "Name", None) if doc is not None else None
+        self._active_doc_name = self._controller.get_active_document_name()
 
         timer = QtCore.QTimer(self)
         timer.setInterval(250)
@@ -93,8 +91,7 @@ class MainPanel(QtWidgets.QDialog):
         self._active_doc_timer = None
 
     def _check_active_document_changed(self) -> None:
-        doc = App.ActiveDocument
-        name = getattr(doc, "Name", None) if doc is not None else None
+        name = self._controller.get_active_document_name()
         if name == self._active_doc_name:
             return
         self._active_doc_name = name
@@ -475,47 +472,12 @@ class MainPanel(QtWidgets.QDialog):
         )
 
     def _is_aliases_display_mode_label(self) -> bool:
-        return bool(
-            self.aliasesObjectLabelRadioButton is not None
+        if self.aliasesObjectLabelRadioButton is None:
+            return False
+        return (
+            self.aliasesObjectLabelRadioButton.isCheckable()
             and self.aliasesObjectLabelRadioButton.isChecked()
         )
-
-    def _format_expression_item_for_display(
-        self,
-        expression_item: ExpressionItem,
-        *,
-        use_label: bool,
-    ) -> str:
-        if not use_label:
-            return self._format_expression_item_basic(expression_item)
-
-        obj_label = self._try_get_object_label(expression_item.object_name)
-        if not obj_label:
-            return self._format_expression_item_basic(expression_item)
-
-        lhs = self._replace_lhs_object_prefix(expression_item.lhs, obj_label)
-        return f"{lhs} {expression_item.operator} {expression_item.rhs}"
-
-    def _format_expression_item_basic(self, expression_item: ExpressionItem) -> str:
-        return f"{expression_item.lhs} {expression_item.operator} {expression_item.rhs}"
-
-    def _try_get_object_label(self, object_name: str) -> str | None:
-        doc = App.ActiveDocument
-        if doc is None:
-            return None
-        obj = doc.getObject(object_name)
-        if obj is None:
-            return None
-        try:
-            return str(obj.Label)
-        except Exception:  # pylint: disable=broad-exception-caught
-            return None
-
-    def _replace_lhs_object_prefix(self, lhs: str, obj_label: str) -> str:
-        if "." not in lhs:
-            return lhs
-        _prefix, rest = lhs.split(".", 1)
-        return f"{obj_label}.{rest}"
 
     def _restore_list_selection_by_predicate(
         self,
@@ -642,12 +604,6 @@ class MainPanel(QtWidgets.QDialog):
                 lambda w: (
                     w.itemSelectionChanged.connect(self._on_available_varsets_selection_changed),
                     w.itemSelectionChanged.connect(self._update_copy_buttons_enabled_state),
-                    App.Console.PrintMessage(
-                        translate(
-                            "Log",
-                            "Workbench MainPanel: connected available varsets selection handler\n",
-                        )
-                    ),
                 ),
             ),
             (
@@ -657,15 +613,6 @@ class MainPanel(QtWidgets.QDialog):
                         self._on_available_spreadsheets_selection_changed
                     ),
                     w.itemSelectionChanged.connect(self._update_copy_buttons_enabled_state),
-                    App.Console.PrintMessage(
-                        translate(
-                            "Log",
-                            (
-                                "Workbench MainPanel: connected available spreadsheets "
-                                "selection handler\n"
-                            ),
-                        )
-                    ),
                 ),
             ),
             (
@@ -768,134 +715,50 @@ class MainPanel(QtWidgets.QDialog):
             ),
             (
                 self.copyAvailableVarsetsPushButton,
-                lambda w: (
-                    App.Console.PrintMessage(
-                        translate(
-                            "Log",
-                            (
-                                f"DataManager(copy): connecting {w.objectName()} "
-                                "-> availableVarsetsListWidget\n"
-                            ),
-                        )
-                    ),
-                    w.pressed.connect(
-                        lambda: self._on_copy_button_clicked(self.availableVarsetsListWidget)
-                    ),
-                    w.clicked.connect(
-                        lambda _checked=False: self._on_copy_button_clicked(
-                            self.availableVarsetsListWidget
-                        )
-                    ),
+                lambda w: w.clicked.connect(
+                    lambda _checked=False: self._on_copy_button_clicked(
+                        self.availableVarsetsListWidget
+                    )
                 ),
             ),
             (
                 self.copyVarsetVariablesPushButton,
-                lambda w: (
-                    App.Console.PrintMessage(
-                        translate(
-                            "Log",
-                            (
-                                f"DataManager(copy): connecting {w.objectName()} "
-                                "-> varsetVariableNamesListWidget\n"
-                            ),
-                        )
-                    ),
-                    w.pressed.connect(
-                        lambda: self._on_copy_button_clicked(self.varsetVariableNamesListWidget)
-                    ),
-                    w.clicked.connect(
-                        lambda _checked=False: self._on_copy_button_clicked(
-                            self.varsetVariableNamesListWidget
-                        )
-                    ),
+                lambda w: w.clicked.connect(
+                    lambda _checked=False: self._on_copy_button_clicked(
+                        self.varsetVariableNamesListWidget
+                    )
                 ),
             ),
             (
                 self.copyVarsetExpressionsPushButton,
-                lambda w: (
-                    App.Console.PrintMessage(
-                        translate(
-                            "Log",
-                            (
-                                f"DataManager(copy): connecting {w.objectName()} "
-                                "-> varsetExpressionsListWidget\n"
-                            ),
-                        )
-                    ),
-                    w.pressed.connect(
-                        lambda: self._on_copy_button_clicked(self.varsetExpressionsListWidget)
-                    ),
-                    w.clicked.connect(
-                        lambda _checked=False: self._on_copy_button_clicked(
-                            self.varsetExpressionsListWidget
-                        )
-                    ),
+                lambda w: w.clicked.connect(
+                    lambda _checked=False: self._on_copy_button_clicked(
+                        self.varsetExpressionsListWidget
+                    )
                 ),
             ),
             (
                 self.copyAvailableSpreadsheetsPushButton,
-                lambda w: (
-                    App.Console.PrintMessage(
-                        translate(
-                            "Log",
-                            (
-                                f"DataManager(copy): connecting {w.objectName()} "
-                                "-> availableSpreadsheetsListWidget\n"
-                            ),
-                        )
-                    ),
-                    w.pressed.connect(
-                        lambda: self._on_copy_button_clicked(self.availableSpreadsheetsListWidget)
-                    ),
-                    w.clicked.connect(
-                        lambda _checked=False: self._on_copy_button_clicked(
-                            self.availableSpreadsheetsListWidget
-                        )
-                    ),
+                lambda w: w.clicked.connect(
+                    lambda _checked=False: self._on_copy_button_clicked(
+                        self.availableSpreadsheetsListWidget
+                    )
                 ),
             ),
             (
                 self.copyAliasesPushButton,
-                lambda w: (
-                    App.Console.PrintMessage(
-                        translate(
-                            "Log",
-                            (
-                                f"DataManager(copy): connecting {w.objectName()} "
-                                "-> aliasesVariableNamesListWidget\n"
-                            ),
-                        )
-                    ),
-                    w.pressed.connect(
-                        lambda: self._on_copy_button_clicked(self.aliasesVariableNamesListWidget)
-                    ),
-                    w.clicked.connect(
-                        lambda _checked=False: self._on_copy_button_clicked(
-                            self.aliasesVariableNamesListWidget
-                        )
-                    ),
+                lambda w: w.clicked.connect(
+                    lambda _checked=False: self._on_copy_button_clicked(
+                        self.aliasesVariableNamesListWidget
+                    )
                 ),
             ),
             (
                 self.copyAliasExpressionsPushButton,
-                lambda w: (
-                    App.Console.PrintMessage(
-                        translate(
-                            "Log",
-                            (
-                                f"DataManager(copy): connecting {w.objectName()} "
-                                "-> aliasExpressionsListWidget\n"
-                            ),
-                        )
-                    ),
-                    w.pressed.connect(
-                        lambda: self._on_copy_button_clicked(self.aliasExpressionsListWidget)
-                    ),
-                    w.clicked.connect(
-                        lambda _checked=False: self._on_copy_button_clicked(
-                            self.aliasExpressionsListWidget
-                        )
-                    ),
+                lambda w: w.clicked.connect(
+                    lambda _checked=False: self._on_copy_button_clicked(
+                        self.aliasExpressionsListWidget
+                    )
                 ),
             ),
         ]
@@ -1191,20 +1054,9 @@ class MainPanel(QtWidgets.QDialog):
 
     def _on_available_varsets_selection_changed(self):
         if self.availableVarsetsListWidget is None or self.varsetVariableNamesListWidget is None:
-            App.Console.PrintMessage(
-                translate("Log", "Workbench MainPanel: no varsets or variable names list widget")
-                + "\n"
-            )
             return
 
-        App.Console.PrintMessage(translate("Log", "Workbench MainPanel: selection changed\n"))
-
         selected_varsets = self._get_selected_varsets()
-        for varset_name in selected_varsets:
-            App.Console.PrintMessage(
-                translate("Log", f"Workbench MainPanel: selected varset {varset_name}") + "\n"
-            )
-
         self._populate_variable_names(selected_varsets)
 
         if self.varsetExpressionsListWidget is not None:
@@ -1218,9 +1070,6 @@ class MainPanel(QtWidgets.QDialog):
             return
 
         selected = self._get_selected_spreadsheets()
-        App.Console.PrintMessage(
-            translate("Log", f"Workbench MainPanel: selected spreadsheets {selected}\n")
-        )
         self._populate_alias_names(selected)
 
         if self.aliasExpressionsListWidget is not None:
@@ -1230,39 +1079,8 @@ class MainPanel(QtWidgets.QDialog):
         if self.varsetVariableNamesListWidget is None or self.varsetExpressionsListWidget is None:
             return
 
-        App.Console.PrintMessage(
-            translate("Log", "Workbench MainPanel: variable selection changed\n")
-        )
-
         selected_vars = self._get_selected_varset_variable_items()
-        expression_items, counts = self._controller.get_expression_items(selected_vars)
-
-        self.varsetExpressionsListWidget.clear()
-
-        use_label = self._is_varsets_display_mode_label()
-
-        for ref in selected_vars:
-            text = ref.text
-            App.Console.PrintMessage(
-                translate("Log", f"Workbench MainPanel: selected variable {text}") + "\n"
-            )
-            refs_count = counts.get(text, 0)
-            App.Console.PrintMessage(
-                translate(
-                    "Log",
-                    (f"Workbench MainPanel: found {refs_count} references for {text}"),
-                )
-                + "\n"
-            )
-
-        for expression_item in expression_items:
-            item = QtWidgets.QListWidgetItem(
-                self._format_expression_item_for_display(expression_item, use_label=use_label)
-            )
-            item.setData(QtCore.Qt.UserRole, expression_item)
-            self.varsetExpressionsListWidget.addItem(item)
-
-        self._update_remove_unused_button_enabled_state()
+        self._populate_expressions(selected_vars)
 
     def _on_varsets_filter_changed(self, _text: str) -> None:
         self._populate_varsets()
@@ -1482,7 +1300,6 @@ class MainPanel(QtWidgets.QDialog):
         When hosted inside FreeCAD's MDI, closes the subwindow; otherwise closes
         the top-level form.
         """
-        App.Console.PrintMessage(translate("Log", "Workbench MainPanel accepted.") + "\n")
         self._stop_active_document_watch()
         self._save_splitter_states()
         if self._mdi_subwindow is not None:
@@ -1492,7 +1309,6 @@ class MainPanel(QtWidgets.QDialog):
 
     def reject(self):
         """Close the panel (Qt dialog reject semantics)."""
-        App.Console.PrintMessage(translate("Log", "Workbench MainPanel rejected.") + "\n")
         self._stop_active_document_watch()
         self._save_splitter_states()
         if self._mdi_subwindow is not None:
@@ -1500,24 +1316,19 @@ class MainPanel(QtWidgets.QDialog):
         else:
             self.form.close()
 
-    def show(self, tab_index: int | None = None):
+    def show(self, *, tab_index: int | None = None):  # noqa: A003
         """Show the panel, optionally selecting a tab.
 
         Args:
             tab_index: When provided, selects the corresponding tab index before
                 showing the panel.
         """
-        App.Console.PrintMessage(translate("Log", "Workbench MainPanel shown.") + "\n")
-
         if tab_index is not None and self.tabWidget is not None:
             self.tabWidget.setCurrentIndex(tab_index)
 
         main_window = Gui.getMainWindow()
         mdi = main_window.findChild(QtWidgets.QMdiArea)
         if mdi is None:
-            App.Console.PrintWarning(
-                translate("Log", "Could not find QMdiArea; showing panel as a standalone window\n")
-            )
             self._widget.show()
             return
 

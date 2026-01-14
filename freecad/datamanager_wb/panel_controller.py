@@ -39,6 +39,14 @@ class PanelController:
         self._port.try_recompute_active_document()
         self._port.try_update_gui()
 
+    def get_active_document_name(self) -> str | None:
+        """Return the active document name, if available."""
+        doc = self._port.get_active_document()
+        if doc is None:
+            return None
+        name = getattr(doc, "Name", None)
+        return str(name) if name else None
+
     def get_object_label(self, object_name: str) -> str | None:
         """Return the label for a named document object, if available."""
         doc = self._port.get_active_document()
