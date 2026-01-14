@@ -29,19 +29,18 @@ class PanelController:
         self._varsets_tab_controller = TabController(VarsetDataSource(ctx=self._ctx))
         self._aliases_tab_controller = TabController(SpreadsheetDataSource(ctx=self._ctx))
 
-    def refresh_document(self) -> None:
-        """Recompute the active document and refresh the FreeCAD GUI.
-
-        Any exceptions are swallowed to keep the UI responsive.
-        """
+    def _recompute_active_document(self) -> None:
         doc = self._ctx.app.ActiveDocument
-        if doc is not None:
-            try:
-                recompute = getattr(doc, "recompute", None)
-                if callable(recompute):
-                    recompute()
-            except Exception:  # pylint: disable=broad-exception-caught
-                pass
+        if doc is None:
+            return
+        try:
+            recompute = getattr(doc, "recompute", None)
+            if callable(recompute):
+                recompute()
+        except Exception:  # pylint: disable=broad-exception-caught
+            pass
+
+    def _update_gui(self) -> None:
         try:
             gui = self._ctx.gui
             updater = getattr(gui, "updateGui", None) if gui is not None else None
@@ -49,6 +48,14 @@ class PanelController:
                 updater()
         except Exception:  # pylint: disable=broad-exception-caught
             pass
+
+    def refresh_document(self) -> None:
+        """Recompute the active document and refresh the FreeCAD GUI.
+
+        Any exceptions are swallowed to keep the UI responsive.
+        """
+        self._recompute_active_document()
+        self._update_gui()
 
     def should_enable_remove_unused(self, *, only_unused: bool, selected_count: int) -> bool:
         """Delegate the enable/disable rule for remove-unused in the VarSets tab."""
