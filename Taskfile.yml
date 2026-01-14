@@ -94,6 +94,7 @@ tasks:
       - task: lint:fix:emoji
       - task: format
       - task: lint
+      - task: lint:check_docstrs
       - task: metrics:complexity
       - task: test:parallel
 

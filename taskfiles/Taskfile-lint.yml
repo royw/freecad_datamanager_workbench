@@ -109,6 +109,12 @@ tasks:
         vars:
           SEARCH_PATH: "{{.SCRIPTS}}"
 
+  check_docstrs:
+    desc: Check that modules and public objects have docstrings
+    summary: Runs the docstring checker on the source directory
+    cmds:
+      - uv run python scripts/check_docstrs.py {{.SRC}}
+
   markdown:
     desc: Lint markdown files with pymarkdownlnt
     summary: Checks markdown formatting and style issues
