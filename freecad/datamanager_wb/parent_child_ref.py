@@ -48,6 +48,7 @@ def parse_parent_child_ref(text: str) -> ParentChildRef | None:
 
 
 def normalize_parent_child_items(items: list[ParentChildRef] | list[str]) -> list[str]:
+    """Normalize a list of selection items to their `parent.child` string form."""
     normalized: list[str] = []
     for item in items:
         if isinstance(item, ParentChildRef):

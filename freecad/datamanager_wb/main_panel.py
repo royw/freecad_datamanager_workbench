@@ -266,10 +266,11 @@ class MainPanel(QtWidgets.QDialog):
             list_widget.installEventFilter(self)
 
     def eventFilter(self, watched: QtCore.QObject, event: QtCore.QEvent) -> bool:  # noqa: N802
+        """Intercept focus events on list widgets to update copy-button state."""
         if isinstance(watched, QtWidgets.QListWidget) and watched in self._copy_map:
             if event.type() in (
                 QtCore.QEvent.Type.FocusIn,
-                QtCore.QEvent.Type.FocusOut,
+                QtCore.QEvent.Type.MouseButtonPress,
             ):
                 QtCore.QTimer.singleShot(0, self._update_copy_buttons_enabled_state)
         return super().eventFilter(watched, event)

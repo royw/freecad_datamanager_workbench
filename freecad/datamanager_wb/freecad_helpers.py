@@ -1,3 +1,11 @@
+"""Shared helper utilities for interacting with FreeCAD documents.
+
+These helpers centralize small FreeCAD-facing operations (document access,
+object lookup, expression iteration, copy-on-change filtering) behind a narrow
+API. Most functions accept an optional `FreeCadContext` so they can be tested
+outside FreeCAD.
+"""
+
 from __future__ import annotations
 
 from collections.abc import Iterable, Iterator, Sequence
@@ -7,12 +15,14 @@ from .freecad_context import FreeCadContext, get_runtime_context
 
 
 def iter_document_objects(doc: object) -> Iterator[object]:
+    """Yield non-null objects from a FreeCAD document's `Objects` list."""
     for obj in getattr(doc, "Objects", []) or []:
         if obj is not None:
             yield obj
 
 
 def get_active_document(*, ctx: FreeCadContext | None = None) -> object | None:
+    """Return the currently active document, if any."""
     if ctx is None:
         ctx = get_runtime_context()
     _ = ctx.gui
@@ -23,6 +33,7 @@ def get_active_document(*, ctx: FreeCadContext | None = None) -> object | None:
 
 
 def get_object_name(obj: object) -> str | None:
+    """Return the object's internal `Name` if present and non-empty."""
     name = getattr(obj, "Name", None)
     if isinstance(name, str) and name:
         return name
@@ -30,6 +41,7 @@ def get_object_name(obj: object) -> str | None:
 
 
 def get_typed_object(doc: object, name: str, *, type_id: str) -> object | None:
+    """Return a named document object only if its `TypeId` matches."""
     getter = getattr(doc, "getObject", None)
     if not callable(getter):
         return None
@@ -40,6 +52,7 @@ def get_typed_object(doc: object, name: str, *, type_id: str) -> object | None:
 
 
 def build_expression_key(*, obj_name: str, lhs: object) -> str:
+    """Build the canonical expression key string for a named expression entry."""
     if str(lhs).startswith("."):
         return f"{obj_name}{lhs}"
     return f"{obj_name}.{lhs}"
@@ -64,6 +77,7 @@ def _try_parse_expression(expr: object) -> tuple[object, object] | None:
 
 
 def iter_expression_engine_entries(doc: object) -> Iterator[tuple[object, object, object]]:
+    """Yield `(obj, lhs, expr_text)` tuples for expression engine entries."""
     for obj in iter_document_objects(doc):
         for expr in _iter_expression_engine(obj):
             parsed = _try_parse_expression(expr)
@@ -74,6 +88,7 @@ def iter_expression_engine_entries(doc: object) -> Iterator[tuple[object, object
 
 
 def iter_named_expression_engine_entries(doc: object) -> Iterator[tuple[str, object, object]]:
+    """Yield `(obj_name, lhs, expr_text)` tuples for expression engine entries."""
     for obj, lhs, expr_text in iter_expression_engine_entries(doc):
         obj_name = get_object_name(obj)
         if obj_name is None:
@@ -99,6 +114,7 @@ def _iter_copy_on_change_named_groups(doc: object) -> Iterator[object]:
 
 
 def get_copy_on_change_groups(doc: object) -> list[object]:
+    """Return all CopyOnChange groups found in the given document."""
     groups: list[object] = []
     direct = _get_direct_copy_on_change_group(doc)
     if direct is not None:
@@ -122,11 +138,13 @@ def _iter_children_from_attr(obj: object, attr: str) -> Iterator[object]:
 
 
 def iter_object_children(obj: object) -> Iterator[object]:
+    """Yield child objects by traversing common FreeCAD container attributes."""
     yield from _iter_children_from_attr(obj, "Group")
     yield from _iter_children_from_attr(obj, "OutList")
 
 
 def get_copy_on_change_names(*, doc: object, type_id: str) -> set[str]:
+    """Return object names of the given `type_id` under CopyOnChange groups."""
     seen: set[int] = set()
     names: set[str] = set()
 
