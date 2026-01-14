@@ -39,6 +39,25 @@ class PanelController:
         self._port.try_recompute_active_document()
         self._port.try_update_gui()
 
+    def get_object_label(self, object_name: str) -> str | None:
+        """Return the label for a named document object, if available."""
+        doc = self._port.get_active_document()
+        if doc is None:
+            return None
+
+        obj = self._port.get_object(doc, object_name)
+        if obj is None:
+            return None
+
+        label = getattr(obj, "Label", None)
+        if label is None:
+            return None
+        try:
+            text = str(label)
+        except Exception:  # pylint: disable=broad-exception-caught
+            return None
+        return text if text else None
+
     def should_enable_remove_unused(self, *, only_unused: bool, selected_count: int) -> bool:
         """Delegate the enable/disable rule for remove-unused in the VarSets tab."""
         return self._varsets_tab_controller.should_enable_remove_unused(

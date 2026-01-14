@@ -13,6 +13,7 @@ import FreeCADGui as Gui
 from PySide import QtCore, QtWidgets
 
 from .expression_item import ExpressionItem
+from .main_panel_presenter import MainPanelPresenter
 from .panel_controller import PanelController
 from .parent_child_ref import ParentChildRef, parse_parent_child_ref
 from .resources import UIPATH
@@ -59,6 +60,7 @@ class MainPanel(QtWidgets.QDialog):
         App.Console.PrintMessage(translate("Log", "Workbench MainPanel initialized.") + "\n")
         self._mdi_subwindow = None
         self._controller = PanelController()
+        self._presenter = MainPanelPresenter(self._controller)
         self._copy_map: dict[QtWidgets.QListWidget, QtWidgets.QAbstractButton] = {}
         self._active_doc_name: str | None = None
         self._active_doc_timer: QtCore.QTimer | None = None
@@ -507,18 +509,6 @@ class MainPanel(QtWidgets.QDialog):
         _prefix, rest = lhs.split(".", 1)
         return f"{obj_label}.{rest}"
 
-    def _format_named_object_for_display(self, object_name: str, *, use_label: bool) -> str:
-        if not use_label:
-            return object_name
-        if "." in object_name:
-            base_name, suffix = object_name.split(".", 1)
-            base_label = self._try_get_object_label(base_name)
-            if base_label:
-                return f"{base_label}.{suffix}"
-            return object_name
-        obj_label = self._try_get_object_label(object_name)
-        return obj_label if obj_label else object_name
-
     def _format_parent_child_ref_for_display(self, ref: ParentChildRef, *, use_label: bool) -> str:
         if not use_label:
             return ref.text
@@ -580,14 +570,14 @@ class MainPanel(QtWidgets.QDialog):
         exclude_copy_on_change = self._is_radio_checked(
             self.avaliableVarsetsExcludeClonesRadioButton
         )
-        items = self._controller.get_filtered_varsets(
+        state = self._presenter.get_varsets_state(
             filter_text=filter_text,
             exclude_copy_on_change=exclude_copy_on_change,
+            use_label=self._is_varsets_display_mode_label(),
+            selected_keys=selected,
         )
-        self._populate_parent_list_widget(
-            widget, items, use_label=self._is_varsets_display_mode_label()
-        )
-        self._restore_list_selection(widget, selected_keys=selected)
+        self._populate_parent_list_widget(widget, state.items)
+        self._restore_list_selection(widget, selected_keys=state.selected_keys)
 
     def _populate_spreadsheets(self) -> None:
         widget = self.availableSpreadsheetsListWidget
@@ -599,16 +589,14 @@ class MainPanel(QtWidgets.QDialog):
         exclude_copy_on_change = self._is_radio_checked(
             self.excludeCopyOnChangeSpreadsheetsRadioButton
         )
-        items = self._controller.get_filtered_spreadsheets(
+        state = self._presenter.get_spreadsheets_state(
             filter_text=filter_text,
             exclude_copy_on_change=exclude_copy_on_change,
-        )
-        self._populate_parent_list_widget(
-            widget,
-            items,
             use_label=self._is_aliases_display_mode_label(),
+            selected_keys=selected,
         )
-        self._restore_list_selection(widget, selected_keys=selected)
+        self._populate_parent_list_widget(widget, state.items)
+        self._restore_list_selection(widget, selected_keys=state.selected_keys)
 
     def _get_line_edit_text(self, widget: QtWidgets.QLineEdit | None) -> str:
         if widget is None:
@@ -621,12 +609,17 @@ class MainPanel(QtWidgets.QDialog):
         return widget.isChecked()
 
     def _populate_parent_list_widget(
-        self, widget: QtWidgets.QListWidget, items: list[str], *, use_label: bool
+        self, widget: QtWidgets.QListWidget, items: list[object]
     ) -> None:
-        for object_name in items:
-            display = self._format_named_object_for_display(object_name, use_label=use_label)
+        for data in items:
+            key = getattr(data, "key", None)
+            display = getattr(data, "display", None)
+            if not isinstance(key, str) or not key:
+                continue
+            if not isinstance(display, str):
+                display = key
             item = QtWidgets.QListWidgetItem(display)
-            item.setData(QtCore.Qt.UserRole, object_name)
+            item.setData(QtCore.Qt.UserRole, key)
             widget.addItem(item)
         self._adjust_list_widget_width_to_contents(widget)
 
