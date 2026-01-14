@@ -185,6 +185,52 @@ class MainPanelPresenter:
         ]
         return ExpressionListState(items=items)
 
+    def get_aliases_state(
+        self,
+        *,
+        selected_spreadsheets: list[str],
+        alias_filter_text: str,
+        only_unused: bool,
+        use_label: bool,
+        selected_refs: set[object],
+    ) -> ChildListState:
+        """Return render state for the aliases list."""
+
+        getter = getattr(self._controller, "get_filtered_spreadsheet_alias_items", None)
+        if not callable(getter):
+            return ChildListState(items=[], selected_keys=set())
+
+        refs: list[object] = getter(
+            selected_spreadsheets=selected_spreadsheets,
+            alias_filter_text=alias_filter_text,
+            only_unused=only_unused,
+        )
+
+        items = [
+            DisplayItem(key=ref, display=self.format_parent_child_ref(ref, use_label=use_label))
+            for ref in refs
+        ]
+        return ChildListState(items=items, selected_keys=set(selected_refs))
+
+    def get_alias_expressions_state(
+        self,
+        selected_alias_items: list[object],
+        *,
+        use_label: bool,
+    ) -> ExpressionListState:
+        """Return render state for the alias expressions list."""
+
+        getter = getattr(self._controller, "get_alias_expression_items", None)
+        if not callable(getter):
+            return ExpressionListState(items=[])
+
+        expr_items, _counts = getter(selected_alias_items)
+        items = [
+            DisplayItem(key=expr, display=self.format_expression_item(expr, use_label=use_label))
+            for expr in expr_items
+        ]
+        return ExpressionListState(items=items)
+
     def get_spreadsheets_state(
         self,
         *,

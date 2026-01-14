@@ -34,6 +34,18 @@ class FakeController:
     def get_expression_items(self, selected_vars: list[ParentChildRef] | list[str]):
         return [ExpressionItem(object_name="Box", lhs="Box.Length", rhs="1")], {}
 
+    def get_filtered_spreadsheet_alias_items(
+        self,
+        *,
+        selected_spreadsheets: list[str],
+        alias_filter_text: str,
+        only_unused: bool,
+    ) -> list[ParentChildRef]:
+        return [ParentChildRef(parent=s, child="Alias") for s in selected_spreadsheets]
+
+    def get_alias_expression_items(self, selected_aliases: list[ParentChildRef] | list[str]):
+        return [ExpressionItem(object_name="Sheet", lhs="Sheet.Alias", rhs="42")], {}
+
 
 def test_format_object_name_label_mode_uses_label() -> None:
     ctrl = FakeController()
@@ -103,3 +115,31 @@ def test_get_varset_expressions_state_formats_expression_with_label() -> None:
 
     assert len(state.items) == 1
     assert "BoxLabel.Length" in state.items[0].display
+
+
+def test_get_aliases_state_formats_parent_child_with_label() -> None:
+    ctrl = FakeController()
+    ctrl.labels["Sheet"] = "SheetLabel"
+
+    p = MainPanelPresenter(ctrl)
+    state = p.get_aliases_state(
+        selected_spreadsheets=["Sheet"],
+        alias_filter_text="",
+        only_unused=False,
+        use_label=True,
+        selected_refs=set(),
+    )
+
+    assert len(state.items) == 1
+    assert state.items[0].display == "SheetLabel.Alias"
+
+
+def test_get_alias_expressions_state_formats_expression_with_label() -> None:
+    ctrl = FakeController()
+    ctrl.labels["Sheet"] = "SheetLabel"
+
+    p = MainPanelPresenter(ctrl)
+    state = p.get_alias_expressions_state([ParentChildRef(parent="Sheet", child="Alias")], use_label=True)
+
+    assert len(state.items) == 1
+    assert "SheetLabel.Alias" in state.items[0].display

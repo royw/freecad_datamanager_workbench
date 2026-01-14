@@ -509,22 +509,14 @@ class MainPanel(QtWidgets.QDialog):
         _prefix, rest = lhs.split(".", 1)
         return f"{obj_label}.{rest}"
 
-    def _format_parent_child_ref_for_display(self, ref: ParentChildRef, *, use_label: bool) -> str:
-        if not use_label:
-            return ref.text
-        obj_label = self._try_get_object_label(ref.parent)
-        if not obj_label:
-            return ref.text
-        return f"{obj_label}.{ref.child}"
-
     def _restore_list_selection_by_predicate(
         self,
-        widget: QtWidgets.QListWidget,
+        list_widget: QtWidgets.QListWidget,
         *,
         should_select: Callable[[QtWidgets.QListWidgetItem], bool],
     ) -> None:
-        for idx in range(widget.count()):
-            item = widget.item(idx)
+        for idx in range(list_widget.count()):
+            item = list_widget.item(idx)
             if item is None:
                 continue
             if should_select(item):
@@ -1050,19 +1042,15 @@ class MainPanel(QtWidgets.QDialog):
         if self.aliasesOnlyUnusedCheckBox is not None:
             only_unused = self.aliasesOnlyUnusedCheckBox.isChecked()
 
-        items = self._controller.get_filtered_spreadsheet_alias_items(
+        selected_refs = set(self._get_selected_alias_items())
+        state = self._presenter.get_aliases_state(
             selected_spreadsheets=selected_sheets,
             alias_filter_text=alias_filter_text,
             only_unused=only_unused,
+            use_label=self._is_aliases_display_mode_label(),
+            selected_refs=selected_refs,
         )
-        App.Console.PrintMessage(
-            translate(
-                "Log",
-                f"Workbench MainPanel: aliases populate sheets={selected_sheets} "
-                f"items={len(items)}\n",
-            )
-        )
-        self._render_alias_names(items)
+        self._render_alias_names(state)
 
     def _render_variable_names(self, state) -> None:
         if self.varsetVariableNamesListWidget is None:
@@ -1092,33 +1080,40 @@ class MainPanel(QtWidgets.QDialog):
             return
 
         self.aliasExpressionsListWidget.clear()
-        expression_items, _counts = self._controller.get_alias_expression_items(
-            selected_alias_items
+        state = self._presenter.get_alias_expressions_state(
+            list(selected_alias_items),
+            use_label=self._is_aliases_display_mode_label(),
         )
-        use_label = self._is_aliases_display_mode_label()
-        for expression_item in expression_items:
-            item = QtWidgets.QListWidgetItem(
-                self._format_expression_item_for_display(expression_item, use_label=use_label)
-            )
-            item.setData(QtCore.Qt.UserRole, expression_item)
+        for data in getattr(state, "items", []) or []:
+            expr = getattr(data, "key", None)
+            display = getattr(data, "display", None)
+            if not isinstance(display, str):
+                display = str(getattr(expr, "display_text", ""))
+            item = QtWidgets.QListWidgetItem(display)
+            item.setData(QtCore.Qt.UserRole, expr)
             self.aliasExpressionsListWidget.addItem(item)
 
         self._update_remove_unused_aliases_button_enabled_state()
 
-    def _render_alias_names(self, items: list[ParentChildRef]) -> None:
+    def _render_alias_names(self, state) -> None:
         if self.aliasesVariableNamesListWidget is None:
             return
 
-        use_label = self._is_aliases_display_mode_label()
         self.aliasesVariableNamesListWidget.clear()
-        for ref in items:
-            item = QtWidgets.QListWidgetItem(
-                self._format_parent_child_ref_for_display(ref, use_label=use_label)
-            )
+        for data in getattr(state, "items", []) or []:
+            ref = getattr(data, "key", None)
+            display = getattr(data, "display", None)
+            if not isinstance(display, str):
+                display = str(getattr(ref, "text", ""))
+            item = QtWidgets.QListWidgetItem(display)
             item.setData(QtCore.Qt.UserRole, ref)
             self.aliasesVariableNamesListWidget.addItem(item)
 
         self._adjust_list_widget_width_to_contents(self.aliasesVariableNamesListWidget)
+        self._restore_parent_child_ref_selection(
+            self.aliasesVariableNamesListWidget,
+            selected_refs=set(getattr(state, "selected_keys", set()) or set()),
+        )
         self._update_remove_unused_aliases_button_enabled_state()
 
     def _update_remove_unused_button_enabled_state(self) -> None:
