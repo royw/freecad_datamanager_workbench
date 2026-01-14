@@ -12,7 +12,7 @@ from __future__ import annotations
 from dataclasses import dataclass
 from typing import Protocol, cast
 
-from .freecad_context import FreeCadContext
+from .freecad_context import FreeCadContext, get_runtime_context
 
 
 class FreeCadPort(Protocol):
@@ -105,3 +105,14 @@ class FreeCadContextAdapter:
                 updater()
         except Exception:  # pylint: disable=broad-exception-caught
             pass
+
+
+def get_port(ctx: FreeCadContext | None = None) -> FreeCadPort:
+    """Return a :class:`FreeCadPort` backed by the given context.
+
+    When `ctx` is not provided, this function obtains the real FreeCAD runtime
+    context via :func:`get_runtime_context`.
+    """
+    if ctx is None:
+        ctx = get_runtime_context()
+    return FreeCadContextAdapter(ctx)

@@ -7,7 +7,7 @@ references to varset variables.
 import re
 from collections.abc import Iterator
 
-from .freecad_context import FreeCadContext, get_runtime_context
+from .freecad_context import FreeCadContext
 from .freecad_helpers import (
     build_expression_key,
     get_copy_on_change_names,
@@ -15,14 +15,7 @@ from .freecad_helpers import (
     iter_document_objects,
     iter_named_expression_engine_entries,
 )
-from .freecad_port import FreeCadContextAdapter
-
-
-def _get_active_doc(*, ctx: FreeCadContext | None = None) -> object | None:
-    if ctx is None:
-        ctx = get_runtime_context()
-    port = FreeCadContextAdapter(ctx)
-    return port.get_active_document()
+from .freecad_port import get_port
 
 
 def _iter_varset_names(doc: object) -> Iterator[str]:
@@ -120,7 +113,7 @@ def getVarsets(
     Yields:
         The `Name` of each `App::VarSet` object.
     """
-    doc = _get_active_doc(ctx=ctx)
+    doc = get_port(ctx).get_active_document()
     if doc is None:
         return
 
@@ -150,7 +143,7 @@ def _is_excluded_varset_property(prop: object) -> bool:
 
 
 def _get_varset(doc: object, varset_name: str) -> object | None:
-    port = FreeCadContextAdapter(get_runtime_context())
+    port = get_port()
     return port.get_typed_object(doc, varset_name, type_id="App::VarSet")
 
 
@@ -186,7 +179,7 @@ def getVarsetVariableGroups(
     groups (property group). When no group is defined, FreeCAD uses "Base".
     """
 
-    doc = _get_active_doc(ctx=ctx)
+    doc = get_port(ctx).get_active_document()
     if doc is None:
         return {}
 
@@ -236,7 +229,7 @@ def getVarsetVariableNames(
         Sorted list of variable/property names. Built-in FreeCAD properties
         (Label, Placement, etc.) are excluded.
     """
-    doc = _get_active_doc(ctx=ctx)
+    doc = get_port(ctx).get_active_document()
     if doc is None:
         return []
 
@@ -263,7 +256,7 @@ def getVarsetReferences(
     Returns:
         Mapping of ``"Object.Property"`` -> expression string.
     """
-    doc = _get_active_doc(ctx=ctx)
+    doc = get_port(ctx).get_active_document()
     if doc is None:
         return {}
 
@@ -273,7 +266,7 @@ def getVarsetReferences(
     )
 
     results: dict[str, str] = {}
-    port = FreeCadContextAdapter(get_runtime_context())
+    port = get_port()
     for obj_name, lhs, expr_text in iter_named_expression_engine_entries(doc):
         if not _matches_varset_expression(
             expr_text=expr_text,

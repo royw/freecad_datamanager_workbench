@@ -6,8 +6,8 @@ alias definition.
 
 from collections.abc import Mapping
 
-from .freecad_context import FreeCadContext, get_runtime_context
-from .freecad_port import FreeCadContextAdapter
+from .freecad_context import FreeCadContext
+from .freecad_port import get_port
 
 
 def _iter_cell_coordinates(*, max_rows: int, max_cols: int) -> list[str]:
@@ -60,9 +60,7 @@ def _try_get_spreadsheet(
     *,
     ctx: FreeCadContext | None = None,
 ) -> object | None:
-    if ctx is None:
-        ctx = get_runtime_context()
-    port = FreeCadContextAdapter(ctx)
+    port = get_port(ctx)
     doc = port.get_active_document()
     if doc is None:
         return None

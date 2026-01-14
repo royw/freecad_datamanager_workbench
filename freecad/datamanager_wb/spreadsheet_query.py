@@ -7,7 +7,7 @@ searching expressions for alias references.
 import re
 from collections.abc import Iterable, Iterator, Mapping
 
-from .freecad_context import FreeCadContext, get_runtime_context
+from .freecad_context import FreeCadContext
 from .freecad_helpers import (
     build_expression_key,
     get_copy_on_change_names,
@@ -15,16 +15,9 @@ from .freecad_helpers import (
     iter_document_objects,
     iter_named_expression_engine_entries,
 )
-from .freecad_port import FreeCadContextAdapter
+from .freecad_port import get_port
 
 _CELL_RE = re.compile(r"^[A-Z]+[0-9]+$")
-
-
-def _get_active_doc(*, ctx: FreeCadContext | None = None) -> object | None:
-    if ctx is None:
-        ctx = get_runtime_context()
-    port = FreeCadContextAdapter(ctx)
-    return port.get_active_document()
 
 
 def _coerce_mapping(value: object) -> dict[str, str]:
@@ -33,6 +26,10 @@ def _coerce_mapping(value: object) -> dict[str, str]:
     if isinstance(value, Mapping):
         return {str(k): str(v) for k, v in value.items()}
     return {}
+
+
+def _get_copy_on_change_spreadsheet_names(doc: object) -> set[str]:
+    return get_copy_on_change_names(doc=doc, type_id="Spreadsheet::Sheet")
 
 
 def _count_cell_like(values: object) -> int:
@@ -182,9 +179,7 @@ def _get_active_spreadsheet(
     *,
     ctx: FreeCadContext | None = None,
 ) -> object | None:
-    if ctx is None:
-        ctx = get_runtime_context()
-    port = FreeCadContextAdapter(ctx)
+    port = get_port(ctx)
     doc = port.get_active_document()
     if doc is None:
         return None
@@ -257,10 +252,6 @@ def _alias_map_from_properties(spreadsheet: object) -> dict[str, str]:
     return {}
 
 
-def _get_copy_on_change_spreadsheet_names(doc: object) -> set[str]:
-    return get_copy_on_change_names(doc=doc, type_id="Spreadsheet::Sheet")
-
-
 def _iter_sheet_objects(doc: object) -> Iterator[object]:
     for obj in iter_document_objects(doc):
         if getattr(obj, "TypeId", None) == "Spreadsheet::Sheet":
@@ -300,7 +291,7 @@ def getSpreadsheets(
     Yields:
         The `Name` of each `Spreadsheet::Sheet` object.
     """
-    doc = _get_active_doc(ctx=ctx)
+    doc = get_port(ctx).get_active_document()
     if doc is None:
         return
 
@@ -362,9 +353,7 @@ def getSpreadsheetAliasNames(
     Returns:
         Sorted list of alias names.
     """
-    if ctx is None:
-        ctx = get_runtime_context()
-    port = FreeCadContextAdapter(ctx)
+    port = get_port(ctx)
     doc = port.get_active_document()
     if doc is None:
         return []
@@ -393,7 +382,7 @@ def getSpreadsheetAliasReferences(
     Returns:
         Mapping of ``"Object.Property"`` -> expression string.
     """
-    doc = _get_active_doc(ctx=ctx)
+    doc = get_port(ctx).get_active_document()
     if doc is None:
         return {}
 
