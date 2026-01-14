@@ -11,6 +11,7 @@ import FreeCAD as App
 from .freecad_port import get_port
 
 translate = get_port().translate
+port = get_port()
 
 # only works with 0.21.2 and above
 FC_MAJOR_VER_REQUIRED = 1
@@ -20,7 +21,7 @@ FC_COMMIT_REQUIRED = 33772
 
 
 def _warn_unsupported_python_version() -> None:
-    App.Console.PrintWarning(
+    port.warn(
         translate(
             "Log",
             "Python version (currently {}.{}.{}) must be at least 3.11 "
@@ -49,7 +50,7 @@ def _parse_freecad_version() -> tuple[int, int, int, int]:
 
 
 def _warn_unsupported_freecad_version(*, major: int, minor: int, patch: int, gitver: int) -> None:
-    App.Console.PrintWarning(
+    port.warn(
         translate(
             "Log",
             "FreeCAD version (currently {}.{}.{} ({})) must be at least {}.{}.{} ({}) "
@@ -112,7 +113,7 @@ def check_python_and_freecad_version() -> None:
         return
 
     # Check FreeCAD version
-    App.Console.PrintLog(translate("Log", "Checking FreeCAD version\n"))
+    port.log(translate("Log", "Checking FreeCAD version\n"))
     major_ver, minor_ver, patch_ver, gitver = _parse_freecad_version()
 
     if not check_supported_python_version(major_ver, minor_ver, patch_ver, gitver):

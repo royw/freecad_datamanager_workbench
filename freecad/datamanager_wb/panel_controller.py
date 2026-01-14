@@ -228,4 +228,4 @@ class PanelController:
 
     def select_expression_item(self, expression_item: ExpressionItem | str) -> None:
         """Select the FreeCAD object referenced by an expression list entry."""
-        select_object_from_expression_item(expression_item)
+        select_object_from_expression_item(expression_item, ctx=self._ctx)

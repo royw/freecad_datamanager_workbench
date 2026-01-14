@@ -30,6 +30,21 @@ class FreeCadPort(Protocol):
     def translate(self, context: str, text: str) -> str:
         """Translate the given text for UI display."""
 
+    def log(self, text: str) -> None:
+        """Write an informational message to the FreeCAD console/log."""
+
+    def warn(self, text: str) -> None:
+        """Write a warning message to the FreeCAD console/log."""
+
+    def message(self, text: str) -> None:
+        """Write a normal message to the FreeCAD console/log."""
+
+    def clear_selection(self) -> None:
+        """Clear GUI selection if the GUI is available."""
+
+    def add_selection(self, *, doc_name: str, obj_name: str) -> None:
+        """Add an object to GUI selection if the GUI is available."""
+
     def try_recompute_active_document(self) -> None:
         """Attempt to recompute the active document.
 
@@ -83,6 +98,63 @@ class FreeCadContextAdapter:
             return str(translate(context, text))
         except Exception:  # pylint: disable=broad-exception-caught
             return text
+
+    def log(self, text: str) -> None:
+        """Write an informational message to the FreeCAD console/log."""
+        console = getattr(self.ctx.app, "Console", None)
+        printer = getattr(console, "PrintLog", None)
+        if not callable(printer):
+            return
+        try:
+            printer(text)
+        except Exception:  # pylint: disable=broad-exception-caught
+            return
+
+    def warn(self, text: str) -> None:
+        """Write a warning message to the FreeCAD console/log."""
+        console = getattr(self.ctx.app, "Console", None)
+        printer = getattr(console, "PrintWarning", None)
+        if not callable(printer):
+            return
+        try:
+            printer(text)
+        except Exception:  # pylint: disable=broad-exception-caught
+            return
+
+    def message(self, text: str) -> None:
+        """Write a normal message to the FreeCAD console/log."""
+        console = getattr(self.ctx.app, "Console", None)
+        printer = getattr(console, "PrintMessage", None)
+        if not callable(printer):
+            return
+        try:
+            printer(text)
+        except Exception:  # pylint: disable=broad-exception-caught
+            return
+
+    def clear_selection(self) -> None:
+        """Clear GUI selection if the GUI is available."""
+        gui = getattr(self.ctx, "gui", None)
+        selection = getattr(gui, "Selection", None) if gui is not None else None
+        clearer = getattr(selection, "clearSelection", None)
+        if not callable(clearer):
+            return
+        try:
+            clearer()
+        except Exception:  # pylint: disable=broad-exception-caught
+            return
+
+    def add_selection(self, *, doc_name: str, obj_name: str) -> None:
+        """Add an object to GUI selection if the GUI is available."""
+        gui = getattr(self.ctx, "gui", None)
+        selection = getattr(gui, "Selection", None) if gui is not None else None
+        adder = getattr(selection, "addSelection", None)
+        if not callable(adder):
+            return
+        try:
+            adder(doc_name, obj_name)
+        except Exception:  # pylint: disable=broad-exception-caught
+            return
 
     def try_recompute_active_document(self) -> None:
         """Attempt to recompute the active document, swallowing exceptions."""

@@ -41,7 +41,7 @@ class DataManagerWorkbench(Gui.Workbench):
         here is the place to import all the commands
         """
 
-        App.Console.PrintMessage(translate("Log", "Switching to datamanager_wb") + "\n")
+        get_port().message(translate("Log", "Switching to datamanager_wb") + "\n")
 
         # NOTE: Context for this commands must be "Workbench"
         self.appendToolbar(QT_TRANSLATE_NOOP("Workbench", "Data Manager"), self.toolbox)
@@ -51,10 +51,10 @@ class DataManagerWorkbench(Gui.Workbench):
         """
         code which should be computed when a user switch to this workbench
         """
-        App.Console.PrintMessage(translate("Log", "Workbench datamanager_wb activated. ;-)") + "\n")
+        get_port().message(translate("Log", "Workbench datamanager_wb activated. ;-)") + "\n")
 
     def Deactivated(self):
         """
         code which should be computed when this workbench is deactivated
         """
-        App.Console.PrintMessage(translate("Log", "Workbench datamanager_wb de-activated.") + "\n")
+        get_port().message(translate("Log", "Workbench datamanager_wb de-activated.") + "\n")

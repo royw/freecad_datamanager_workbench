@@ -1,18 +1,23 @@
 """GUI selection helpers for the DataManager workbench.
 
 This module contains small utilities for selecting FreeCAD objects referenced
-by expression items."""
+by expression items.
 
-import FreeCAD as App
-import FreeCADGui as Gui
+The helper functions route FreeCAD/FreeCADGui access through `FreeCadPort` so
+they can be tested (or at least imported) outside FreeCAD.
+"""
 
 from .expression_item import ExpressionItem
+from .freecad_context import FreeCadContext
+from .freecad_port import get_port
 from .parsing_helpers import parse_expression_item_object_name
 
-translate = App.Qt.translate
 
-
-def select_object_from_expression_item(expression_item: ExpressionItem | str) -> None:
+def select_object_from_expression_item(
+    expression_item: ExpressionItem | str,
+    *,
+    ctx: FreeCadContext | None = None,
+) -> None:
     """Select the FreeCAD object referenced by an expression item.
 
     The expressions list in the panel can provide either:
@@ -33,16 +38,22 @@ def select_object_from_expression_item(expression_item: ExpressionItem | str) ->
     if obj_name is None:
         return
 
-    doc = App.ActiveDocument
+    port = get_port(ctx)
+    doc = port.get_active_document()
     if doc is None:
         return
 
-    obj = doc.getObject(obj_name)
+    obj = port.get_object(doc, obj_name)
     if obj is None:
-        App.Console.PrintWarning(
-            translate("Log", f"Workbench MainPanel: cannot find object '{obj_name}'\n")
-        )
+        port.warn(port.translate("Log", f"Workbench MainPanel: cannot find object '{obj_name}'\n"))
         return
 
-    Gui.Selection.clearSelection()
-    Gui.Selection.addSelection(doc.Name, obj.Name)
+    doc_name = getattr(doc, "Name", None)
+    obj_internal_name = getattr(obj, "Name", None)
+    if not isinstance(doc_name, str) or not doc_name:
+        return
+    if not isinstance(obj_internal_name, str) or not obj_internal_name:
+        return
+
+    port.clear_selection()
+    port.add_selection(doc_name=doc_name, obj_name=obj_internal_name)
