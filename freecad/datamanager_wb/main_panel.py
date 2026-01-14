@@ -8,17 +8,15 @@ import functools
 import os
 from collections.abc import Callable
 
-import FreeCAD as App
 from PySide import QtCore, QtWidgets
 
+from .app_port import AppPort, FreeCadAppAdapter
 from .expression_item import ExpressionItem
 from .gui_port import FreeCadGuiAdapter, GuiPort
 from .main_panel_presenter import MainPanelPresenter
 from .panel_controller import PanelController
 from .parent_child_ref import ParentChildRef, parse_parent_child_ref
 from .resources import UIPATH
-
-translate = App.Qt.translate
 
 _SETTINGS_GROUP = "DataManager"
 _SETTINGS_APP = "DataManagerWorkbench"
@@ -55,9 +53,15 @@ class MainPanel(QtWidgets.QDialog):
     workbench controller/data layers.
     """
 
-    def __init__(self, *, gui_port: GuiPort | None = None):
+    def __init__(
+        self,
+        *,
+        gui_port: GuiPort | None = None,
+        app_port: AppPort | None = None,
+    ):
         super().__init__()
         self._gui_port: GuiPort = gui_port or FreeCadGuiAdapter()
+        self._app_port: AppPort = app_port or FreeCadAppAdapter()
         self._mdi_subwindow = None
         self._controller = PanelController()
         self._presenter = MainPanelPresenter(self._controller)
@@ -136,7 +140,7 @@ class MainPanel(QtWidgets.QDialog):
         widget = self._widget.findChild(widget_type, object_name)
         if widget is None:
             raise RuntimeError(
-                translate(
+                self._app_port.translate(
                     "Log",
                     f"Workbench MainPanel: required widget not found: {object_name}",
                 )
@@ -262,7 +266,7 @@ class MainPanel(QtWidgets.QDialog):
                 continue
 
             button.setText("")
-            button.setToolTip(translate("Workbench", "Copy selection"))
+            button.setToolTip(self._app_port.translate("Workbench", "Copy selection"))
             if isinstance(button, QtWidgets.QToolButton):
                 button.setAutoRaise(True)
                 button.setToolButtonStyle(QtCore.Qt.ToolButtonStyle.ToolButtonIconOnly)
@@ -314,11 +318,11 @@ class MainPanel(QtWidgets.QDialog):
             QtWidgets.QAbstractItemView.SelectionMode.ExtendedSelection,
         )
 
-        select_all_action = menu.addAction(translate("Workbench", "Select All"))
+        select_all_action = menu.addAction(self._app_port.translate("Workbench", "Select All"))
         select_all_action.setEnabled(can_select_all and widget.count() > 0)
         select_all_action.triggered.connect(widget.selectAll)
 
-        copy_action = menu.addAction(translate("Workbench", "Copy"))
+        copy_action = menu.addAction(self._app_port.translate("Workbench", "Copy"))
         copy_action.setEnabled(len(widget.selectedItems()) > 0)
         copy_action.triggered.connect(lambda _checked=False: self._on_copy_button_clicked(widget))
 
@@ -1128,8 +1132,8 @@ class MainPanel(QtWidgets.QDialog):
     def _confirm_remove_unused(self) -> bool:
         reply = QtWidgets.QMessageBox.question(
             self._widget,
-            translate("Workbench", "Confirm"),
-            translate(
+            self._app_port.translate("Workbench", "Confirm"),
+            self._app_port.translate(
                 "Workbench",
                 "Are you sure you want to remove the selected variables from the varset(s)?",
             ),
@@ -1149,8 +1153,8 @@ class MainPanel(QtWidgets.QDialog):
     def _show_remove_unused_message(self) -> None:
         QtWidgets.QMessageBox.information(
             self._widget,
-            translate("Workbench", "Remove variables"),
-            translate(
+            self._app_port.translate("Workbench", "Remove variables"),
+            self._app_port.translate(
                 "Workbench",
                 "Some selected variables could not be removed.",
             ),
@@ -1210,8 +1214,8 @@ class MainPanel(QtWidgets.QDialog):
     def _confirm_remove_unused_aliases(self) -> bool:
         reply = QtWidgets.QMessageBox.question(
             self._widget,
-            translate("Workbench", "Confirm"),
-            translate(
+            self._app_port.translate("Workbench", "Confirm"),
+            self._app_port.translate(
                 "Workbench",
                 "Are you sure you want to remove the selected aliases from the spreadsheet(s)?",
             ),
@@ -1348,7 +1352,7 @@ class MainPanel(QtWidgets.QDialog):
                 return
 
             self._mdi_subwindow = self._gui_port.add_subwindow(mdi_area=mdi, widget=self._widget)
-        self._mdi_subwindow.setWindowTitle(translate("Workbench", "Data Manager"))
+        self._mdi_subwindow.setWindowTitle(self._app_port.translate("Workbench", "Data Manager"))
         self._mdi_subwindow._dm_main_panel = self  # pylint: disable=protected-access
         self._mdi_subwindow.setAttribute(QtCore.Qt.WA_DeleteOnClose, True)
         self._mdi_subwindow.destroyed.connect(self._on_subwindow_destroyed)
