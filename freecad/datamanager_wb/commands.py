@@ -7,12 +7,8 @@ import os
 from collections.abc import Callable
 from typing import TYPE_CHECKING
 
-import FreeCAD as App
-import FreeCADGui as Gui
-
+from .app_port import FreeCadAppAdapter
 from .resources import ICONPATH
-
-translate = App.Qt.translate
 
 if TYPE_CHECKING:
     from .main_panel import MainPanel
@@ -30,6 +26,7 @@ class _VarsetManagementCommand:
 
         FreeCAD calls this to populate menu text, tooltip, and toolbar icon.
         """
+        translate = FreeCadAppAdapter().translate
         return {
             "MenuText": translate("Workbench", "Varset Management"),
             "ToolTip": translate("Workbench", "Manage VarSets"),
@@ -54,6 +51,7 @@ class _AliasManagementCommand:
 
     def GetResources(self) -> dict[str, str]:
         """Return FreeCAD command metadata for UI integration."""
+        translate = FreeCadAppAdapter().translate
         return {
             "MenuText": translate("Workbench", "Alias Management"),
             "ToolTip": translate("Workbench", "Manage Aliases"),
@@ -76,5 +74,7 @@ def register_commands(get_main_panel: GetMainPanel) -> None:
         get_main_panel: Factory used by command activation to show/reuse a
             singleton MainPanel.
     """
+    import FreeCADGui as Gui  # pylint: disable=import-error
+
     Gui.addCommand("DataManagerVarsetManagement", _VarsetManagementCommand(get_main_panel))
     Gui.addCommand("DataManagerAliasManagement", _AliasManagementCommand(get_main_panel))
