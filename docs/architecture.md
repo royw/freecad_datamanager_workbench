@@ -5,21 +5,24 @@ This document describes the current architecture of the **DataManager** FreeCAD 
 ## Goals
 
 - Provide a stable FreeCAD workbench entrypoint (commands, toolbar/menu, panel).
-- Keep the Qt UI layer thin by delegating behavior to controllers.
+- Keep the Qt UI layer thin by delegating behavior to presenters/controllers.
 - Reuse the same tab logic for different data domains (VarSets and Spreadsheet Aliases).
 - Keep document queries/mutations isolated from the UI so they can be tested.
+- Make core modules importable and testable without a running FreeCAD GUI.
 
 ## High-level structure
 
-- **FreeCAD integration / entrypoints**
+- **FreeCAD integration / entrypoints (runtime)**
   - `freecad/datamanager_wb/init_gui.py`
   - `freecad/datamanager_wb/workbench.py`
   - `freecad/datamanager_wb/commands.py`
 - **UI layer (Qt)**
-  - `freecad/datamanager_wb/main_panel.py` (loads `.ui`, wires signals)
+  - `freecad/datamanager_wb/main_panel.py` (Qt widget wiring + rendering)
   - `freecad/datamanager_wb/resources/ui/main_panel.ui`
+- **Presenter layer**
+  - `freecad/datamanager_wb/main_panel_presenter.py` (list state, formatting, orchestration plans)
 - **Controller layer**
-  - `freecad/datamanager_wb/panel_controller.py` (UI-facing facade, owns recompute/GUI refresh)
+  - `freecad/datamanager_wb/panel_controller.py` (UI-facing facade; owns recompute/GUI refresh)
   - `freecad/datamanager_wb/tab_controller.py` (generic per-tab logic)
 - **Data access layer**
   - VarSets:
@@ -30,6 +33,14 @@ This document describes the current architecture of the **DataManager** FreeCAD 
     - `freecad/datamanager_wb/spreadsheet_query.py`
     - `freecad/datamanager_wb/spreadsheet_mutations.py`
     - `freecad/datamanager_wb/spreadsheet_datasource.py` (adapts spreadsheet APIs to generic tab API)
+- **Ports & adapters (FreeCAD/GUI boundaries)**
+  - FreeCAD runtime:
+    - `freecad/datamanager_wb/freecad_context.py` (`FreeCadContext` + `get_runtime_context()`)
+    - `freecad/datamanager_wb/freecad_port.py` (`FreeCadPort` + adapter + `get_port(ctx)`)
+  - UI runtime boundaries:
+    - `freecad/datamanager_wb/app_port.py` (`AppPort` for translation)
+    - `freecad/datamanager_wb/gui_port.py` (`GuiPort` for FreeCADGui/PySideUic + MDI integration)
+    - `freecad/datamanager_wb/settings_port.py` (`SettingsPort` for persisted UI settings)
 - **Shared types/helpers**
   - `freecad/datamanager_wb/tab_datasource.py` (`TabDataSource` protocol + shared result types)
   - `freecad/datamanager_wb/parent_child_ref.py` (`ParentChildRef` used for list items)
@@ -42,6 +53,25 @@ This document describes the current architecture of the **DataManager** FreeCAD 
   - `freecad/datamanager_wb/resources/icons/*`
   - `freecad/datamanager_wb/resources/translations/*`
 
+## Architectural principles
+
+- **Ports at runtime boundaries**
+
+  - Code that needs FreeCAD runtime is routed through `FreeCadPort`.
+  - Code that needs FreeCADGui / PySideUic is routed through `GuiPort`.
+  - Translation is routed through `AppPort`.
+  - Settings persistence is routed through `SettingsPort`.
+
+- **Dependency injection by optional context/ports**
+
+  - Data/query/mutation functions accept `ctx: FreeCadContext | None` and call `get_port(ctx)`.
+  - UI widgets accept optional injected ports (defaults to runtime adapters).
+
+- **Presenter owns UI state and formatting decisions**
+
+  - The Qt widget (`MainPanel`) renders lists and forwards user events.
+  - The presenter computes list state, selection preservation, and formatting (including label-mode).
+
 ## Module map
 
 ```mermaid
@@ -53,8 +83,9 @@ flowchart TB
 
   Commands --> MainPanel
 
-  %% UI -> controller
-  MainPanel --> PanelController[panel_controller.py]
+  %% UI -> presenter -> controller
+  MainPanel --> Presenter[main_panel_presenter.py]
+  Presenter --> PanelController[panel_controller.py]
 
   %% Controllers
   PanelController --> VarTab[TabController: VarSets]
@@ -80,16 +111,26 @@ flowchart TB
   MainPanel --> Resources[resources.py]
   Commands --> Resources
   Workbench --> Resources
+
+  %% Ports
+  MainPanel --> AppPort[app_port.py]
+  MainPanel --> GuiPort[gui_port.py]
+  MainPanel --> SettingsPort[settings_port.py]
+  PanelController --> FreeCadPort[freecad_port.py]
 ```
 
 ## FreeCAD startup and workbench registration
 
-At FreeCAD startup, `init_gui.py` is imported by FreeCAD’s workbench discovery process. It performs:
+At FreeCAD startup, `init_gui.py` is imported by FreeCAD’s workbench discovery process. It performs (when FreeCADGui is available):
 
 - Version checks (`check_python_and_freecad_version`).
 - Translation path setup (`Gui.addLanguagePath`, `Gui.updateLocale`).
 - Command registration (`register_commands`).
 - Workbench registration (`Gui.addWorkbench(DataManagerWorkbench())`).
+
+Implementation note:
+
+- The entrypoint modules (`init_gui.py`, `workbench.py`, `commands.py`, `freecad_version_check.py`) are structured to be importable outside FreeCAD by using guarded/lazy imports.
 
 ```mermaid
 sequenceDiagram
@@ -115,7 +156,8 @@ sequenceDiagram
 - Loads the Qt Designer file `resources/ui/main_panel.ui`.
 - Locates required widgets by object name.
 - Wires signals (selection changes, filter changes, button presses).
-- Delegates behavior (querying lists, remove-unused, expression discovery) to `PanelController`.
+- Delegates formatting, list state, and orchestration decisions to `MainPanelPresenter`.
+- Delegates data operations to `PanelController`.
 
 In addition, the panel is responsible for a few UI-only behaviors:
 
@@ -124,10 +166,22 @@ In addition, the panel is responsible for a few UI-only behaviors:
 
 The UI uses splitters inside each tab so the list panes and expressions pane can be resized.
 
-The expressions panes include a **Show Objects as: Name/Label** mode, persisted via Qt settings. The VarSets and
+The expressions panes include a **Show Objects as: Name/Label** mode, persisted via `SettingsPort`. The VarSets and
 Aliases tabs each store their mode independently.
 
-**Key principle:** the Qt layer should not directly reach into FreeCAD document APIs beyond what is needed for UI wiring; domain operations go through the controller.
+**Key principle:** the Qt widget should not reach into FreeCAD document APIs directly; it should go through injected ports and the controller.
+
+### UI ports used by MainPanel
+
+- **`AppPort`** (`app_port.py`)
+  - `translate(context, text)`
+- **`GuiPort`** (`gui_port.py`)
+  - Load `.ui` files
+  - Provide MDI integration (`QMdiArea`, `addSubWindow`)
+- **`SettingsPort`** (`settings_port.py`)
+  - Persist display mode and splitter state
+
+These are injected into `MainPanel` (with runtime defaults), which makes `main_panel.py` importable and testable without FreeCAD.
 
 ## Controller architecture
 
@@ -139,7 +193,7 @@ Aliases tabs each store their mode independently.
   - VarSets: `TabController(VarsetDataSource())`
   - Aliases: `TabController(SpreadsheetDataSource())`
 - Provides UI-friendly methods with “VarSet/Spreadsheet” names.
-- Owns the **document refresh** boundary (`doc.recompute()` and `Gui.updateGui()`).
+- Owns the **document refresh** boundary (`doc.recompute()` and `Gui.updateGui()`) through `FreeCadPort`.
 
 This keeps recompute/update behavior consistent and prevents the UI from sprinkling recompute calls throughout the code.
 
@@ -218,18 +272,22 @@ expressions).
 ```mermaid
 sequenceDiagram
   participant UI as MainPanel (Qt)
+  participant P as MainPanelPresenter
   participant PC as PanelController
   participant TC as TabController
   participant DS as TabDataSource
 
-  UI->>PC: get_filtered_*parents(filter_text, exclude_copy_on_change)
+  UI->>P: get_*_state(filter_text, exclude_copy_on_change, selected_keys)
+  P->>PC: get_filtered_*parents(filter_text, exclude_copy_on_change)
   PC->>TC: get_filtered_parents(...)
   TC->>DS: get_sorted_parents(exclude_copy_on_change)
   DS-->>TC: parents
   TC-->>PC: filtered parents
-  PC-->>UI: list[str]
+  PC-->>P: list[str]
+  P-->>UI: ParentListState
 
-  UI->>PC: get_filtered_*child_items(selected_parents, child_filter_text, only_unused)
+  UI->>P: get_*_state(selected_parents, child_filter_text, only_unused, selected_refs)
+  P->>PC: get_filtered_*child_items(selected_parents, child_filter_text, only_unused)
   PC->>TC: get_filtered_child_items(...)
   TC->>DS: get_child_refs(selected_parents)
   DS-->>TC: list[ParentChildRef]
@@ -238,7 +296,8 @@ sequenceDiagram
     DS-->>TC: dict[text,int]
   end
   TC-->>PC: filtered child refs
-  PC-->>UI: list[ParentChildRef]
+  PC-->>P: list[ParentChildRef]
+  P-->>UI: ChildListState
 ```
 
 ### Remove unused (button)
@@ -274,5 +333,7 @@ sequenceDiagram
 
 ## Notes / constraints
 
-- FreeCAD entrypoints and GUI integration are necessarily runtime-dependent (FreeCAD + Qt bindings), so strict static analysis is limited in those areas.
-- Unit tests focus on the tab-generic logic (`TabController`) using a fake data source.
+- FreeCAD entrypoints and GUI integration are necessarily runtime-dependent (FreeCAD + Qt bindings), but modules are structured so they can be imported in unit tests via guarded/lazy imports.
+- Unit tests focus on:
+  - Presenter logic (`MainPanelPresenter`) without Qt.
+  - Tab-generic logic (`TabController`) using a fake data source.
