@@ -1,6 +1,8 @@
 from __future__ import annotations
 
+from freecad.datamanager_wb.expression_item import ExpressionItem
 from freecad.datamanager_wb.main_panel_presenter import MainPanelPresenter
+from freecad.datamanager_wb.parent_child_ref import ParentChildRef
 
 
 class FakeController:
@@ -19,6 +21,18 @@ class FakeController:
         self, *, filter_text: str, exclude_copy_on_change: bool = False
     ) -> list[str]:
         return list(self.sheets)
+
+    def get_filtered_varset_variable_items(
+        self,
+        *,
+        selected_varsets: list[str],
+        variable_filter_text: str,
+        only_unused: bool,
+    ) -> list[ParentChildRef]:
+        return [ParentChildRef(parent=v, child="X") for v in selected_varsets]
+
+    def get_expression_items(self, selected_vars: list[ParentChildRef] | list[str]):
+        return [ExpressionItem(object_name="Box", lhs="Box.Length", rhs="1")], {}
 
 
 def test_format_object_name_label_mode_uses_label() -> None:
@@ -61,3 +75,31 @@ def test_get_varsets_state_formats_display_and_preserves_selection() -> None:
     assert [i.key for i in state.items] == ["A", "B.Prop"]
     assert [i.display for i in state.items] == ["A", "Bee.Prop"]
     assert state.selected_keys == {"A"}
+
+
+def test_get_varset_variables_state_formats_parent_child_with_label() -> None:
+    ctrl = FakeController()
+    ctrl.labels["Var"] = "VarLabel"
+
+    p = MainPanelPresenter(ctrl)
+    state = p.get_varset_variables_state(
+        selected_varsets=["Var"],
+        variable_filter_text="",
+        only_unused=False,
+        use_label=True,
+        selected_refs=set(),
+    )
+
+    assert len(state.items) == 1
+    assert state.items[0].display == "VarLabel.X"
+
+
+def test_get_varset_expressions_state_formats_expression_with_label() -> None:
+    ctrl = FakeController()
+    ctrl.labels["Box"] = "BoxLabel"
+
+    p = MainPanelPresenter(ctrl)
+    state = p.get_varset_expressions_state([ParentChildRef(parent="Var", child="X")], use_label=True)
+
+    assert len(state.items) == 1
+    assert "BoxLabel.Length" in state.items[0].display

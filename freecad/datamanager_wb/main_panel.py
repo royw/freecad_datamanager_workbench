@@ -1028,12 +1028,15 @@ class MainPanel(QtWidgets.QDialog):
         if self.varsetVariableNamesOnlyUnusedCheckBox is not None:
             only_unused = self.varsetVariableNamesOnlyUnusedCheckBox.isChecked()
 
-        items = self._controller.get_filtered_varset_variable_items(
+        selected_refs = set(self._get_selected_varset_variable_items())
+        state = self._presenter.get_varset_variables_state(
             selected_varsets=selected_varsets,
             variable_filter_text=variable_filter_text,
             only_unused=only_unused,
+            use_label=self._is_varsets_display_mode_label(),
+            selected_refs=selected_refs,
         )
-        self._render_variable_names(items)
+        self._render_variable_names(state)
 
     def _populate_alias_names(self, selected_sheets: list[str]) -> None:
         if self.aliasesVariableNamesListWidget is None:
@@ -1061,20 +1064,25 @@ class MainPanel(QtWidgets.QDialog):
         )
         self._render_alias_names(items)
 
-    def _render_variable_names(self, items: list[ParentChildRef]) -> None:
+    def _render_variable_names(self, state) -> None:
         if self.varsetVariableNamesListWidget is None:
             return
 
-        use_label = self._is_varsets_display_mode_label()
         self.varsetVariableNamesListWidget.clear()
-        for ref in items:
-            item = QtWidgets.QListWidgetItem(
-                self._format_parent_child_ref_for_display(ref, use_label=use_label)
-            )
+        for data in getattr(state, "items", []) or []:
+            ref = getattr(data, "key", None)
+            display = getattr(data, "display", None)
+            if not isinstance(display, str):
+                display = str(getattr(ref, "text", ""))
+            item = QtWidgets.QListWidgetItem(display)
             item.setData(QtCore.Qt.UserRole, ref)
             self.varsetVariableNamesListWidget.addItem(item)
 
         self._adjust_list_widget_width_to_contents(self.varsetVariableNamesListWidget)
+        self._restore_parent_child_ref_selection(
+            self.varsetVariableNamesListWidget,
+            selected_refs=set(getattr(state, "selected_keys", set()) or set()),
+        )
         self._update_remove_unused_button_enabled_state()
 
     def _populate_alias_expressions(
@@ -1156,15 +1164,17 @@ class MainPanel(QtWidgets.QDialog):
             return
 
         self.varsetExpressionsListWidget.clear()
-        expression_items, _counts = self._controller.get_expression_items(
-            selected_varset_variable_items
+        state = self._presenter.get_varset_expressions_state(
+            list(selected_varset_variable_items),
+            use_label=self._is_varsets_display_mode_label(),
         )
-        use_label = self._is_varsets_display_mode_label()
-        for expression_item in expression_items:
-            item = QtWidgets.QListWidgetItem(
-                self._format_expression_item_for_display(expression_item, use_label=use_label)
-            )
-            item.setData(QtCore.Qt.UserRole, expression_item)
+        for data in getattr(state, "items", []) or []:
+            expr = getattr(data, "key", None)
+            display = getattr(data, "display", None)
+            if not isinstance(display, str):
+                display = str(getattr(expr, "display_text", ""))
+            item = QtWidgets.QListWidgetItem(display)
+            item.setData(QtCore.Qt.UserRole, expr)
             self.varsetExpressionsListWidget.addItem(item)
 
         self._update_remove_unused_button_enabled_state()
