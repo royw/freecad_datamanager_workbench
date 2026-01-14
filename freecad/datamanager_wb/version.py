@@ -2,6 +2,14 @@
 
 from __future__ import annotations
 
+# We intentionally do not use `importlib.metadata.version(...)` here.
+#
+# In typical Python packaging flows, the workbench would be installed as a
+# distribution and the version would be available via installed package
+# metadata. FreeCAD Addons, however, are commonly loaded directly from a source
+# checkout (e.g. `Mod/` symlink or Addon Manager install) without installing a
+# distribution into the interpreter environment. Reading `pyproject.toml` keeps
+# version reporting stable in both "installed" and "source tree" scenarios.
 import tomllib
 from pathlib import Path
 from typing import Any
