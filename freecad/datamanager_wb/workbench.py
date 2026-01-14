@@ -6,55 +6,65 @@ and activate the workbench.
 
 import os
 
-import FreeCAD as App
-import FreeCADGui as Gui
-
 from .freecad_port import get_port
 from .resources import ICONPATH
 
-translate = get_port().translate
-QT_TRANSLATE_NOOP = App.Qt.QT_TRANSLATE_NOOP
+
+def _translate(context: str, text: str) -> str:
+    return get_port().translate(context, text)
 
 
-class DataManagerWorkbench(Gui.Workbench):
-    """
-    class which gets initiated at startup of the gui
-    """
+try:
+    import FreeCADGui as Gui  # pylint: disable=import-error
+except Exception:  # pylint: disable=broad-exception-caught
+    Gui = None
 
-    MenuText = translate("Workbench", "Data Manager")
-    ToolTip = translate("Workbench", "a simple data manager workbench")
-    Icon = os.path.join(ICONPATH, "datamanager_wb.svg")
-    toolbox = [
-        "DataManagerVarsetManagement",
-        "DataManagerAliasManagement",
-    ]
 
-    def GetClassName(self):
+if Gui is not None:
+
+    class DataManagerWorkbench(Gui.Workbench):
         """
-        Return the class name of the workbench
-        """
-        return "Gui::PythonWorkbench"
-
-    def Initialize(self):
-        """
-        This function is called at the first activation of the workbench.
-        here is the place to import all the commands
+        class which gets initiated at startup of the gui
         """
 
-        get_port().message(translate("Log", "Switching to datamanager_wb") + "\n")
+        MenuText = _translate("Workbench", "Data Manager")
+        ToolTip = _translate("Workbench", "a simple data manager workbench")
+        Icon = os.path.join(ICONPATH, "datamanager_wb.svg")
+        toolbox = [
+            "DataManagerVarsetManagement",
+            "DataManagerAliasManagement",
+        ]
 
-        # NOTE: Context for this commands must be "Workbench"
-        self.appendToolbar(QT_TRANSLATE_NOOP("Workbench", "Data Manager"), self.toolbox)
-        self.appendMenu(QT_TRANSLATE_NOOP("Workbench", "Data Manager"), self.toolbox)
+        def GetClassName(self):
+            """
+            Return the class name of the workbench
+            """
+            return "Gui::PythonWorkbench"
 
-    def Activated(self):
-        """
-        code which should be computed when a user switch to this workbench
-        """
-        get_port().message(translate("Log", "Workbench datamanager_wb activated. ;-)") + "\n")
+        def Initialize(self):
+            """
+            This function is called at the first activation of the workbench.
+            here is the place to import all the commands
+            """
 
-    def Deactivated(self):
-        """
-        code which should be computed when this workbench is deactivated
-        """
-        get_port().message(translate("Log", "Workbench datamanager_wb de-activated.") + "\n")
+            import FreeCAD as App  # pylint: disable=import-error
+
+            get_port().message(_translate("Log", "Switching to datamanager_wb") + "\n")
+
+            qt_translate_noop = App.Qt.QT_TRANSLATE_NOOP
+
+            # NOTE: Context for this commands must be "Workbench"
+            self.appendToolbar(qt_translate_noop("Workbench", "Data Manager"), self.toolbox)
+            self.appendMenu(qt_translate_noop("Workbench", "Data Manager"), self.toolbox)
+
+        def Activated(self):
+            """
+            code which should be computed when a user switch to this workbench
+            """
+            get_port().message(_translate("Log", "Workbench datamanager_wb activated. ;-)") + "\n")
+
+        def Deactivated(self):
+            """
+            code which should be computed when this workbench is deactivated
+            """
+            get_port().message(_translate("Log", "Workbench datamanager_wb de-activated.") + "\n")
