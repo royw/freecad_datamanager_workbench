@@ -27,6 +27,9 @@ class FreeCadPort(Protocol):
     def get_typed_object(self, doc: object, name: str, *, type_id: str) -> object | None:
         """Return an object by name only if its `TypeId` matches."""
 
+    def translate(self, context: str, text: str) -> str:
+        """Translate the given text for UI display."""
+
     def try_recompute_active_document(self) -> None:
         """Attempt to recompute the active document.
 
@@ -69,6 +72,17 @@ class FreeCadContextAdapter:
         if obj is None or getattr(obj, "TypeId", None) != type_id:
             return None
         return obj
+
+    def translate(self, context: str, text: str) -> str:
+        """Translate the given text for UI display."""
+        qt = getattr(self.ctx.app, "Qt", None)
+        translate = getattr(qt, "translate", None)
+        if not callable(translate):
+            return text
+        try:
+            return str(translate(context, text))
+        except Exception:  # pylint: disable=broad-exception-caught
+            return text
 
     def try_recompute_active_document(self) -> None:
         """Attempt to recompute the active document, swallowing exceptions."""

@@ -7,23 +7,22 @@ references to varset variables.
 import re
 from collections.abc import Iterator
 
-from .freecad_context import FreeCadContext
+from .freecad_context import FreeCadContext, get_runtime_context
 from .freecad_helpers import (
     build_expression_key,
-    get_active_document,
     get_copy_on_change_names,
     get_object_name,
-    get_typed_object,
     iter_document_objects,
     iter_named_expression_engine_entries,
 )
+from .freecad_port import FreeCadContextAdapter
 
 
 def _get_active_doc(*, ctx: FreeCadContext | None = None) -> object | None:
-    doc = get_active_document(ctx=ctx)
-    if doc is None:
-        return None
-    return doc
+    if ctx is None:
+        ctx = get_runtime_context()
+    port = FreeCadContextAdapter(ctx)
+    return port.get_active_document()
 
 
 def _iter_varset_names(doc: object) -> Iterator[str]:
@@ -151,10 +150,8 @@ def _is_excluded_varset_property(prop: object) -> bool:
 
 
 def _get_varset(doc: object, varset_name: str) -> object | None:
-    varset = get_typed_object(doc, varset_name, type_id="App::VarSet")
-    if varset is None:
-        return None
-    return varset
+    port = FreeCadContextAdapter(get_runtime_context())
+    return port.get_typed_object(doc, varset_name, type_id="App::VarSet")
 
 
 def _collect_varset_variable_names(varset: object) -> list[str]:
@@ -266,7 +263,7 @@ def getVarsetReferences(
     Returns:
         Mapping of ``"Object.Property"`` -> expression string.
     """
-    doc = get_active_document(ctx=ctx)
+    doc = _get_active_doc(ctx=ctx)
     if doc is None:
         return {}
 
@@ -276,12 +273,13 @@ def getVarsetReferences(
     )
 
     results: dict[str, str] = {}
+    port = FreeCadContextAdapter(get_runtime_context())
     for obj_name, lhs, expr_text in iter_named_expression_engine_entries(doc):
         if not _matches_varset_expression(
             expr_text=expr_text,
             patterns=patterns,
             internal_var_re=internal_var_re,
-            obj=get_typed_object(doc, obj_name, type_id="App::VarSet") or object(),
+            obj=port.get_typed_object(doc, obj_name, type_id="App::VarSet") or object(),
             varset_name=varset_name,
         ):
             continue

@@ -3,28 +3,20 @@
 Contains operations that modify VarSets, such as removing a variable property.
 """
 
-from typing import cast
-
 from .freecad_context import FreeCadContext, get_runtime_context
+from .freecad_port import FreeCadContextAdapter
 
 
 def _get_active_doc(*, ctx: FreeCadContext | None = None) -> object | None:
     if ctx is None:
         ctx = get_runtime_context()
-    doc = ctx.app.ActiveDocument
-    if doc is None:
-        return None
-    return cast(object, doc)
+    port = FreeCadContextAdapter(ctx)
+    return port.get_active_document()
 
 
 def _get_varset(doc: object, varset_name: str) -> object | None:
-    getter = getattr(doc, "getObject", None)
-    if not callable(getter):
-        return None
-    varset = getter(varset_name)
-    if varset is None or getattr(varset, "TypeId", None) != "App::VarSet":
-        return None
-    return cast(object, varset)
+    port = FreeCadContextAdapter(get_runtime_context())
+    return port.get_typed_object(doc, varset_name, type_id="App::VarSet")
 
 
 def _has_property(obj: object, property_name: str) -> bool:
