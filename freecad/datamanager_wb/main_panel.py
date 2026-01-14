@@ -111,16 +111,26 @@ class MainPanel(QtWidgets.QDialog):
         widget.clear()
 
     def _refresh_for_active_document_change(self) -> None:
-        self._clear_list_selection(self.availableVarsetsListWidget)
-        self._clear_list_selection(self.availableSpreadsheetsListWidget)
+        plan = self._presenter.get_active_document_change_plan()
 
-        self._populate_varsets()
-        self._populate_spreadsheets()
+        if plan.clear_varsets_selection:
+            self._clear_list_selection(self.availableVarsetsListWidget)
+        if plan.clear_spreadsheets_selection:
+            self._clear_list_selection(self.availableSpreadsheetsListWidget)
 
-        self._clear_list_contents(self.varsetVariableNamesListWidget)
-        self._clear_list_contents(self.varsetExpressionsListWidget)
-        self._clear_list_contents(self.aliasesVariableNamesListWidget)
-        self._clear_list_contents(self.aliasExpressionsListWidget)
+        if plan.repopulate_varsets:
+            self._populate_varsets()
+        if plan.repopulate_spreadsheets:
+            self._populate_spreadsheets()
+
+        if plan.clear_varset_variable_names:
+            self._clear_list_contents(self.varsetVariableNamesListWidget)
+        if plan.clear_varset_expressions:
+            self._clear_list_contents(self.varsetExpressionsListWidget)
+        if plan.clear_alias_names:
+            self._clear_list_contents(self.aliasesVariableNamesListWidget)
+        if plan.clear_alias_expressions:
+            self._clear_list_contents(self.aliasExpressionsListWidget)
 
         self._update_copy_buttons_enabled_state()
 

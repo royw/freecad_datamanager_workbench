@@ -40,11 +40,39 @@ class ExpressionListState:
     items: list[DisplayItem]
 
 
+@dataclass(frozen=True)
+class ActiveDocumentChangePlan:
+    """Presenter-defined orchestration plan for an active document change."""
+
+    clear_varsets_selection: bool
+    clear_spreadsheets_selection: bool
+    repopulate_varsets: bool
+    repopulate_spreadsheets: bool
+    clear_varset_variable_names: bool
+    clear_varset_expressions: bool
+    clear_alias_names: bool
+    clear_alias_expressions: bool
+
+
 class MainPanelPresenter:
     """Presenter for `MainPanel` interactions and formatting."""
 
     def __init__(self, controller: object) -> None:
         self._controller = controller
+
+    def get_active_document_change_plan(self) -> ActiveDocumentChangePlan:
+        """Return an orchestration plan for when the active document changes."""
+
+        return ActiveDocumentChangePlan(
+            clear_varsets_selection=True,
+            clear_spreadsheets_selection=True,
+            repopulate_varsets=True,
+            repopulate_spreadsheets=True,
+            clear_varset_variable_names=True,
+            clear_varset_expressions=True,
+            clear_alias_names=True,
+            clear_alias_expressions=True,
+        )
 
     def _get_object_label(self, object_name: str) -> str | None:
         getter = getattr(self._controller, "get_object_label", None)

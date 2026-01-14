@@ -143,3 +143,17 @@ def test_get_alias_expressions_state_formats_expression_with_label() -> None:
 
     assert len(state.items) == 1
     assert "SheetLabel.Alias" in state.items[0].display
+
+
+def test_get_active_document_change_plan_clears_and_repopulates() -> None:
+    p = MainPanelPresenter(FakeController())
+    plan = p.get_active_document_change_plan()
+
+    assert plan.clear_varsets_selection
+    assert plan.clear_spreadsheets_selection
+    assert plan.repopulate_varsets
+    assert plan.repopulate_spreadsheets
+    assert plan.clear_varset_variable_names
+    assert plan.clear_varset_expressions
+    assert plan.clear_alias_names
+    assert plan.clear_alias_expressions
