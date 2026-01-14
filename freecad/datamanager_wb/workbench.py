@@ -9,9 +9,10 @@ import os
 import FreeCAD as App
 import FreeCADGui as Gui
 
+from .freecad_port import get_port
 from .resources import ICONPATH
 
-translate = App.Qt.translate
+translate = get_port().translate
 QT_TRANSLATE_NOOP = App.Qt.QT_TRANSLATE_NOOP
 
 
