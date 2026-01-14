@@ -7,7 +7,7 @@ GUI refresh behavior.
 
 from .expression_item import ExpressionItem
 from .freecad_context import FreeCadContext, get_runtime_context
-from .freecad_port import FreeCadContextAdapter, FreeCadPort
+from .freecad_port import FreeCadPort, get_port
 from .gui_selection import select_object_from_expression_item
 from .parent_child_ref import ParentChildRef
 from .spreadsheet_datasource import SpreadsheetDataSource
@@ -27,7 +27,7 @@ class PanelController:
 
     def __init__(self, *, ctx: FreeCadContext | None = None) -> None:
         self._ctx = ctx or get_runtime_context()
-        self._port: FreeCadPort = FreeCadContextAdapter(self._ctx)
+        self._port: FreeCadPort = get_port(self._ctx)
         self._varsets_tab_controller = TabController(VarsetDataSource(ctx=self._ctx))
         self._aliases_tab_controller = TabController(SpreadsheetDataSource(ctx=self._ctx))
 

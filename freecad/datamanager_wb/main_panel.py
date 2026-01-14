@@ -17,6 +17,7 @@ from .main_panel_presenter import MainPanelPresenter
 from .panel_controller import PanelController
 from .parent_child_ref import ParentChildRef, parse_parent_child_ref
 from .resources import UIPATH
+from .settings_port import QtSettingsAdapter, SettingsPort
 
 _SETTINGS_GROUP = "DataManager"
 _SETTINGS_APP = "DataManagerWorkbench"
@@ -58,10 +59,15 @@ class MainPanel(QtWidgets.QDialog):
         *,
         gui_port: GuiPort | None = None,
         app_port: AppPort | None = None,
+        settings_port: SettingsPort | None = None,
     ):
         super().__init__()
         self._gui_port: GuiPort = gui_port or FreeCadGuiAdapter()
         self._app_port: AppPort = app_port or FreeCadAppAdapter()
+        self._settings_port: SettingsPort = settings_port or QtSettingsAdapter(
+            group=_SETTINGS_GROUP,
+            app=_SETTINGS_APP,
+        )
         self._mdi_subwindow = None
         self._controller = PanelController()
         self._presenter = MainPanelPresenter(self._controller)
@@ -394,12 +400,9 @@ class MainPanel(QtWidgets.QDialog):
         )
         self._disable_button(self.removeUnusedAliasesPushButton)
 
-    def _get_settings(self) -> QtCore.QSettings:
-        return QtCore.QSettings(_SETTINGS_GROUP, _SETTINGS_APP)
-
     def _get_display_mode_setting(self, *, setting_key: str) -> str:
-        settings = self._get_settings()
-        mode = settings.value(setting_key, _DISPLAY_MODE_NAME, type=str)
+        raw = self._settings_port.value(setting_key, _DISPLAY_MODE_NAME)
+        mode = str(raw) if raw is not None else _DISPLAY_MODE_NAME
         if mode not in (_DISPLAY_MODE_NAME, _DISPLAY_MODE_LABEL):
             return _DISPLAY_MODE_NAME
         return mode
@@ -442,8 +445,7 @@ class MainPanel(QtWidgets.QDialog):
             )
 
     def _restore_splitter_state(self, *, setting_key: str, splitter: QtWidgets.QSplitter) -> None:
-        settings = self._get_settings()
-        raw = settings.value(setting_key, None)
+        raw = self._settings_port.value(setting_key, None)
         state: QtCore.QByteArray | None = None
         if isinstance(raw, QtCore.QByteArray):
             state = raw
@@ -465,11 +467,14 @@ class MainPanel(QtWidgets.QDialog):
             )
 
     def _save_splitter_states(self) -> None:
-        settings = self._get_settings()
         if self.varsetsSplitter is not None:
-            settings.setValue(_SETTING_VARSETS_SPLITTER_STATE, self.varsetsSplitter.saveState())
+            self._settings_port.set_value(
+                _SETTING_VARSETS_SPLITTER_STATE, self.varsetsSplitter.saveState()
+            )
         if self.aliasesSplitter is not None:
-            settings.setValue(_SETTING_ALIASES_SPLITTER_STATE, self.aliasesSplitter.saveState())
+            self._settings_port.set_value(
+                _SETTING_ALIASES_SPLITTER_STATE, self.aliasesSplitter.saveState()
+            )
 
     def _is_varsets_display_mode_label(self) -> bool:
         return bool(
@@ -776,18 +781,19 @@ class MainPanel(QtWidgets.QDialog):
     def _on_varsets_splitter_moved(self, _pos: int, _index: int) -> None:
         if self.varsetsSplitter is None:
             return
-        settings = self._get_settings()
-        settings.setValue(_SETTING_VARSETS_SPLITTER_STATE, self.varsetsSplitter.saveState())
+        self._settings_port.set_value(
+            _SETTING_VARSETS_SPLITTER_STATE, self.varsetsSplitter.saveState()
+        )
 
     def _on_aliases_splitter_moved(self, _pos: int, _index: int) -> None:
         if self.aliasesSplitter is None:
             return
-        settings = self._get_settings()
-        settings.setValue(_SETTING_ALIASES_SPLITTER_STATE, self.aliasesSplitter.saveState())
+        self._settings_port.set_value(
+            _SETTING_ALIASES_SPLITTER_STATE, self.aliasesSplitter.saveState()
+        )
 
     def _persist_display_mode(self, *, setting_key: str, mode: str) -> None:
-        settings = self._get_settings()
-        settings.setValue(setting_key, mode)
+        self._settings_port.set_value(setting_key, mode)
 
     def _on_varsets_object_display_mode_toggled(self, checked: bool) -> None:
         if not checked:
