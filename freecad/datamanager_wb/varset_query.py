@@ -142,11 +142,6 @@ def _is_excluded_varset_property(prop: object) -> bool:
     return str(prop) in excluded
 
 
-def _get_varset(doc: object, varset_name: str, *, ctx: FreeCadContext | None) -> object | None:
-    port = get_port(ctx)
-    return port.get_typed_object(doc, varset_name, type_id="App::VarSet")
-
-
 def _collect_varset_variable_names(varset: object) -> list[str]:
     names: list[str] = []
     for prop in getattr(varset, "PropertiesList", []):
@@ -183,7 +178,7 @@ def getVarsetVariableGroups(
     if doc is None:
         return {}
 
-    varset = _get_varset(doc, varset_name, ctx=ctx)
+    varset = get_port(ctx).get_typed_object(doc, varset_name, type_id="App::VarSet")
     if varset is None:
         return {}
 
@@ -233,7 +228,7 @@ def getVarsetVariableNames(
     if doc is None:
         return []
 
-    varset = _get_varset(doc, varset_name, ctx=ctx)
+    varset = get_port(ctx).get_typed_object(doc, varset_name, type_id="App::VarSet")
     if varset is None:
         return []
 
