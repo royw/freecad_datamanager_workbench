@@ -12,6 +12,7 @@ from collections.abc import Iterable, Iterator, Sequence
 from typing import cast
 
 from .freecad_context import FreeCadContext, get_runtime_context
+from .freecad_port import FreeCadContextAdapter
 
 
 def iter_document_objects(doc: object) -> Iterator[object]:
@@ -25,11 +26,9 @@ def get_active_document(*, ctx: FreeCadContext | None = None) -> object | None:
     """Return the currently active document, if any."""
     if ctx is None:
         ctx = get_runtime_context()
-    _ = ctx.gui
-    doc = ctx.app.ActiveDocument
-    if doc is None:
-        return None
-    return cast(object, doc)
+    port = FreeCadContextAdapter(ctx)
+    doc = port.get_active_document()
+    return doc
 
 
 def get_object_name(obj: object) -> str | None:

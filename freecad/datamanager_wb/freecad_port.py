@@ -18,6 +18,9 @@ from .freecad_context import FreeCadContext
 class FreeCadPort(Protocol):
     """Port interface for the small slice of FreeCAD used by controllers."""
 
+    def get_active_document(self) -> object | None:
+        """Return the active document, if any."""
+
     def try_recompute_active_document(self) -> None:
         """Attempt to recompute the active document.
 
@@ -36,6 +39,13 @@ class FreeCadContextAdapter:
     """Runtime adapter that implements :class:`FreeCadPort` using `FreeCadContext`."""
 
     ctx: FreeCadContext
+
+    def get_active_document(self) -> object | None:
+        """Return the active document, if any."""
+        doc = self.ctx.app.ActiveDocument
+        if doc is None:
+            return None
+        return doc
 
     def try_recompute_active_document(self) -> None:
         """Attempt to recompute the active document, swallowing exceptions."""
