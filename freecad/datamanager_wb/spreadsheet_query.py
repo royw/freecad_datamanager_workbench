@@ -28,10 +28,6 @@ def _coerce_mapping(value: object) -> dict[str, str]:
     return {}
 
 
-def _get_copy_on_change_spreadsheet_names(doc: object) -> set[str]:
-    return get_copy_on_change_names(doc=doc, type_id="Spreadsheet::Sheet")
-
-
 def _count_cell_like(values: object) -> int:
     if not isinstance(values, (list, tuple, set)):
         return 0
@@ -296,7 +292,9 @@ def getSpreadsheets(
         return
 
     excluded: set[str] = (
-        _get_copy_on_change_spreadsheet_names(doc) if exclude_copy_on_change else set()
+        get_copy_on_change_names(doc=doc, type_id="Spreadsheet::Sheet")
+        if exclude_copy_on_change
+        else set()
     )
     yield from _iter_filtered_sheet_names(
         doc=doc,

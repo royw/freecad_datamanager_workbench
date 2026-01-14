@@ -15,10 +15,6 @@ FC_PATCH_VER_REQUIRED = 2
 FC_COMMIT_REQUIRED = 33772
 
 
-def _python_version_supported() -> bool:
-    return bool(sys.version_info[0] == 3 and sys.version_info[1] >= 11)
-
-
 def _warn_unsupported_python_version() -> None:
     App.Console.PrintWarning(
         App.Qt.translate(
@@ -107,7 +103,7 @@ def check_python_and_freecad_version() -> None:
     functionality.
     """
 
-    if not _python_version_supported():
+    if not (sys.version_info[0] == 3 and sys.version_info[1] >= 11):
         _warn_unsupported_python_version()
         return
 

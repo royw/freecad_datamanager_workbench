@@ -132,14 +132,10 @@ def _iter_non_null(values: object) -> Iterator[object]:
             yield cast(object, item)
 
 
-def _iter_children_from_attr(obj: object, attr: str) -> Iterator[object]:
-    yield from _iter_non_null(getattr(obj, attr, None))
-
-
 def iter_object_children(obj: object) -> Iterator[object]:
     """Yield child objects by traversing common FreeCAD container attributes."""
-    yield from _iter_children_from_attr(obj, "Group")
-    yield from _iter_children_from_attr(obj, "OutList")
+    yield from _iter_non_null(getattr(obj, "Group", None))
+    yield from _iter_non_null(getattr(obj, "OutList", None))
 
 
 def get_copy_on_change_names(*, doc: object, type_id: str) -> set[str]:

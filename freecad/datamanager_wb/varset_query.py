@@ -89,10 +89,6 @@ def _matches_internal_var_ref(
     return internal_var_re.search(text) is not None
 
 
-def _get_copy_on_change_varset_names(doc: object) -> set[str]:
-    return get_copy_on_change_names(doc=doc, type_id="App::VarSet")
-
-
 def _iter_varset_objects(doc: object) -> Iterator[object]:
     for obj in iter_document_objects(doc):
         if getattr(obj, "TypeId", None) == "App::VarSet":
@@ -117,7 +113,11 @@ def getVarsets(
     if doc is None:
         return
 
-    excluded: set[str] = _get_copy_on_change_varset_names(doc) if exclude_copy_on_change else set()
+    excluded: set[str] = (
+        get_copy_on_change_names(doc=doc, type_id="App::VarSet")
+        if exclude_copy_on_change
+        else set()
+    )
     yield from _iter_filtered_varset_names(
         doc=doc,
         excluded=excluded,
