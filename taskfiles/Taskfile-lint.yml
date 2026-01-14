@@ -113,7 +113,9 @@ tasks:
     desc: Check that modules and public objects have docstrings
     summary: Runs the docstring checker on the source directory
     cmds:
+      - echo "Checking docstrings..."
       - uv run python scripts/check_docstrs.py {{.SRC}}
+    silent: true
 
   markdown:
     desc: Lint markdown files with pymarkdownlnt
