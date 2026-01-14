@@ -7,6 +7,7 @@ GUI refresh behavior.
 
 from .expression_item import ExpressionItem
 from .freecad_context import FreeCadContext, get_runtime_context
+from .freecad_port import FreeCadContextAdapter, FreeCadPort
 from .gui_selection import select_object_from_expression_item
 from .parent_child_ref import ParentChildRef
 from .spreadsheet_datasource import SpreadsheetDataSource
@@ -26,36 +27,17 @@ class PanelController:
 
     def __init__(self, *, ctx: FreeCadContext | None = None) -> None:
         self._ctx = ctx or get_runtime_context()
+        self._port: FreeCadPort = FreeCadContextAdapter(self._ctx)
         self._varsets_tab_controller = TabController(VarsetDataSource(ctx=self._ctx))
         self._aliases_tab_controller = TabController(SpreadsheetDataSource(ctx=self._ctx))
-
-    def _recompute_active_document(self) -> None:
-        doc = self._ctx.app.ActiveDocument
-        if doc is None:
-            return
-        try:
-            recompute = getattr(doc, "recompute", None)
-            if callable(recompute):
-                recompute()
-        except Exception:  # pylint: disable=broad-exception-caught
-            pass
-
-    def _update_gui(self) -> None:
-        try:
-            gui = self._ctx.gui
-            updater = getattr(gui, "updateGui", None) if gui is not None else None
-            if callable(updater):
-                updater()
-        except Exception:  # pylint: disable=broad-exception-caught
-            pass
 
     def refresh_document(self) -> None:
         """Recompute the active document and refresh the FreeCAD GUI.
 
         Any exceptions are swallowed to keep the UI responsive.
         """
-        self._recompute_active_document()
-        self._update_gui()
+        self._port.try_recompute_active_document()
+        self._port.try_update_gui()
 
     def should_enable_remove_unused(self, *, only_unused: bool, selected_count: int) -> bool:
         """Delegate the enable/disable rule for remove-unused in the VarSets tab."""
