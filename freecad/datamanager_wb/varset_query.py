@@ -142,8 +142,8 @@ def _is_excluded_varset_property(prop: object) -> bool:
     return str(prop) in excluded
 
 
-def _get_varset(doc: object, varset_name: str) -> object | None:
-    port = get_port()
+def _get_varset(doc: object, varset_name: str, *, ctx: FreeCadContext | None) -> object | None:
+    port = get_port(ctx)
     return port.get_typed_object(doc, varset_name, type_id="App::VarSet")
 
 
@@ -183,7 +183,7 @@ def getVarsetVariableGroups(
     if doc is None:
         return {}
 
-    varset = _get_varset(doc, varset_name)
+    varset = _get_varset(doc, varset_name, ctx=ctx)
     if varset is None:
         return {}
 
@@ -233,7 +233,7 @@ def getVarsetVariableNames(
     if doc is None:
         return []
 
-    varset = _get_varset(doc, varset_name)
+    varset = _get_varset(doc, varset_name, ctx=ctx)
     if varset is None:
         return []
 
@@ -266,7 +266,7 @@ def getVarsetReferences(
     )
 
     results: dict[str, str] = {}
-    port = get_port()
+    port = get_port(ctx)
     for obj_name, lhs, expr_text in iter_named_expression_engine_entries(doc):
         if not _matches_varset_expression(
             expr_text=expr_text,

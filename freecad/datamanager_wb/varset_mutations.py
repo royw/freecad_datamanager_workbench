@@ -38,11 +38,12 @@ def removeVarsetVariable(
     Returns:
         ``True`` if the property was removed, otherwise ``False``.
     """
-    doc = get_port(ctx).get_active_document()
+    port = get_port(ctx)
+    doc = port.get_active_document()
     if doc is None:
         return False
 
-    varset = get_port().get_typed_object(doc, varset_name, type_id="App::VarSet")
+    varset = port.get_typed_object(doc, varset_name, type_id="App::VarSet")
     if varset is None:
         return False
 

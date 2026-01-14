@@ -11,8 +11,8 @@ from __future__ import annotations
 from collections.abc import Iterable, Iterator, Sequence
 from typing import cast
 
-from .freecad_context import FreeCadContext, get_runtime_context
-from .freecad_port import FreeCadContextAdapter
+from .freecad_context import FreeCadContext
+from .freecad_port import get_port
 
 
 def iter_document_objects(doc: object) -> Iterator[object]:
@@ -24,11 +24,7 @@ def iter_document_objects(doc: object) -> Iterator[object]:
 
 def get_active_document(*, ctx: FreeCadContext | None = None) -> object | None:
     """Return the currently active document, if any."""
-    if ctx is None:
-        ctx = get_runtime_context()
-    port = FreeCadContextAdapter(ctx)
-    doc = port.get_active_document()
-    return doc
+    return get_port(ctx).get_active_document()
 
 
 def get_object_name(obj: object) -> str | None:
