@@ -1,3 +1,5 @@
+"""Unit tests for `SpreadsheetDataSource`."""
+
 from __future__ import annotations
 
 from freecad.datamanager_wb.domain.parent_child_ref import ParentChildRef

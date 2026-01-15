@@ -1,3 +1,8 @@
+"""Unit tests for `MainPanelPresenter`.
+
+Includes a small fake controller to drive presenter behavior without FreeCAD.
+"""
+
 from __future__ import annotations
 
 from freecad.datamanager_wb.domain.expression_item import ExpressionItem
@@ -6,17 +11,24 @@ from freecad.datamanager_wb.domain.parent_child_ref import ParentChildRef
 
 
 class FakeController:
+    """Test double that provides the subset of controller behavior used by the presenter."""
+
     def __init__(self) -> None:
         self.labels: dict[str, str] = {}
         self.varsets: list[str] = []
         self.sheets: list[str] = []
 
     def get_object_label(self, object_name: str) -> str | None:
+        """Return a label for an object name, if one is configured in the test."""
         return self.labels.get(object_name)
 
     def get_filtered_varsets(
         self, *, filter_text: str, exclude_copy_on_change: bool = False
     ) -> list[str]:
+        """Return varset names for the given filter inputs.
+
+        The fake ignores filtering; tests set `self.varsets` directly.
+        """
         _filter_text = filter_text
         _exclude_copy_on_change = exclude_copy_on_change
         return list(self.varsets)
@@ -24,6 +36,10 @@ class FakeController:
     def get_filtered_spreadsheets(
         self, *, filter_text: str, exclude_copy_on_change: bool = False
     ) -> list[str]:
+        """Return spreadsheet names for the given filter inputs.
+
+        The fake ignores filtering; tests set `self.sheets` directly.
+        """
         _filter_text = filter_text
         _exclude_copy_on_change = exclude_copy_on_change
         return list(self.sheets)
@@ -35,11 +51,16 @@ class FakeController:
         variable_filter_text: str,
         only_unused: bool,
     ) -> list[ParentChildRef]:
+        """Return variable refs for selected varsets.
+
+        The fake returns a deterministic `ParentChildRef` per selected varset.
+        """
         _variable_filter_text = variable_filter_text
         _only_unused = only_unused
         return [ParentChildRef(parent=v, child="X") for v in selected_varsets]
 
     def get_expression_items(self, selected_vars: list[ParentChildRef] | list[str]):
+        """Return expression items and reference counts for selected variables."""
         _selected_vars = selected_vars
         return [ExpressionItem(object_name="Box", lhs="Box.Length", rhs="1")], {}
 
@@ -50,15 +71,21 @@ class FakeController:
         alias_filter_text: str,
         only_unused: bool,
     ) -> list[ParentChildRef]:
+        """Return alias refs for selected spreadsheets.
+
+        The fake returns a deterministic `ParentChildRef` per selected spreadsheet.
+        """
         _alias_filter_text = alias_filter_text
         _only_unused = only_unused
         return [ParentChildRef(parent=s, child="Alias") for s in selected_spreadsheets]
 
     def get_alias_expression_items(self, selected_aliases: list[ParentChildRef] | list[str]):
+        """Return expression items and reference counts for selected aliases."""
         _selected_aliases = selected_aliases
         return [ExpressionItem(object_name="Sheet", lhs="Sheet.Alias", rhs="42")], {}
 
     def should_enable_remove_unused(self, *, only_unused: bool, selected_count: int) -> bool:
+        """Return whether remove-unused should be enabled for current selection state."""
         return bool(only_unused and selected_count > 0)
 
 

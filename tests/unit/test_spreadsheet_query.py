@@ -1,3 +1,5 @@
+"""Unit tests for spreadsheet alias query helpers."""
+
 from __future__ import annotations
 
 from freecad.datamanager_wb.spreadsheets import spreadsheet_query

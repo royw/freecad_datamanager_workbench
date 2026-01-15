@@ -10,6 +10,8 @@ from freecad.datamanager_wb.domain.tab_datasource import RemoveUnusedResult
 
 
 class FakeDataSource:
+    """Test double implementing the `TabDataSource` interface required by `TabController`."""
+
     def __init__(self) -> None:
         self.parents = ["A", "B", "CopyOnChange1"]
         self.children = {
@@ -23,11 +25,13 @@ class FakeDataSource:
         }
 
     def get_sorted_parents(self, *, exclude_copy_on_change: bool = False) -> list[str]:
+        """Return sorted parent keys, optionally excluding CopyOnChange.* parents."""
         if exclude_copy_on_change:
             return [p for p in self.parents if not p.startswith("CopyOnChange")]
         return sorted(self.parents)
 
     def get_child_refs(self, selected_parents: list[str]) -> list[ParentChildRef]:
+        """Return sorted child refs for the provided parent selection."""
         refs: list[ParentChildRef] = []
         for p in selected_parents:
             refs.extend(self.children.get(p, []))
@@ -36,17 +40,23 @@ class FakeDataSource:
     def get_expression_items(
         self, selected_children: list[ParentChildRef] | list[str]
     ) -> tuple[list[ExpressionItem], dict[str, int]]:
+        """Return expression items and reference counts for selected children.
+
+        These tests only assert the counts shape.
+        """
         # Not needed for these tests
         return [], {k: self.counts.get(k, 0) for k in _normalize(selected_children)}
 
     def get_expression_reference_counts(
         self, selected_children: list[ParentChildRef] | list[str]
     ) -> dict[str, int]:
+        """Return reference counts for each selected child key."""
         return {k: self.counts.get(k, 0) for k in _normalize(selected_children)}
 
     def remove_unused_children(
         self, selected_children: list[ParentChildRef] | list[str]
     ) -> RemoveUnusedResult:
+        """Remove children with zero references and return a structured result."""
         removed: list[str] = []
         still_used: list[str] = []
         failed: list[str] = []

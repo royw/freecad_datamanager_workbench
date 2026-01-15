@@ -218,6 +218,23 @@ Notes:
 
 A custom metrics tool, `scripts/dev-metrics.py`, is provided to measure code quality metrics. This is normally ran with `task metrics`.
 
+### scripts/
+
+The repository includes small helper scripts in `scripts/` that are invoked by tasks or used during development:
+
+- **scripts/check_docstrs.py**
+  - AST-based docstring checker used by `task check`.
+  - Verifies every module has a non-empty module docstring and that public functions/classes/methods have docstrings.
+- **scripts/custom_argparse.py**
+  - A custom `argparse.ArgumentParser` implementation that provides improved usage/help formatting.
+  - Used by scripts in `scripts/` to present consistent CLI help output.
+- **scripts/dev-metrics.py**
+  - Aggregates project metrics (SLOC, complexity, coverage summary, risk/duplication-style signals) and prints a report.
+  - Typically run via `task metrics`.
+- **scripts/generate_test_docs.py**
+  - Extracts test docstrings from the `tests/` tree and generates a Markdown table for documentation.
+  - Used to keep test documentation in sync with the test suite.
+
 ### Testing
 
 `task test` runs the test suite.
