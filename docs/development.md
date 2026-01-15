@@ -286,7 +286,7 @@ When your changes are finished:
 1. `git push` # push your changes to your fork
 1. create a pull request on GitHub.
 
-Note: The master repository maintainer is responsible for updating the version number using `task version:bump` or `task version:minor` or `task version:major`.
+Note: The master repository maintainer is responsible for updating the version number using `task version:bump` or `task version:bump:minor` or `task version:bump:major`.
 
 ## Manual smoke test (in FreeCAD)
 
