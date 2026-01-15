@@ -6,7 +6,7 @@ Adapts spreadsheet alias queries/mutations to the generic `TabController`.
 from ..domain.expression_item import ExpressionItem
 from ..domain.parent_child_ref import ParentChildRef, parse_parent_child_ref
 from ..domain.tab_datasource import RemoveUnusedResult, TabDataSource
-from ..freecad_context import FreeCadContext
+from ..ports.freecad_context import FreeCadContext
 from .spreadsheet_mutations import removeSpreadsheetAlias
 from .spreadsheet_query import (
     getSpreadsheetAliasNames,

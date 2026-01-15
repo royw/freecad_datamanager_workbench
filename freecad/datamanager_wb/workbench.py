@@ -6,7 +6,7 @@ and activate the workbench.
 
 import os
 
-from .freecad_port import get_port
+from .ports.freecad_port import get_port
 from .resources import ICONPATH
 
 

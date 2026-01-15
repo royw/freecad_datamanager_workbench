@@ -35,12 +35,12 @@ This document describes the current architecture of the **DataManager** FreeCAD 
     - `freecad/datamanager_wb/spreadsheets/spreadsheet_datasource.py` (adapts spreadsheet APIs to generic tab API)
 - **Ports & adapters (FreeCAD/GUI boundaries)**
   - FreeCAD runtime:
-    - `freecad/datamanager_wb/freecad_context.py` (`FreeCadContext` + `get_runtime_context()`)
-    - `freecad/datamanager_wb/freecad_port.py` (`FreeCadPort` + adapter + `get_port(ctx)`)
+    - `freecad/datamanager_wb/ports/freecad_context.py` (`FreeCadContext` + `get_runtime_context()`)
+    - `freecad/datamanager_wb/ports/freecad_port.py` (`FreeCadPort` + adapter + `get_port(ctx)`)
   - UI runtime boundaries:
-    - `freecad/datamanager_wb/app_port.py` (`AppPort` for translation)
-    - `freecad/datamanager_wb/gui_port.py` (`GuiPort` for FreeCADGui/PySideUic + MDI integration)
-    - `freecad/datamanager_wb/settings_port.py` (`SettingsPort` for persisted UI settings)
+    - `freecad/datamanager_wb/ports/app_port.py` (`AppPort` for translation)
+    - `freecad/datamanager_wb/ports/gui_port.py` (`GuiPort` for FreeCADGui/PySideUic + MDI integration)
+    - `freecad/datamanager_wb/ports/settings_port.py` (`SettingsPort` for persisted UI settings)
 - **Shared types/helpers**
   - `freecad/datamanager_wb/domain/tab_datasource.py` (`TabDataSource` protocol + shared result types)
   - `freecad/datamanager_wb/domain/parent_child_ref.py` (`ParentChildRef` used for list items)

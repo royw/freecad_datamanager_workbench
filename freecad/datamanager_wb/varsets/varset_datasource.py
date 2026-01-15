@@ -7,7 +7,7 @@ from ..domain.expression_item import ExpressionItem
 from ..domain.parent_child_ref import ParentChildRef, normalize_parent_child_items
 from ..domain.parsing_helpers import parse_varset_variable_item
 from ..domain.tab_datasource import RemoveUnusedResult, TabDataSource
-from ..freecad_context import FreeCadContext
+from ..ports.freecad_context import FreeCadContext
 from .varset_mutations import removeVarsetVariable
 from .varset_query import (
     getVarsetReferences,

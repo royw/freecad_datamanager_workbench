@@ -82,13 +82,13 @@ Key UI layers and boundaries:
   - Presenter responsible for formatting and computing UI list state.
   - Keeps the Qt widget thin.
 - Ports/adapters that isolate runtime dependencies:
-  - `freecad/datamanager_wb/freecad_context.py` / `freecad/datamanager_wb/freecad_port.py`
+  - `freecad/datamanager_wb/ports/freecad_context.py` / `freecad/datamanager_wb/ports/freecad_port.py`
     - FreeCAD runtime access (`FreeCadContext`, `FreeCadPort`, `get_port(ctx)`).
-  - `freecad/datamanager_wb/app_port.py`
+  - `freecad/datamanager_wb/ports/app_port.py`
     - Translation boundary (`App.Qt.translate`).
-  - `freecad/datamanager_wb/gui_port.py`
+  - `freecad/datamanager_wb/ports/gui_port.py`
     - FreeCADGui boundary (UI loading, MDI integration).
-  - `freecad/datamanager_wb/settings_port.py`
+  - `freecad/datamanager_wb/ports/settings_port.py`
     - Settings persistence boundary (wraps Qt settings).
 
 Implementation note:
@@ -120,8 +120,8 @@ When adding new behavior, prefer placing it in the lowest layer that makes sense
   - `freecad/datamanager_wb/varsets/varset_query.py`, `freecad/datamanager_wb/varsets/varset_mutations.py`
   - `freecad/datamanager_wb/spreadsheets/spreadsheet_query.py`, `freecad/datamanager_wb/spreadsheets/spreadsheet_mutations.py`
 - **Runtime boundaries (ports/adapters)**
-  - `freecad/datamanager_wb/freecad_context.py`, `freecad/datamanager_wb/freecad_port.py`
-  - `freecad/datamanager_wb/app_port.py`, `freecad/datamanager_wb/gui_port.py`, `freecad/datamanager_wb/settings_port.py`
+  - `freecad/datamanager_wb/ports/freecad_context.py`, `freecad/datamanager_wb/ports/freecad_port.py`
+  - `freecad/datamanager_wb/ports/app_port.py`, `freecad/datamanager_wb/ports/gui_port.py`, `freecad/datamanager_wb/ports/settings_port.py`
 
 ## Developer tooling
 
@@ -596,7 +596,7 @@ The UI state is persisted through `SettingsPort`.
 
 Implementation:
 
-- `freecad/datamanager_wb/settings_port.py` (`SettingsPort`, `QtSettingsAdapter`)
+- `freecad/datamanager_wb/ports/settings_port.py` (`SettingsPort`, `QtSettingsAdapter`)
 - `freecad/datamanager_wb/main_panel.py` (uses injected `SettingsPort`)
 
 Persisted keys:

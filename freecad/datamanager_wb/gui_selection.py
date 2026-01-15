@@ -9,8 +9,8 @@ they can be tested (or at least imported) outside FreeCAD.
 
 from .domain.expression_item import ExpressionItem
 from .domain.parsing_helpers import parse_expression_item_object_name
-from .freecad_context import FreeCadContext
-from .freecad_port import get_port
+from .ports.freecad_context import FreeCadContext
+from .ports.freecad_port import get_port
 
 
 def select_object_from_expression_item(

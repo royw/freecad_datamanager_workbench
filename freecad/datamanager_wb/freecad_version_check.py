@@ -6,7 +6,7 @@ minimum required versions for the workbench.
 
 import sys
 
-from .freecad_port import get_port
+from .ports.freecad_port import get_port
 
 # only works with 0.21.2 and above
 FC_MAJOR_VER_REQUIRED = 1

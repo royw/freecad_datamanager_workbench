@@ -9,9 +9,9 @@ from .domain.expression_item import ExpressionItem
 from .domain.parent_child_ref import ParentChildRef
 from .domain.tab_controller import TabController
 from .domain.tab_datasource import PostRemoveUpdate, RemoveUnusedAndUpdateResult, RemoveUnusedResult
-from .freecad_context import FreeCadContext, get_runtime_context
-from .freecad_port import FreeCadPort, get_port
 from .gui_selection import select_object_from_expression_item
+from .ports.freecad_context import FreeCadContext, get_runtime_context
+from .ports.freecad_port import FreeCadPort, get_port
 from .spreadsheets.spreadsheet_datasource import SpreadsheetDataSource
 from .varsets.varset_datasource import VarsetDataSource
 

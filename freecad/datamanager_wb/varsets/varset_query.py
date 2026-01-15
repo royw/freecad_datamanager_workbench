@@ -7,7 +7,6 @@ references to varset variables.
 import re
 from collections.abc import Iterator
 
-from ..freecad_context import FreeCadContext
 from ..freecad_helpers import (
     build_expression_key,
     get_copy_on_change_names,
@@ -15,7 +14,8 @@ from ..freecad_helpers import (
     iter_document_objects,
     iter_named_expression_engine_entries,
 )
-from ..freecad_port import get_port
+from ..ports.freecad_context import FreeCadContext
+from ..ports.freecad_port import get_port
 
 
 def _iter_varset_names(doc: object) -> Iterator[str]:

@@ -2,6 +2,12 @@ set(Namespace_SRCS
         freecad/datamanager_wb/init_gui.py
         freecad/datamanager_wb/__init__.py
         freecad/datamanager_wb/commands.py
+        freecad/datamanager_wb/ports/__init__.py
+        freecad/datamanager_wb/ports/app_port.py
+        freecad/datamanager_wb/ports/freecad_context.py
+        freecad/datamanager_wb/ports/freecad_port.py
+        freecad/datamanager_wb/ports/gui_port.py
+        freecad/datamanager_wb/ports/settings_port.py
         freecad/datamanager_wb/domain/__init__.py
         freecad/datamanager_wb/domain/expression_item.py
         freecad/datamanager_wb/freecad_helpers.py

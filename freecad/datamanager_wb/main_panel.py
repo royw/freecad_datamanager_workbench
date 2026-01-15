@@ -10,14 +10,14 @@ from collections.abc import Callable
 
 from PySide import QtCore, QtWidgets
 
-from .app_port import AppPort, FreeCadAppAdapter
 from .domain.expression_item import ExpressionItem
 from .domain.parent_child_ref import ParentChildRef, parse_parent_child_ref
-from .gui_port import FreeCadGuiAdapter, GuiPort
 from .main_panel_presenter import MainPanelPresenter
 from .panel_controller import PanelController
+from .ports.app_port import AppPort, FreeCadAppAdapter
+from .ports.gui_port import FreeCadGuiAdapter, GuiPort
+from .ports.settings_port import QtSettingsAdapter, SettingsPort
 from .resources import UIPATH
-from .settings_port import QtSettingsAdapter, SettingsPort
 
 _SETTINGS_GROUP = "DataManager"
 _SETTINGS_APP = "DataManagerWorkbench"

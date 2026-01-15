@@ -7,7 +7,7 @@ import os
 from collections.abc import Callable
 from typing import TYPE_CHECKING
 
-from .app_port import FreeCadAppAdapter
+from .ports.app_port import FreeCadAppAdapter
 from .resources import ICONPATH
 
 if TYPE_CHECKING:

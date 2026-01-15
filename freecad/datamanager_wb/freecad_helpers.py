@@ -11,8 +11,8 @@ from __future__ import annotations
 from collections.abc import Iterable, Iterator, Sequence
 from typing import cast
 
-from .freecad_context import FreeCadContext
-from .freecad_port import get_port
+from .ports.freecad_context import FreeCadContext
+from .ports.freecad_port import get_port
 
 
 def iter_document_objects(doc: object) -> Iterator[object]:
