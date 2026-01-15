@@ -111,7 +111,7 @@ When adding new behavior, prefer placing it in the lowest layer that makes sense
   - `freecad/datamanager_wb/panel_controller.py`
   - Owns document recompute + GUI refresh through `FreeCadPort`.
 - **Reusable tab logic (domain-agnostic)**
-  - `freecad/datamanager_wb/tab_controller.py`
+  - `freecad/datamanager_wb/domain/tab_controller.py`
   - Filtering, only-unused logic, selection rules.
 - **Domain adapters (VarSets / Spreadsheets)**
   - `freecad/datamanager_wb/varsets/varset_datasource.py`
@@ -526,9 +526,9 @@ Parent and child filters in the UI use glob matching. If you type no glob charac
 
 Implementation:
 
-- `freecad/datamanager_wb/tab_controller.py:_normalize_glob_pattern`
-- `freecad/datamanager_wb/tab_controller.py:get_filtered_parents`
-- `freecad/datamanager_wb/tab_controller.py:get_filtered_child_items`
+- `freecad/datamanager_wb/domain/tab_controller.py:_normalize_glob_pattern`
+- `freecad/datamanager_wb/domain/tab_controller.py:get_filtered_parents`
+- `freecad/datamanager_wb/domain/tab_controller.py:get_filtered_child_items`
 
 ### Name normalization
 

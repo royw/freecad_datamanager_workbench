@@ -2,21 +2,22 @@ set(Namespace_SRCS
         freecad/datamanager_wb/init_gui.py
         freecad/datamanager_wb/__init__.py
         freecad/datamanager_wb/commands.py
-        freecad/datamanager_wb/expression_item.py
+        freecad/datamanager_wb/domain/__init__.py
+        freecad/datamanager_wb/domain/expression_item.py
         freecad/datamanager_wb/freecad_helpers.py
         freecad/datamanager_wb/freecad_version_check.py
         freecad/datamanager_wb/gui_selection.py
         freecad/datamanager_wb/main_panel.py
         freecad/datamanager_wb/panel_controller.py
-        freecad/datamanager_wb/parent_child_ref.py
-        freecad/datamanager_wb/parsing_helpers.py
+        freecad/datamanager_wb/domain/parent_child_ref.py
+        freecad/datamanager_wb/domain/parsing_helpers.py
         freecad/datamanager_wb/resources.py
         freecad/datamanager_wb/spreadsheets/__init__.py
         freecad/datamanager_wb/spreadsheets/spreadsheet_datasource.py
         freecad/datamanager_wb/spreadsheets/spreadsheet_mutations.py
         freecad/datamanager_wb/spreadsheets/spreadsheet_query.py
-        freecad/datamanager_wb/tab_controller.py
-        freecad/datamanager_wb/tab_datasource.py
+        freecad/datamanager_wb/domain/tab_controller.py
+        freecad/datamanager_wb/domain/tab_datasource.py
         freecad/datamanager_wb/varsets/__init__.py
         freecad/datamanager_wb/varsets/varset_datasource.py
         freecad/datamanager_wb/varsets/varset_mutations.py

@@ -2,8 +2,15 @@
 
 from __future__ import annotations
 
-from freecad.datamanager_wb.parent_child_ref import ParentChildRef, normalize_parent_child_items, parse_parent_child_ref
-from freecad.datamanager_wb.parsing_helpers import parse_expression_item_object_name, parse_varset_variable_item
+from freecad.datamanager_wb.domain.parent_child_ref import (
+    ParentChildRef,
+    normalize_parent_child_items,
+    parse_parent_child_ref,
+)
+from freecad.datamanager_wb.domain.parsing_helpers import (
+    parse_expression_item_object_name,
+    parse_varset_variable_item,
+)
 
 
 def test_parse_parent_child_ref_success() -> None:

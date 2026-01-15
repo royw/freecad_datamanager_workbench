@@ -3,10 +3,10 @@ Uses a fake data source to validate filtering and remove-unused behavior."""
 
 from __future__ import annotations
 
-from freecad.datamanager_wb.parent_child_ref import ParentChildRef
-from freecad.datamanager_wb.expression_item import ExpressionItem
-from freecad.datamanager_wb.tab_controller import TabController
-from freecad.datamanager_wb.tab_datasource import RemoveUnusedResult
+from freecad.datamanager_wb.domain.parent_child_ref import ParentChildRef
+from freecad.datamanager_wb.domain.expression_item import ExpressionItem
+from freecad.datamanager_wb.domain.tab_controller import TabController
+from freecad.datamanager_wb.domain.tab_datasource import RemoveUnusedResult
 
 
 class FakeDataSource:

@@ -11,11 +11,11 @@ from collections.abc import Callable
 from PySide import QtCore, QtWidgets
 
 from .app_port import AppPort, FreeCadAppAdapter
-from .expression_item import ExpressionItem
+from .domain.expression_item import ExpressionItem
+from .domain.parent_child_ref import ParentChildRef, parse_parent_child_ref
 from .gui_port import FreeCadGuiAdapter, GuiPort
 from .main_panel_presenter import MainPanelPresenter
 from .panel_controller import PanelController
-from .parent_child_ref import ParentChildRef, parse_parent_child_ref
 from .resources import UIPATH
 from .settings_port import QtSettingsAdapter, SettingsPort
 

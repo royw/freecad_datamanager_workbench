@@ -1,6 +1,6 @@
 from __future__ import annotations
 
-from freecad.datamanager_wb.parent_child_ref import ParentChildRef
+from freecad.datamanager_wb.domain.parent_child_ref import ParentChildRef
 from freecad.datamanager_wb.spreadsheets.spreadsheet_datasource import SpreadsheetDataSource
 
 

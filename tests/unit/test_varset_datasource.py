@@ -5,7 +5,7 @@ These tests mock the FreeCAD-facing query functions so they can run without Free
 
 from __future__ import annotations
 
-from freecad.datamanager_wb.parent_child_ref import ParentChildRef
+from freecad.datamanager_wb.domain.parent_child_ref import ParentChildRef
 from freecad.datamanager_wb.varsets.varset_datasource import VarsetDataSource
 
 
