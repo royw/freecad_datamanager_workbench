@@ -1,8 +1,21 @@
 # Installation
 
-Add instructions for installing via the Addon Manager.
+## Install via FreeCAD Addon Manager
 
-## DevelopmentInstallation (from GitHub)
+This is the recommended installation method for most users.
+
+1. Open FreeCAD.
+1. Open `Tools` -> `Addon manager...`.
+1. Search for `DataManager` (or `Data Manager`).
+1. Select the workbench and click `Install`/`Update`.
+1. Restart FreeCAD.
+
+Notes:
+
+- Addon Manager installs workbenches into your FreeCAD user `Mod/` directory.
+- After install/update, a FreeCAD restart is usually required for workbench discovery and command registration.
+
+## Development installation (from GitHub)
 
 FreeCAD discovers user workbenches by scanning your FreeCAD `Mod/` directory. For development (and for installing
 from a cloned repo), the recommended workflow is to clone this repository and then create a link into your `Mod/`
@@ -13,7 +26,7 @@ After adding/removing a workbench (or changing the link), **restart FreeCAD**.
 ### 1) Clone the repository
 
 ```sh
-git clone git@github.com:royw/freecad_datamanager_workbench.git
+git clone https://github.com/royw/freecad_datamanager_workbench.git
 ```
 
 ### 2) Locate your FreeCAD `Mod/` directory
@@ -41,20 +54,6 @@ If you’re unsure, in FreeCAD go to:
 
 The macro directory is typically adjacent to your user `Mod/` directory.
 If you find the `Macro/` directory and there is not a `Mod/` directory, create a `Mod/` directory in the same location.
-
-Typically:
-
-```bash
-,,,/Freecad/Macro/
-,,,/Freecad/Mod/
-```
-
-or
-
-```bash
-.../FreeCAD/<version>/Macro/
-.../FreeCAD/<version>/Mod/
-```
 
 ### 3) Create the link
 
