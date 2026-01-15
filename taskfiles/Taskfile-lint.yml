@@ -114,7 +114,7 @@ tasks:
     summary: Runs the docstring checker on the source directory
     cmds:
       - echo "Checking docstrings..."
-      - uv run python scripts/check_docstrs.py {{.SRC}}
+      - uv run python scripts/check_docstrs.py {{.SRC}} {{.TESTS_CORE}}
     silent: true
 
   markdown:
