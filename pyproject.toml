@@ -83,6 +83,8 @@ exclude = [
     '^freecad/datamanager_wb/init_gui\.py$',
     '^freecad/datamanager_wb/main_panel\.py$',
     '^freecad/datamanager_wb/workbench\.py$',
+    '^freecad/datamanager_wb/ui/.*\.py$',
+    '^freecad/datamanager_wb/entrypoints/.*\.py$',
     '^scripts/.*$',
 ]
 # Allow multiple conftest.py files in different test directories
@@ -117,6 +119,8 @@ module = [
     "freecad.datamanager_wb.init_gui",
     "freecad.datamanager_wb.main_panel",
     "freecad.datamanager_wb.workbench",
+    "freecad.datamanager_wb.ui.*",
+    "freecad.datamanager_wb.entrypoints.*",
 ]
 ignore_errors = true
 

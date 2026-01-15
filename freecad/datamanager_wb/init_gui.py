@@ -1,22 +1,6 @@
-"""
-FreeCAD datamanager workbench
-"""
+"""Compatibility wrapper for FreeCAD workbench initialization."""
 
-try:
-    import FreeCADGui as Gui  # pylint: disable=import-error
-except Exception:  # pylint: disable=broad-exception-caught
-    Gui = None
+# Import for side effects: FreeCAD workbench registration occurs at import time.
+from .entrypoints import init_gui as _init_gui  # noqa: F401
 
-if Gui is not None:
-    from .commands import register_commands
-    from .freecad_version_check import check_python_and_freecad_version
-    from .main_panel import get_main_panel
-    from .resources import TRANSLATIONSPATH
-    from .workbench import DataManagerWorkbench
-
-    Gui.addLanguagePath(TRANSLATIONSPATH)
-    Gui.updateLocale()
-
-    check_python_and_freecad_version()
-    register_commands(get_main_panel)
-    Gui.addWorkbench(DataManagerWorkbench())
+__all__: list[str] = []

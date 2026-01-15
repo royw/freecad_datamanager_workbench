@@ -1,7 +1,21 @@
 set(Namespace_SRCS
-        freecad/datamanager_wb/init_gui.py
         freecad/datamanager_wb/__init__.py
+        freecad/datamanager_wb/init_gui.py
         freecad/datamanager_wb/commands.py
+        freecad/datamanager_wb/workbench.py
+        freecad/datamanager_wb/main_panel.py
+        freecad/datamanager_wb/main_panel_presenter.py
+        freecad/datamanager_wb/panel_controller.py
+        freecad/datamanager_wb/gui_selection.py
+        freecad/datamanager_wb/entrypoints/__init__.py
+        freecad/datamanager_wb/entrypoints/init_gui.py
+        freecad/datamanager_wb/entrypoints/commands.py
+        freecad/datamanager_wb/entrypoints/workbench.py
+        freecad/datamanager_wb/ui/__init__.py
+        freecad/datamanager_wb/ui/main_panel.py
+        freecad/datamanager_wb/ui/main_panel_presenter.py
+        freecad/datamanager_wb/ui/panel_controller.py
+        freecad/datamanager_wb/ui/gui_selection.py
         freecad/datamanager_wb/ports/__init__.py
         freecad/datamanager_wb/ports/app_port.py
         freecad/datamanager_wb/ports/freecad_context.py
@@ -12,9 +26,6 @@ set(Namespace_SRCS
         freecad/datamanager_wb/domain/expression_item.py
         freecad/datamanager_wb/freecad_helpers.py
         freecad/datamanager_wb/freecad_version_check.py
-        freecad/datamanager_wb/gui_selection.py
-        freecad/datamanager_wb/main_panel.py
-        freecad/datamanager_wb/panel_controller.py
         freecad/datamanager_wb/domain/parent_child_ref.py
         freecad/datamanager_wb/domain/parsing_helpers.py
         freecad/datamanager_wb/resources.py
@@ -29,7 +40,6 @@ set(Namespace_SRCS
         freecad/datamanager_wb/varsets/varset_mutations.py
         freecad/datamanager_wb/varsets/varset_query.py
         freecad/datamanager_wb/version.py
-        freecad/datamanager_wb/workbench.py
         freecad/datamanager_wb/resources/icons/datamanager_wb.svg
         freecad/datamanager_wb/resources/icons/Varsets.svg
         freecad/datamanager_wb/resources/icons/Aliases.svg
