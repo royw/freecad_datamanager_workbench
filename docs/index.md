@@ -26,6 +26,7 @@ It helps you:
 
 - [Architecture](architecture.md)
 - [Development](development.md)
+- [Tests](tests.md)
 
 ### API reference
 
