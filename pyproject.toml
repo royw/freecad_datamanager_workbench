@@ -176,6 +176,7 @@ disable = [
     "no-member",                 # Sometimes false positives
     "not-callable",              # Sometimes false positives
     "c-extension-no-member",     # C extension issues
+    "protected-access",          # Tests intentionally validate underscored helpers
 ]
 # Enable specific messages that are disabled by default
 enable = [
@@ -211,7 +212,7 @@ allow-global-unused-variables = true
 # A regular expression matching the name of dummy variables (i.e. expected to not be used)
 dummy-variables-rgx = "^(_|dummy_|unused_)"
 # Argument names that match this expression will be ignored. Default to name with leading underscore
-ignored-argument-names = "_.*"
+ignored-argument-names = "(_.*|ctx|doc|obj|varset_name|sheet_name|alias_name|group|filter_text|only_unused)"
 
 [tool.pylint.similarities]
 # Minimum lines number of a similarity

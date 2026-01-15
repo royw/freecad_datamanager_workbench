@@ -11,6 +11,8 @@ Architecture:
 2. Report generation phase - format and display results
 """
 
+# pylint: disable=broad-exception-caught
+
 from __future__ import annotations
 
 from collections import defaultdict
@@ -540,7 +542,7 @@ def _extract_test_results(result: subprocess.CompletedProcess[str], metrics: Cov
 def _parse_coverage_json(metrics: CoverageMetrics, sloc_map: dict[str, int] | None = None) -> None:
     """Parse coverage.json file for coverage metrics."""
     try:
-        with open("coverage.json") as f:
+        with open("coverage.json", encoding="utf-8") as f:
             data = json.load(f)
 
         totals = data.get("totals", {})
@@ -645,7 +647,7 @@ def gather_risk_metrics(
         return metrics
 
     try:
-        with open("coverage.json") as f:
+        with open("coverage.json", encoding="utf-8") as f:
             data = json.load(f)
 
         # Build file coverage and SLOC map from JSON

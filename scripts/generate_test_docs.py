@@ -35,7 +35,7 @@ def extract_tests_from_file(file_path: Path) -> list[TestInfo]:
     try:
         with open(file_path, encoding="utf-8") as f:
             tree = ast.parse(f.read(), filename=str(file_path))
-    except Exception as e:
+    except Exception as e:  # pylint: disable=broad-exception-caught
         print(f"Warning: Could not parse {file_path}: {e}")
         return tests
 
