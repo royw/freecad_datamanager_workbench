@@ -57,14 +57,9 @@ class PanelController:
         if doc is None:
             return None
 
-        obj = self._port.get_object(doc, object_name)
-        if obj is None:
-            return None
-
-        label = getattr(obj, "Label", None)
-        if label is None:
-            return None
         try:
+            obj = self._port.get_object(doc, object_name)
+            label = obj.Label  # type: ignore[union-attr]
             text = str(label)
         except Exception:  # pylint: disable=broad-exception-caught
             return None

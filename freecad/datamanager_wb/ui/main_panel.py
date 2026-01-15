@@ -118,28 +118,43 @@ class MainPanel(QtWidgets.QDialog):
             return
         widget.clear()
 
+    def _apply_active_document_change_plan_selections(self, plan) -> None:
+        selection_steps: list[tuple[bool, QtWidgets.QListWidget | None]] = [
+            (plan.clear_varsets_selection, self.availableVarsetsListWidget),
+            (plan.clear_spreadsheets_selection, self.availableSpreadsheetsListWidget),
+        ]
+        for should_clear, widget in selection_steps:
+            if should_clear:
+                self._clear_list_selection(widget)
+
+    def _apply_active_document_change_plan_repopulate(self, plan) -> None:
+        repopulate_steps: list[tuple[bool, object]] = [
+            (plan.repopulate_varsets, self._populate_varsets),
+            (plan.repopulate_spreadsheets, self._populate_spreadsheets),
+        ]
+        for should_repopulate, fn in repopulate_steps:
+            if should_repopulate:
+                fn()
+
+    def _apply_active_document_change_plan_clear_lists(self, plan) -> None:
+        clear_steps: list[tuple[bool, QtWidgets.QListWidget | None]] = [
+            (plan.clear_varset_variable_names, self.varsetVariableNamesListWidget),
+            (plan.clear_varset_expressions, self.varsetExpressionsListWidget),
+            (plan.clear_alias_names, self.aliasesVariableNamesListWidget),
+            (plan.clear_alias_expressions, self.aliasExpressionsListWidget),
+        ]
+        for should_clear, widget in clear_steps:
+            if should_clear:
+                self._clear_list_contents(widget)
+
+    def _apply_active_document_change_plan(self, plan) -> None:
+        self._apply_active_document_change_plan_selections(plan)
+        self._apply_active_document_change_plan_repopulate(plan)
+        self._apply_active_document_change_plan_clear_lists(plan)
+
     def _refresh_for_active_document_change(self) -> None:
         plan = self._presenter.get_active_document_change_plan()
-
-        if plan.clear_varsets_selection:
-            self._clear_list_selection(self.availableVarsetsListWidget)
-        if plan.clear_spreadsheets_selection:
-            self._clear_list_selection(self.availableSpreadsheetsListWidget)
-
-        if plan.repopulate_varsets:
-            self._populate_varsets()
-        if plan.repopulate_spreadsheets:
-            self._populate_spreadsheets()
-
-        if plan.clear_varset_variable_names:
-            self._clear_list_contents(self.varsetVariableNamesListWidget)
-        if plan.clear_varset_expressions:
-            self._clear_list_contents(self.varsetExpressionsListWidget)
-        if plan.clear_alias_names:
-            self._clear_list_contents(self.aliasesVariableNamesListWidget)
-        if plan.clear_alias_expressions:
-            self._clear_list_contents(self.aliasExpressionsListWidget)
-
+        self._apply_active_document_change_plan(plan)
         self._update_copy_buttons_enabled_state()
 
     def _find_required_widget(self, widget_type: type, object_name: str):
@@ -934,26 +949,41 @@ class MainPanel(QtWidgets.QDialog):
         )
         self._render_alias_names(state)
 
-    def _render_variable_names(self, state) -> None:
-        if self.varsetVariableNamesListWidget is None:
+    def _render_ref_list_widget(
+        self,
+        list_widget: QtWidgets.QListWidget | None,
+        state,
+        *,
+        on_after_render,
+    ) -> None:
+        if list_widget is None:
             return
 
-        self.varsetVariableNamesListWidget.clear()
+        list_widget.clear()
         for data in getattr(state, "items", []) or []:
-            ref = getattr(data, "key", None)
-            display = getattr(data, "display", None)
-            if not isinstance(display, str):
-                display = str(getattr(ref, "text", ""))
-            item = QtWidgets.QListWidgetItem(display)
-            item.setData(QtCore.Qt.UserRole, ref)
-            self.varsetVariableNamesListWidget.addItem(item)
+            list_widget.addItem(self._create_ref_list_item(data))
 
-        self._adjust_list_widget_width_to_contents(self.varsetVariableNamesListWidget)
+        self._adjust_list_widget_width_to_contents(list_widget)
         self._restore_parent_child_ref_selection(
-            self.varsetVariableNamesListWidget,
+            list_widget,
             selected_refs=set(getattr(state, "selected_keys", set()) or set()),
         )
-        self._update_remove_unused_button_enabled_state()
+        on_after_render()
+
+    def _create_ref_list_item(self, data) -> QtWidgets.QListWidgetItem:
+        ref = getattr(data, "key", None)
+        display = getattr(data, "display", None)
+        text = display if isinstance(display, str) else str(getattr(ref, "text", ""))
+        item = QtWidgets.QListWidgetItem(text)
+        item.setData(QtCore.Qt.UserRole, ref)
+        return item
+
+    def _render_variable_names(self, state) -> None:
+        self._render_ref_list_widget(
+            self.varsetVariableNamesListWidget,
+            state,
+            on_after_render=self._update_remove_unused_button_enabled_state,
+        )
 
     def _populate_alias_expressions(
         self, selected_alias_items: list[ParentChildRef] | list[str]
@@ -978,25 +1008,11 @@ class MainPanel(QtWidgets.QDialog):
         self._update_remove_unused_aliases_button_enabled_state()
 
     def _render_alias_names(self, state) -> None:
-        if self.aliasesVariableNamesListWidget is None:
-            return
-
-        self.aliasesVariableNamesListWidget.clear()
-        for data in getattr(state, "items", []) or []:
-            ref = getattr(data, "key", None)
-            display = getattr(data, "display", None)
-            if not isinstance(display, str):
-                display = str(getattr(ref, "text", ""))
-            item = QtWidgets.QListWidgetItem(display)
-            item.setData(QtCore.Qt.UserRole, ref)
-            self.aliasesVariableNamesListWidget.addItem(item)
-
-        self._adjust_list_widget_width_to_contents(self.aliasesVariableNamesListWidget)
-        self._restore_parent_child_ref_selection(
+        self._render_ref_list_widget(
             self.aliasesVariableNamesListWidget,
-            selected_refs=set(getattr(state, "selected_keys", set()) or set()),
+            state,
+            on_after_render=self._update_remove_unused_aliases_button_enabled_state,
         )
-        self._update_remove_unused_aliases_button_enabled_state()
 
     def _update_remove_unused_button_enabled_state(self) -> None:
         if self.removeUnusedVariablesPushButton is None:
@@ -1327,6 +1343,32 @@ class MainPanel(QtWidgets.QDialog):
         else:
             self.form.close()
 
+    def _apply_requested_tab_index(self, tab_index: int | None) -> None:
+        if tab_index is None or self.tabWidget is None:
+            return
+        self.tabWidget.setCurrentIndex(tab_index)
+
+    def _try_show_standalone(self, plan) -> bool:
+        if not plan.show_standalone:
+            return False
+        self._widget.show()
+        return True
+
+    def _try_reuse_subwindow(self, plan) -> bool:
+        if not plan.reuse_subwindow or self._mdi_subwindow is None:
+            return False
+        self._mdi_subwindow.showMaximized()
+        self._mdi_subwindow.setFocus()
+        return True
+
+    def _ensure_mdi_subwindow(self, *, plan, mdi) -> None:
+        if not plan.create_subwindow:
+            return
+        if mdi is None:
+            self._widget.show()
+            return
+        self._mdi_subwindow = self._gui_port.add_subwindow(mdi_area=mdi, widget=self._widget)
+
     def show(self, *, tab_index: int | None = None):  # noqa: A003
         """Show the panel, optionally selecting a tab.
 
@@ -1334,8 +1376,7 @@ class MainPanel(QtWidgets.QDialog):
             tab_index: When provided, selects the corresponding tab index before
                 showing the panel.
         """
-        if tab_index is not None and self.tabWidget is not None:
-            self.tabWidget.setCurrentIndex(tab_index)
+        self._apply_requested_tab_index(tab_index)
 
         mdi = self._gui_port.get_mdi_area()
         plan = self._presenter.get_show_plan(
@@ -1343,21 +1384,12 @@ class MainPanel(QtWidgets.QDialog):
             has_existing_subwindow=self._mdi_subwindow is not None,
         )
 
-        if plan.show_standalone:
-            self._widget.show()
+        if self._try_show_standalone(plan):
+            return
+        if self._try_reuse_subwindow(plan):
             return
 
-        if plan.reuse_subwindow and self._mdi_subwindow is not None:
-            self._mdi_subwindow.showMaximized()
-            self._mdi_subwindow.setFocus()
-            return
-
-        if plan.create_subwindow:
-            if mdi is None:
-                self._widget.show()
-                return
-
-            self._mdi_subwindow = self._gui_port.add_subwindow(mdi_area=mdi, widget=self._widget)
+        self._ensure_mdi_subwindow(plan=plan, mdi=mdi)
         self._mdi_subwindow.setWindowTitle(self._app_port.translate("Workbench", "Data Manager"))
         self._mdi_subwindow._dm_main_panel = self  # pylint: disable=protected-access
         self._mdi_subwindow.setAttribute(QtCore.Qt.WA_DeleteOnClose, True)

@@ -6,6 +6,7 @@ Qt widgets in `MainPanel` as a thin view layer.
 
 from __future__ import annotations
 
+import fnmatch
 from dataclasses import dataclass
 
 
@@ -152,27 +153,44 @@ class MainPanelPresenter:
 
     def format_expression_item(self, expression_item: object, *, use_label: bool) -> str:
         """Format an `ExpressionItem`-like object for display."""
+        display_text = str(getattr(expression_item, "display_text", ""))
+        parts = self._get_expression_item_parts(expression_item)
+        if parts is None:
+            return display_text
 
+        lhs, rhs, operator, obj_name = parts
+        if not self._should_use_object_label(use_label, obj_name=obj_name):
+            return f"{lhs} {operator} {rhs}"
+
+        return self._format_expression_item_with_label(lhs, rhs, operator, obj_name)
+
+    def _get_expression_item_parts(
+        self, expression_item: object
+    ) -> tuple[str, str, str, str | None] | None:
         lhs = getattr(expression_item, "lhs", None)
         rhs = getattr(expression_item, "rhs", None)
         operator = getattr(expression_item, "operator", "=")
         obj_name = getattr(expression_item, "object_name", None)
-
         if not isinstance(lhs, str) or not isinstance(rhs, str):
-            return str(getattr(expression_item, "display_text", ""))
+            return None
+        return lhs, rhs, str(operator), obj_name if isinstance(obj_name, str) else None
 
-        if not use_label or not isinstance(obj_name, str) or not obj_name:
-            return f"{lhs} {operator} {rhs}"
+    def _should_use_object_label(self, use_label: bool, *, obj_name: str | None) -> bool:
+        return bool(use_label and obj_name)
 
+    def _format_expression_item_with_label(
+        self, lhs: str, rhs: str, operator: str, obj_name: str
+    ) -> str:
         obj_label = self._get_object_label(obj_name)
         if not obj_label:
             return f"{lhs} {operator} {rhs}"
+        return f"{self._replace_lhs_object_with_label(lhs, obj_label)} {operator} {rhs}"
 
-        if "." in lhs:
-            _prefix, rest = lhs.split(".", 1)
-            lhs = f"{obj_label}.{rest}"
-
-        return f"{lhs} {operator} {rhs}"
+    def _replace_lhs_object_with_label(self, lhs: str, obj_label: str) -> str:
+        if "." not in lhs:
+            return lhs
+        _prefix, rest = lhs.split(".", 1)
+        return f"{obj_label}.{rest}"
 
     def get_varsets_state(
         self,
@@ -187,16 +205,34 @@ class MainPanelPresenter:
         if not callable(getter):
             return ParentListState(items=[], selected_keys=set())
 
-        names: list[str] = getter(
-            filter_text=filter_text,
+        raw_names: list[str] = getter(
+            filter_text="" if use_label else filter_text,
             exclude_copy_on_change=exclude_copy_on_change,
         )
 
         items = [
             DisplayItem(key=n, display=self.format_object_name(n, use_label=use_label))
-            for n in names
+            for n in raw_names
         ]
+        if use_label:
+            items = self._filter_display_items(items, filter_text=filter_text)
         return ParentListState(items=items, selected_keys=set(selected_keys))
+
+    def _normalize_glob_pattern(self, text: str) -> str | None:
+        stripped = text.strip()
+        if not stripped:
+            return None
+        if not any(ch in stripped for ch in "*?[]"):
+            return f"*{stripped}*"
+        return stripped
+
+    def _filter_display_items(
+        self, items: list[DisplayItem], *, filter_text: str
+    ) -> list[DisplayItem]:
+        pattern = self._normalize_glob_pattern(filter_text)
+        if pattern is None:
+            return items
+        return [item for item in items if fnmatch.fnmatchcase(item.display, pattern)]
 
     def get_varset_variables_state(
         self,
@@ -304,13 +340,15 @@ class MainPanelPresenter:
         if not callable(getter):
             return ParentListState(items=[], selected_keys=set())
 
-        names: list[str] = getter(
-            filter_text=filter_text,
+        raw_names: list[str] = getter(
+            filter_text="" if use_label else filter_text,
             exclude_copy_on_change=exclude_copy_on_change,
         )
 
         items = [
             DisplayItem(key=n, display=self.format_object_name(n, use_label=use_label))
-            for n in names
+            for n in raw_names
         ]
+        if use_label:
+            items = self._filter_display_items(items, filter_text=filter_text)
         return ParentListState(items=items, selected_keys=set(selected_keys))

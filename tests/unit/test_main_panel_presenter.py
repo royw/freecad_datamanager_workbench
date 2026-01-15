@@ -135,6 +135,44 @@ def test_get_varsets_state_formats_display_and_preserves_selection() -> None:
     assert state.selected_keys == {"A"}
 
 
+class _RecordingVarsetsController:
+    """Test double that records the last filter text passed by the presenter."""
+
+    def __init__(self, *, varsets: list[str], labels: dict[str, str]) -> None:
+        self._varsets = list(varsets)
+        self._labels = dict(labels)
+        self.last_filter_text: str | None = None
+
+    def get_object_label(self, object_name: str) -> str | None:
+        """Return a label for the given object name, if configured."""
+        return self._labels.get(object_name)
+
+    def get_filtered_varsets(
+        self, *, filter_text: str, exclude_copy_on_change: bool = False
+    ) -> list[str]:
+        """Return all varsets, recording the filter text passed in."""
+        _exclude_copy_on_change = exclude_copy_on_change
+        self.last_filter_text = filter_text
+        return list(self._varsets)
+
+
+def test_get_varsets_state_filters_on_label_in_label_mode() -> None:
+    """get_varsets_state applies filter against display text when label mode is enabled."""
+    ctrl = _RecordingVarsetsController(varsets=["A", "B"], labels={"B": "Bee"})
+    p = MainPanelPresenter(ctrl)
+
+    state = p.get_varsets_state(
+        filter_text="Bee",
+        exclude_copy_on_change=False,
+        use_label=True,
+        selected_keys=set(),
+    )
+
+    assert ctrl.last_filter_text == ""
+    assert [i.key for i in state.items] == ["B"]
+    assert [i.display for i in state.items] == ["Bee"]
+
+
 def test_get_varset_variables_state_formats_parent_child_with_label() -> None:
     """get_varset_variables_state formats parent.child refs using labels when enabled."""
     ctrl = FakeController()
