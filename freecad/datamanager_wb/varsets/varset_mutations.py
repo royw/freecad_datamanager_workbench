@@ -3,8 +3,8 @@
 Contains operations that modify VarSets, such as removing a variable property.
 """
 
-from .freecad_context import FreeCadContext
-from .freecad_port import get_port
+from ..freecad_context import FreeCadContext
+from ..freecad_port import get_port
 
 
 def _has_property(obj: object, property_name: str) -> bool:

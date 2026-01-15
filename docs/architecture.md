@@ -26,9 +26,9 @@ This document describes the current architecture of the **DataManager** FreeCAD 
   - `freecad/datamanager_wb/tab_controller.py` (generic per-tab logic)
 - **Data access layer**
   - VarSets:
-    - `freecad/datamanager_wb/varset_query.py` (low-level FreeCAD VarSet queries)
-    - `freecad/datamanager_wb/varset_mutations.py` (low-level FreeCAD VarSet mutations)
-    - `freecad/datamanager_wb/varset_datasource.py` (adapts varset APIs to generic tab API)
+    - `freecad/datamanager_wb/varsets/varset_query.py` (low-level FreeCAD VarSet queries)
+    - `freecad/datamanager_wb/varsets/varset_mutations.py` (low-level FreeCAD VarSet mutations)
+    - `freecad/datamanager_wb/varsets/varset_datasource.py` (adapts varset APIs to generic tab API)
   - Spreadsheet Aliases:
     - `freecad/datamanager_wb/spreadsheet_query.py`
     - `freecad/datamanager_wb/spreadsheet_mutations.py`
@@ -232,9 +232,9 @@ This makes it possible to share the tab behavior between different domains.
 
 VarSets are backed by FreeCAD’s `App::VarSet`. The repository keeps VarSet-specific logic in:
 
-- `varset_query.py` (thin wrappers around FreeCAD VarSet query APIs)
-- `varset_mutations.py` (thin wrappers around FreeCAD VarSet mutation APIs)
-- `varset_datasource.py` (adapter to the generic protocol)
+- `varsets/varset_query.py` (thin wrappers around FreeCAD VarSet query APIs)
+- `varsets/varset_mutations.py` (thin wrappers around FreeCAD VarSet mutation APIs)
+- `varsets/varset_datasource.py` (adapter to the generic protocol)
 
 VarSets can organize variables into **property groups** (for example, the default `Base` group). When a VarSet
 contains variables in more than one group, the VarSets tab exposes **virtual parent entries**:
@@ -245,8 +245,8 @@ Selecting a virtual parent filters the variables list to only variables from tha
 
 Implementation detail:
 
-- Group discovery lives in `varset_query.py` (property group mapping / filtering helpers).
-- Virtual parent generation and group filtering is implemented in `varset_datasource.py`.
+- Group discovery lives in `varsets/varset_query.py` (property group mapping / filtering helpers).
+- Virtual parent generation and group filtering is implemented in `varsets/varset_datasource.py`.
 
 VarSet and spreadsheet query code shares common FreeCAD document helpers in `freecad_helpers.py` (expression engine iteration, copy-on-change filtering, typed object lookup).
 

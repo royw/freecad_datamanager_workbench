@@ -16,9 +16,10 @@ set(Namespace_SRCS
         freecad/datamanager_wb/spreadsheet_query.py
         freecad/datamanager_wb/tab_controller.py
         freecad/datamanager_wb/tab_datasource.py
-        freecad/datamanager_wb/varset_datasource.py
-        freecad/datamanager_wb/varset_mutations.py
-        freecad/datamanager_wb/varset_query.py
+        freecad/datamanager_wb/varsets/__init__.py
+        freecad/datamanager_wb/varsets/varset_datasource.py
+        freecad/datamanager_wb/varsets/varset_mutations.py
+        freecad/datamanager_wb/varsets/varset_query.py
         freecad/datamanager_wb/version.py
         freecad/datamanager_wb/workbench.py
         freecad/datamanager_wb/resources/icons/datamanager_wb.svg

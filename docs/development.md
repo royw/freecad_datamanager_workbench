@@ -114,10 +114,10 @@ When adding new behavior, prefer placing it in the lowest layer that makes sense
   - `freecad/datamanager_wb/tab_controller.py`
   - Filtering, only-unused logic, selection rules.
 - **Domain adapters (VarSets / Spreadsheets)**
-  - `freecad/datamanager_wb/varset_datasource.py`
+  - `freecad/datamanager_wb/varsets/varset_datasource.py`
   - `freecad/datamanager_wb/spreadsheet_datasource.py`
 - **Low-level queries/mutations**
-  - `freecad/datamanager_wb/varset_query.py`, `freecad/datamanager_wb/varset_mutations.py`
+  - `freecad/datamanager_wb/varsets/varset_query.py`, `freecad/datamanager_wb/varsets/varset_mutations.py`
   - `freecad/datamanager_wb/spreadsheet_query.py`, `freecad/datamanager_wb/spreadsheet_mutations.py`
 - **Runtime boundaries (ports/adapters)**
   - `freecad/datamanager_wb/freecad_context.py`, `freecad/datamanager_wb/freecad_port.py`
@@ -452,7 +452,7 @@ The workbench discovers VarSets by scanning the active document (`App.ActiveDocu
 
 Implementation:
 
-- `freecad/datamanager_wb/varset_query.py:getVarsets`
+- `freecad/datamanager_wb/varsets/varset_query.py:getVarsets`
 - `freecad/datamanager_wb/freecad_helpers.py:iter_document_objects`
 
 ### How variables are discovered
@@ -461,7 +461,7 @@ Variables are discovered from each selected VarSet’s properties.
 
 Implementation:
 
-- `freecad/datamanager_wb/varset_query.py:getVarsetVariableNames`
+- `freecad/datamanager_wb/varsets/varset_query.py:getVarsetVariableNames`
 
 Details:
 

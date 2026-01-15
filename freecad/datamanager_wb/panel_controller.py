@@ -13,7 +13,7 @@ from .parent_child_ref import ParentChildRef
 from .spreadsheet_datasource import SpreadsheetDataSource
 from .tab_controller import TabController
 from .tab_datasource import PostRemoveUpdate, RemoveUnusedAndUpdateResult, RemoveUnusedResult
-from .varset_datasource import VarsetDataSource
+from .varsets.varset_datasource import VarsetDataSource
 
 
 class PanelController:
