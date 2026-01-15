@@ -21,7 +21,6 @@ set(Namespace_SRCS
         freecad/datamanager_wb/varset_query.py
         freecad/datamanager_wb/version.py
         freecad/datamanager_wb/workbench.py
-        freecad/datamanager_wb/resources/datamanager_wb.svg
         freecad/datamanager_wb/resources/icons/datamanager_wb.svg
         freecad/datamanager_wb/resources/icons/Varsets.svg
         freecad/datamanager_wb/resources/icons/Aliases.svg
