@@ -5,6 +5,7 @@ from freecad.datamanager_wb.spreadsheet_datasource import SpreadsheetDataSource
 
 
 def test_get_child_refs_sorts(monkeypatch) -> None:
+    """SpreadsheetDataSource.get_child_refs returns sorted alias refs."""
     ds = SpreadsheetDataSource()
 
     monkeypatch.setattr(
@@ -17,6 +18,7 @@ def test_get_child_refs_sorts(monkeypatch) -> None:
 
 
 def test_get_expression_items_counts_and_operator(monkeypatch) -> None:
+    """SpreadsheetDataSource.get_expression_items returns reference counts and operators."""
     ds = SpreadsheetDataSource()
 
     def fake_refs(sheet_name: str, alias_name: str | None = None, *, ctx=None):
@@ -41,6 +43,7 @@ def test_get_expression_items_counts_and_operator(monkeypatch) -> None:
 
 
 def test_remove_unused_children(monkeypatch) -> None:
+    """SpreadsheetDataSource.remove_unused_children removes only aliases with zero references."""
     ds = SpreadsheetDataSource()
 
     def fake_refs(sheet_name: str, alias_name: str | None = None, *, ctx=None):

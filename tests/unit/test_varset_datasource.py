@@ -10,6 +10,7 @@ from freecad.datamanager_wb.varset_datasource import VarsetDataSource
 
 
 def test_get_child_refs_for_virtual_varset_filters_by_group(monkeypatch) -> None:
+    """VarsetDataSource.get_child_refs filters variables by virtual varset group selection."""
     ds = VarsetDataSource()
 
     def fake_groups(varset_name: str, *, ctx=None):
@@ -31,6 +32,7 @@ def test_get_child_refs_for_virtual_varset_filters_by_group(monkeypatch) -> None
 
 
 def test_get_child_refs_for_non_virtual_parent_includes_all(monkeypatch) -> None:
+    """VarsetDataSource.get_child_refs returns all variables for a non-virtual varset parent."""
     ds = VarsetDataSource()
 
     monkeypatch.setattr(
@@ -47,6 +49,7 @@ def test_get_child_refs_for_non_virtual_parent_includes_all(monkeypatch) -> None
 
 
 def test_virtual_parent_with_unknown_group_falls_back_to_normal(monkeypatch) -> None:
+    """Unknown virtual group selection falls back to treating the selection as a normal variable prefix."""
     ds = VarsetDataSource()
 
     monkeypatch.setattr(

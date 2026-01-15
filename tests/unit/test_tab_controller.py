@@ -66,17 +66,20 @@ def _normalize(items: list[ParentChildRef] | list[str]) -> list[str]:
 
 
 def test_get_filtered_parents_plain_substring_becomes_glob() -> None:
+    """TabController treats plain filter text as an implicit substring glob."""
     c = TabController(FakeDataSource())
     assert c.get_filtered_parents(filter_text="A") == ["A"]
 
 
 def test_get_filtered_child_items_only_unused_filters_by_counts() -> None:
+    """TabController filters child items to only-unused items based on reference counts."""
     c = TabController(FakeDataSource())
     items = c.get_filtered_child_items(selected_parents=["A"], child_filter_text="", only_unused=True)
     assert [i.text for i in items] == ["A.x"]
 
 
 def test_remove_unused_and_get_update_returns_post_update_items() -> None:
+    """TabController remove-unused returns an updated list consistent with filters."""
     c = TabController(FakeDataSource())
     result = c.remove_unused_and_get_update(
         selected_child_items=[ParentChildRef(parent="A", child="x"), ParentChildRef(parent="A", child="y")],
