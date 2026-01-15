@@ -1,6 +1,6 @@
-[![Docs](https://github.com/royw/freecad_datamanager_workbench/actions/workflows/docs.yml/badge.svg)](https://github.com/royw/freecad_datamanager_workbench/actions/workflows/docs.yml)
-
 # DataManager FreeCAD Workbench
+
+[![Docs](https://github.com/royw/freecad_datamanager_workbench/actions/workflows/docs.yml/badge.svg)](https://github.com/royw/freecad_datamanager_workbench/actions/workflows/docs.yml)
 
 Manages FreeCAD VarSets and aliases.
 

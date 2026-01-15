@@ -116,10 +116,14 @@ See the annotated screenshot above (9).
 
 ### “Show Objects as: Name / Label”
 
-Each tab includes a **Name/Label** display toggle for expression items.
+Each tab includes a **Name/Label** display toggle for displaying object references.
 
 - **Name** shows expression object references using FreeCAD internal object names.
 - **Label** shows expression object references using FreeCAD object labels (more user-friendly).
+
+Notes:
+
+- Label display is best-effort. If a label cannot be resolved, the UI falls back to showing the object name.
 
 This setting is remembered separately for the Varsets and Aliases tabs.
 
@@ -134,6 +138,14 @@ At the bottom of each expressions pane, the UI indicates:
 When you click an expression entry in the list, the workbench will attempt to select the referenced object in the FreeCAD model.
 
 Tip: If you don’t see anything selected, the expression may reference a property or sub-element that can’t be selected directly, or the object may no longer exist.
+
+Examples:
+
+- `Box.Length = <<VarSet>>.Width`
+  - `Box.Length` is the property being driven.
+  - The right-hand side references a variable (from a VarSet).
+- `Sheet.A1 := 'AliasName`
+  - `:=` entries indicate alias definition-style rows (specific to spreadsheets).
 
 See the annotated screenshot above (13).
 
@@ -193,6 +205,15 @@ Enable **Only Unused** to show only variables with **zero** expression reference
 
 This mode is intended to help you safely clean up unused variables.
 
+What counts as a reference:
+
+- The workbench scans FreeCAD expression-engine entries across the active document.
+
+What this does not detect:
+
+- References from macros/scripts or external tooling.
+- Any usage not represented in the expression engine.
+
 See the annotated screenshot above (7).
 
 ### 6) Remove selected unused variables
@@ -211,6 +232,11 @@ Clicking the button:
 1. Updates the variable list (and clears expressions if appropriate).
 
 If some variables could not be removed, the UI will show an informational message.
+
+Safety note:
+
+- Consider saving the document (or saving a copy) before batch removals.
+- Depending on FreeCAD behavior and your document, removals may not be easily undoable.
 
 Notes:
 
@@ -260,6 +286,16 @@ See the annotated screenshot above (10).
 
 Enable **Only Unused** to show only alias names with **zero** expression references.
 
+What counts as a reference:
+
+- The workbench scans FreeCAD expression-engine entries across the active document.
+- The workbench also scans spreadsheet-internal alias usage.
+
+What this does not detect:
+
+- References from macros/scripts or external tooling.
+- Any usage not represented in the expression engine or spreadsheet content scan.
+
 See the annotated screenshot above (7) for the checkbox location (the Aliases tab uses the same control).
 
 ### 6) Remove selected unused aliases
@@ -278,6 +314,11 @@ Clicking the button:
 1. Updates the alias list (and clears expressions if appropriate).
 
 If some aliases could not be removed, the UI will show an informational message.
+
+Safety note:
+
+- Consider saving the document (or saving a copy) before batch removals.
+- Depending on FreeCAD behavior and your document, removals may not be easily undoable.
 
 See the annotated screenshot above (8) for the button location (the Aliases tab uses the same control).
 
