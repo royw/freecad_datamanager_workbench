@@ -6,6 +6,7 @@ tasks:
   # intentionally not using a desc:, instead the serve: task has the description and indicates it is the default task
   default:
     cmds:
+      - task: build
       - task: serve
     silent: true
 
@@ -33,7 +34,7 @@ tasks:
       - echo "📚 Building documentation..."
       - |
         set -o pipefail
-        uv run mkdocs build --strict {{.CLI_ARGS}} 2>&1 | grep -v "MERMAID2.*Found superfences config" | grep -v "MERMAID2.*Initialization arguments" | grep -v "MERMAID2.*Using javascript library"
+        uv run mkdocs build --strict {{.CLI_ARGS}}
       - echo "✅ Documentation built successfully in site/"
     silent: true
 

@@ -1,7 +1,7 @@
 # Test Documentation
 
-> **Auto-generated** on 2026-01-14 19:57:26
-> **Total Tests**: 35
+> **Auto-generated** on 2026-01-15 10:37:26
+> **Total Tests**: 36
 
 This page provides a comprehensive overview of all tests in the project, automatically extracted from test docstrings.
 
@@ -29,6 +29,7 @@ This page provides a comprehensive overview of all tests in the project, automat
 | (module) | `test_get_show_plan_without_mdi_shows_standalone` | get_show_plan chooses standalone display when MDI is not available. |
 | (module) | `test_get_varset_expressions_state_formats_expression_with_label` | get_varset_expressions_state formats expression items using labels when enabled. |
 | (module) | `test_get_varset_variables_state_formats_parent_child_with_label` | get_varset_variables_state formats parent.child refs using labels when enabled. |
+| (module) | `test_get_varsets_state_filters_on_label_in_label_mode` | get_varsets_state applies filter against display text when label mode is enabled. |
 | (module) | `test_get_varsets_state_formats_display_and_preserves_selection` | get_varsets_state formats items and preserves selected keys. |
 | (module) | `test_get_version_falls_back_when_read_fails` | get_version falls back to 0.0.0 when reading pyproject fails. |
 | (module) | `test_get_version_returns_value_when_available` | get_version returns the read version when available. |

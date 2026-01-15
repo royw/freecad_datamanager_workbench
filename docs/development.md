@@ -352,6 +352,56 @@ TBD:
 
 - Whether to add a dedicated “in-FreeCAD smoke test checklist” section (manual steps) per release.
 
+## Documentation
+
+To build the documentation, run `task docs:build`.
+
+To serve the documentation, run `task docs:serve`. The Ctrl+C to stop the server.
+
+To do both at the same time, run `task docs`.
+
+### Warnings
+
+When running `task docs`, you will see some INFO messages from MERMAID2 and a warning about an unrecognized relative link 'reference/datamanager_wb/'. These are expected and can be ignored:
+
+- **MERMAID2 INFO messages**
+  - These are emitted by the `mermaid2` MkDocs plugin when it initializes.
+  - They typically indicate which Mermaid JavaScript bundle is being used and that it detected the Mermaid superfences configuration.
+- **Unrecognized relative link warning**
+  - The API reference pages under `docs/reference/` are generated during the MkDocs build by `docs/gen_ref_pages.py`.
+  - MkDocs validates links against the set of source documentation files before generation is complete, so links into the generated API reference can be reported as “unrecognized” even though they work in the final built site.
+
+```bash
+task docs                             Python 3.12.12 [freecad-workbench-datamanager] royw@roy-manjaro
+COMMIT Generating test documentation...
+ℹ️  Test documentation unchanged: /home/royw/src/FreeCAD_Workbench_DataManager/docs/tests.md
+   Total tests documented: 36
+DOCS Building documentation...
+INFO    -  MERMAID2  - Initialization arguments: {}
+INFO    -  MERMAID2  - Using javascript library (10.4.0):
+              https://unpkg.com/mermaid@10.4.0/dist/mermaid.esm.min.mjs
+INFO    -  Cleaning site directory
+INFO    -  Building documentation to directory: /home/royw/src/FreeCAD_Workbench_DataManager/site
+INFO    -  Doc file 'index.md' contains an unrecognized relative link 'reference/datamanager_wb/', it was left as is. Did you mean
+           'reference/datamanager_wb/index.md'?
+INFO    -  MERMAID2  - Found superfences config: {'custom_fences': [{'name': 'mermaid', 'class': 'mermaid', 'format': <function fence_code_format at
+           0x7f4db7e2a3e0>}]}
+INFO    -  Documentation built in 1.45 seconds
+PASS Documentation built successfully in site/
+SERVER Starting documentation server...
+INFO    -  Building documentation...
+INFO    -  MERMAID2  - Initialization arguments: {}
+INFO    -  MERMAID2  - Using javascript library (10.4.0):
+              https://unpkg.com/mermaid@10.4.0/dist/mermaid.esm.min.mjs
+INFO    -  Cleaning site directory
+INFO    -  Doc file 'index.md' contains an unrecognized relative link 'reference/datamanager_wb/', it was left as is. Did you mean
+           'reference/datamanager_wb/index.md'?
+INFO    -  MERMAID2  - Found superfences config: {'custom_fences': [{'name': 'mermaid', 'class': 'mermaid', 'format': <function fence_code_format at
+           0x7fdccc04c540>}]}
+INFO    -  Documentation built in 1.33 seconds
+INFO    -  [11:30:12] Serving on http://127.0.0.1:8000/freecad_datamanager_workbench/
+```
+
 ## Packaging and distribution (FreeCAD Addon)
 
 This workbench is intended to be installed via the FreeCAD Addon ecosystem.

@@ -143,6 +143,7 @@ nav:
   - Development:
     - Architecture: architecture.md
     - Development: development.md
+    - Tests: tests.md
     - Starterkit Historical README: HISTORICAL_README.md
   - API Reference: reference/
   - Repository on GitHub: https://github.com/royw/freecad_datamanager_workbench

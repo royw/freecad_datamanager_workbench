@@ -11,7 +11,9 @@ It helps you:
 - Inspect expression references to variables/aliases.
 - Identify and remove **unused** variables/aliases.
 
-[Screenshot: DataManager panel showing both tabs (Varsets and Aliases), with the three-pane layout (parents, children, expressions)]
+![DataManager panel annotated](images/datamanager_wb_annotated.png)
+
+*Screenshot: DataManager panel showing both tabs (Varsets and Aliases), with the three-pane layout (parents, children, expressions). Details in the [User Guide](user-guide.md).*
 
 ## Documentation index
 
@@ -27,4 +29,4 @@ It helps you:
 
 ### API reference
 
-- [datamanager_wb](reference/datamanager_wb)
+- [datamanager_wb](reference/datamanager_wb/)
