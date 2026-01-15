@@ -209,7 +209,7 @@ The panel UI is defined in:
 Notes:
 
 - Use `designer6` (Qt Designer) to edit the `.ui` file.
-- Keep widget `objectName` values stable. `main_panel.py` expects specific names at runtime.
+- Keep widget `objectName` values stable. `freecad/datamanager_wb/ui/main_panel.py` expects specific names at runtime.
 - After editing:
   - Run `task check`.
   - Launch FreeCAD and open the panel to verify the UI loads and widgets are found.

@@ -4,6 +4,8 @@
 
 Manages FreeCAD VarSets and aliases.
 
+Tested on FreeCAD version 1.0.2 and 1.1.0rc2.
+
 Documentation: [royw.github.io/freecad_datamanager_workbench](https://royw.github.io/freecad_datamanager_workbench/)
 
 Special thanks to OldBeard for his testing of the beta workbench and many great suggestions!
