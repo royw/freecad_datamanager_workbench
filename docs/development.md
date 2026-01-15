@@ -45,7 +45,7 @@ After creating the symlink, restart FreeCAD. The workbench should appear in the 
 
 ### Reloading during development (Python console)
 
-For iterative development, you can sometimes reload Python modules from the FreeCAD Python console.
+For iterative development, the normal procedure is to restart FreeCAD. However, you can sometimes reload Python modules from the FreeCAD Python console.
 
 ```py
 import importlib
@@ -75,27 +75,153 @@ Key entrypoints:
   - Commands open/activate the UI panel.
 - `freecad/datamanager_wb/main_panel.py`
   - Loads the Qt `.ui` file and implements the panel widget.
-  - Persists small UI state via `QtCore.QSettings`.
+
+Key UI layers and boundaries:
+
+- `freecad/datamanager_wb/main_panel_presenter.py`
+  - Presenter responsible for formatting and computing UI list state.
+  - Keeps the Qt widget thin.
+- Ports/adapters that isolate runtime dependencies:
+  - `freecad/datamanager_wb/freecad_context.py` / `freecad/datamanager_wb/freecad_port.py`
+    - FreeCAD runtime access (`FreeCadContext`, `FreeCadPort`, `get_port(ctx)`).
+  - `freecad/datamanager_wb/app_port.py`
+    - Translation boundary (`App.Qt.translate`).
+  - `freecad/datamanager_wb/gui_port.py`
+    - FreeCADGui boundary (UI loading, MDI integration).
+  - `freecad/datamanager_wb/settings_port.py`
+    - Settings persistence boundary (wraps Qt settings).
+
+Implementation note:
+
+- Entry modules are structured with guarded/lazy imports so they can be imported by tooling/tests outside FreeCAD.
+
+## Where to put changes (by layer)
+
+The project is structured so that most logic can be tested outside FreeCAD.
+
+When adding new behavior, prefer placing it in the lowest layer that makes sense:
+
+- **UI wiring and rendering (Qt)**
+  - `freecad/datamanager_wb/main_panel.py`
+  - Keep this layer focused on widget lookup, signal wiring, and applying render state.
+- **Presenter (UI state + formatting)**
+  - `freecad/datamanager_wb/main_panel_presenter.py`
+  - Owns list state computation, display formatting (Name vs Label), and orchestration plans.
+- **UI-facing orchestration (FreeCAD refresh boundary)**
+  - `freecad/datamanager_wb/panel_controller.py`
+  - Owns document recompute + GUI refresh through `FreeCadPort`.
+- **Reusable tab logic (domain-agnostic)**
+  - `freecad/datamanager_wb/tab_controller.py`
+  - Filtering, only-unused logic, selection rules.
+- **Domain adapters (VarSets / Spreadsheets)**
+  - `freecad/datamanager_wb/varset_datasource.py`
+  - `freecad/datamanager_wb/spreadsheet_datasource.py`
+- **Low-level queries/mutations**
+  - `freecad/datamanager_wb/varset_query.py`, `freecad/datamanager_wb/varset_mutations.py`
+  - `freecad/datamanager_wb/spreadsheet_query.py`, `freecad/datamanager_wb/spreadsheet_mutations.py`
+- **Runtime boundaries (ports/adapters)**
+  - `freecad/datamanager_wb/freecad_context.py`, `freecad/datamanager_wb/freecad_port.py`
+  - `freecad/datamanager_wb/app_port.py`, `freecad/datamanager_wb/gui_port.py`, `freecad/datamanager_wb/settings_port.py`
 
 ## Developer tooling
 
-The repository uses a `Taskfile.yml` to standardize common workflows.
+This section describes the tooling and recommended workflow.
+
+### Taskfile
+
+The repository uses a `Taskfile.yml` to standardize common workflows. Note that the set of tasks is my python application development and includes tasks not directly related to FreeCAD Addon development, for example the release tasks.
+
+### Required tools
+
+`task check` is an orchestration task that calls formatting, linting, metrics, and test sub-tasks. The following tools are expected to be available (either as system executables, or installed into the active `uv` environment).
+
+- **task**
+  - Task runner used to invoke `task check` and its sub-tasks.
+- **uv**
+  - Python environment + tool runner (`uv run ...`, `uv tool install ...`).
+- **python3**
+  - Used both directly (small helper scripts) and via `uv run python`.
+- **git**
+  - Checked by `task env:check`.
+- **pipx / pipxu**
+  - Checked by `task env:check` (used for local deployment tasks).
+
+Tools commonly invoked under `uv run ...` by `task check`:
+
+- **ruff**
+  - Formatting and linting.
+- **mypy**
+  - Type checking.
+- **pytest**
+  - Test runner (with plugins configured in `pyproject.toml`, e.g. xdist/timeout).
+- **pymarkdownlnt**
+  - Markdown linting.
+- **mdformat**
+  - Markdown formatting.
+- **deadcode**
+  - Dead-code detection.
+- **radon**
+  - Complexity checks.
+
+Additional executables used by some subtasks:
+
+- **bash**, **grep**, **sed**, **find**
+  - Used by various helper tasks (shell wrappers and simple checks).
+- **designer6**
+  - Qt Designer (checked by `task env:check`; used when editing `.ui` files).
 
 Common commands:
 
 - `task check`
   - Runs formatting, linters, deadcode checks, complexity checks, and tests.
 - `task docs`
-  - Builds the MkDocs site.
+  - Builds the MkDocs site and starts a local server.
 - `task lint:markdown`
   - Runs markdown lint.
+- `task help`
+  - Lists available tasks.
+- `task help:lint`
+  - Lists available lint tasks.
+- `task help:all`
+  - Lists all tasks.
 
-TBD:
+Taskfile documentation:
 
-- Whether a smaller “fast” task should exist (for example `task lint` without running tests).
-- Whether CI should run the full `task check` or a subset.
+- [Taskfile documentation](https://taskfile.dev/)
 
-## Testing
+Taskfile locations:
+
+- Taskfile.yml
+- taskfiles/Taskfile-\*.yml
+
+### uv
+
+The `uv` tool is used for dependency management. It is a drop-in replacement for `pip` and `poetry`.
+
+Run: `uv sync` or `task env:install` to install dependencies and setup the virtual environment, `.venv\`.
+
+### Editing the Qt .ui file
+
+The panel UI is defined in:
+
+- `freecad/datamanager_wb/resources/ui/main_panel.ui`
+
+Notes:
+
+- Use `designer6` (Qt Designer) to edit the `.ui` file.
+- Keep widget `objectName` values stable. `main_panel.py` expects specific names at runtime.
+- After editing:
+  - Run `task check`.
+  - Launch FreeCAD and open the panel to verify the UI loads and widgets are found.
+
+### Metrics
+
+A custom metrics tool, `scripts/dev-metrics.py`, is provided to measure code quality metrics. This is normally ran with `task metrics`.
+
+### Testing
+
+`task test` runs the test suite.
+`task test:coverage` runs tests with coverage.
 
 The test suite is designed to run outside of FreeCAD when possible.
 
@@ -104,7 +230,78 @@ Guidance:
 - Prefer unit tests for parsing/formatting helpers and query logic that can be exercised without a live FreeCAD GUI.
 - FreeCAD and Qt integration is inherently harder to test; keep GUI-facing behavior thin and delegate logic into testable helpers.
 
-### Dependency injection for FreeCAD runtime access
+### Code Quality
+
+`task check` runs formatting, linters, deadcode checks, complexity checks, and tests.
+`task metrics` runs code quality metrics.
+
+## Recommended workflow
+
+Fork the [repository on GitHub](https://github.com/royw/freecad_datamanager_workbench) and clone it to your local machine. Then change into the cloned directory.
+
+### Initial setup
+
+Initial setup will install dependencies and verify that the required tools are installed and working:
+
+1. `task env:install`
+1. `task check`
+1. `task test`
+1. `task docs`
+
+### Normal development workflow
+
+The normal development workflow cycle is:
+
+1. change code
+1. `task check` $ verify no errors or warnings
+1. commit changes
+
+Make sure to update the documentation when your changes affect it:
+
+1. change documenation
+1. `task docs` # verify no errors or warnings and then the docs are correct using the local server.
+1. commit changes
+
+When your changes are finished:
+
+1. `task check` # verify no errors or warnings
+1. `task metrics` # for your own edification
+1. `git push` # push your changes to your fork
+1. create a pull request on GitHub.
+
+Note: The master repository maintainer is responsible for updating the version number using `task version:bump` or `task version:minor` or `task version:major`.
+
+## Manual smoke test (in FreeCAD)
+
+Unit tests are designed to run outside FreeCAD, but the workbench still needs quick manual validation in FreeCAD before a release.
+
+Suggested checklist:
+
+- **Workbench registration**
+  - Restart FreeCAD.
+  - Confirm the workbench appears in the selector.
+- **Commands and panel**
+  - Run both commands (VarSets and Aliases) and confirm they open/focus the panel.
+- **Multi-document behavior**
+  - Create/open two documents.
+  - Switch active document and confirm the panel refreshes correctly.
+- **VarSets tab**
+  - Filter parents/children.
+  - Toggle Only Unused.
+  - Remove unused variables (verify document recompute is stable).
+  - Toggle Name/Label mode and verify display formatting.
+- **Aliases tab**
+  - Filter parents/children.
+  - Toggle Only Unused.
+  - Remove unused aliases.
+  - Toggle Name/Label mode and verify display formatting.
+- **Expression list actions**
+  - Select an expression entry and confirm selection behavior (object highlight) is correct.
+- **Persistence**
+  - Close and reopen the panel.
+  - Verify splitter state and display-mode settings persisted.
+
+## Dependency injection for FreeCAD runtime access
 
 Non-UI modules avoid importing `FreeCAD` / `FreeCADGui` at module import time. Instead, functions and classes that need access to the FreeCAD runtime accept an optional `ctx: FreeCadContext | None` argument.
 
@@ -113,6 +310,15 @@ Notes:
 1. When `ctx` is omitted, the code falls back to the live FreeCAD runtime via `get_runtime_context()`.
 1. In unit tests, you can pass a fake `FreeCadContext` (or `None` if the test only exercises pure logic).
 1. For code that delegates through the query/mutation layer, passing `ctx` at the controller/data-source level ensures the entire call chain stays testable.
+
+UI ports:
+
+- `MainPanel` accepts injected ports for UI runtime boundaries:
+  - `GuiPort` (FreeCADGui / UI loading and MDI integration)
+  - `AppPort` (translation)
+  - `SettingsPort` (persisted UI settings)
+
+These ports default to runtime adapters, but can be replaced with fakes in unit tests.
 
 Common patterns:
 
@@ -132,6 +338,8 @@ TBD:
 ## Packaging and distribution (FreeCAD Addon)
 
 This workbench is intended to be installed via the FreeCAD Addon ecosystem.
+
+While the workbench can be packaged and distributed via PyPI (there are tasks for this), it is not recommended. Instead the workbench is intended to be installed via the FreeCAD Addon Manager which runs the workbench from the source tree.
 
 Notes:
 
@@ -384,11 +592,12 @@ If you want tree items to auto-expand when selecting objects in the 3D view, thi
 
 #### Persisting UI state
 
-The UI state is persisted using `QtCore.QSettings`.
+The UI state is persisted through `SettingsPort`.
 
 Implementation:
 
-- `freecad/datamanager_wb/main_panel.py:_get_settings`
+- `freecad/datamanager_wb/settings_port.py` (`SettingsPort`, `QtSettingsAdapter`)
+- `freecad/datamanager_wb/main_panel.py` (uses injected `SettingsPort`)
 
 Persisted keys:
 
