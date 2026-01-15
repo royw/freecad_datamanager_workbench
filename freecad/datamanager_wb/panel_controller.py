@@ -10,7 +10,7 @@ from .freecad_context import FreeCadContext, get_runtime_context
 from .freecad_port import FreeCadPort, get_port
 from .gui_selection import select_object_from_expression_item
 from .parent_child_ref import ParentChildRef
-from .spreadsheet_datasource import SpreadsheetDataSource
+from .spreadsheets.spreadsheet_datasource import SpreadsheetDataSource
 from .tab_controller import TabController
 from .tab_datasource import PostRemoveUpdate, RemoveUnusedAndUpdateResult, RemoveUnusedResult
 from .varsets.varset_datasource import VarsetDataSource

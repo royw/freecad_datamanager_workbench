@@ -115,10 +115,10 @@ When adding new behavior, prefer placing it in the lowest layer that makes sense
   - Filtering, only-unused logic, selection rules.
 - **Domain adapters (VarSets / Spreadsheets)**
   - `freecad/datamanager_wb/varsets/varset_datasource.py`
-  - `freecad/datamanager_wb/spreadsheet_datasource.py`
+  - `freecad/datamanager_wb/spreadsheets/spreadsheet_datasource.py`
 - **Low-level queries/mutations**
   - `freecad/datamanager_wb/varsets/varset_query.py`, `freecad/datamanager_wb/varsets/varset_mutations.py`
-  - `freecad/datamanager_wb/spreadsheet_query.py`, `freecad/datamanager_wb/spreadsheet_mutations.py`
+  - `freecad/datamanager_wb/spreadsheets/spreadsheet_query.py`, `freecad/datamanager_wb/spreadsheets/spreadsheet_mutations.py`
 - **Runtime boundaries (ports/adapters)**
   - `freecad/datamanager_wb/freecad_context.py`, `freecad/datamanager_wb/freecad_port.py`
   - `freecad/datamanager_wb/app_port.py`, `freecad/datamanager_wb/gui_port.py`, `freecad/datamanager_wb/settings_port.py`
@@ -489,7 +489,7 @@ Aliases are spreadsheet cell aliases.
 
 Implementation:
 
-- `freecad/datamanager_wb/spreadsheet_query.py:getAliases`
+- `freecad/datamanager_wb/spreadsheets/spreadsheet_query.py:getAliases`
 
 Details:
 
@@ -502,7 +502,7 @@ The workbench discovers spreadsheets by scanning the active document and selecti
 
 Implementation:
 
-- `freecad/datamanager_wb/spreadsheet_query.py:getSpreadsheets`
+- `freecad/datamanager_wb/spreadsheets/spreadsheet_query.py:getSpreadsheets`
 
 ### How alias references are discovered
 
@@ -513,7 +513,7 @@ Alias references are discovered in two places:
 
 Implementation:
 
-- `freecad/datamanager_wb/spreadsheet_query.py:getAliasReferences`
+- `freecad/datamanager_wb/spreadsheets/spreadsheet_query.py:getAliasReferences`
 
 Details:
 

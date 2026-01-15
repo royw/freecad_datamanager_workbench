@@ -30,9 +30,9 @@ This document describes the current architecture of the **DataManager** FreeCAD 
     - `freecad/datamanager_wb/varsets/varset_mutations.py` (low-level FreeCAD VarSet mutations)
     - `freecad/datamanager_wb/varsets/varset_datasource.py` (adapts varset APIs to generic tab API)
   - Spreadsheet Aliases:
-    - `freecad/datamanager_wb/spreadsheet_query.py`
-    - `freecad/datamanager_wb/spreadsheet_mutations.py`
-    - `freecad/datamanager_wb/spreadsheet_datasource.py` (adapts spreadsheet APIs to generic tab API)
+    - `freecad/datamanager_wb/spreadsheets/spreadsheet_query.py`
+    - `freecad/datamanager_wb/spreadsheets/spreadsheet_mutations.py`
+    - `freecad/datamanager_wb/spreadsheets/spreadsheet_datasource.py` (adapts spreadsheet APIs to generic tab API)
 - **Ports & adapters (FreeCAD/GUI boundaries)**
   - FreeCAD runtime:
     - `freecad/datamanager_wb/freecad_context.py` (`FreeCadContext` + `get_runtime_context()`)
@@ -256,9 +256,9 @@ Aliases are backed by FreeCAD’s Spreadsheet objects.
 
 The alias implementation is split into:
 
-- `spreadsheet_query.py` (discover spreadsheets, discover aliases, find references)
-- `spreadsheet_mutations.py` (remove alias)
-- `spreadsheet_datasource.py` (adapter to the generic protocol)
+- `spreadsheets/spreadsheet_query.py` (discover spreadsheets, discover aliases, find references)
+- `spreadsheets/spreadsheet_mutations.py` (remove aliases)
+- `spreadsheets/spreadsheet_datasource.py` (adapter to the generic protocol)
 
 The query/mutation layer is designed to tolerate FreeCAD API differences across versions (for example, environments that only provide `getAlias(cell)` rather than bulk alias enumeration).
 

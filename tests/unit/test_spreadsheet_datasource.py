@@ -1,7 +1,7 @@
 from __future__ import annotations
 
 from freecad.datamanager_wb.parent_child_ref import ParentChildRef
-from freecad.datamanager_wb.spreadsheet_datasource import SpreadsheetDataSource
+from freecad.datamanager_wb.spreadsheets.spreadsheet_datasource import SpreadsheetDataSource
 
 
 def test_get_child_refs_sorts(monkeypatch) -> None:
@@ -9,7 +9,7 @@ def test_get_child_refs_sorts(monkeypatch) -> None:
     ds = SpreadsheetDataSource()
 
     monkeypatch.setattr(
-        "freecad.datamanager_wb.spreadsheet_datasource.getSpreadsheetAliasNames",
+        "freecad.datamanager_wb.spreadsheets.spreadsheet_datasource.getSpreadsheetAliasNames",
         lambda sheet_name, *, ctx=None: ["b", "a"],
     )
 
@@ -30,7 +30,7 @@ def test_get_expression_items_counts_and_operator(monkeypatch) -> None:
         }
 
     monkeypatch.setattr(
-        "freecad.datamanager_wb.spreadsheet_datasource.getSpreadsheetAliasReferences",
+        "freecad.datamanager_wb.spreadsheets.spreadsheet_datasource.getSpreadsheetAliasReferences",
         fake_refs,
     )
 
@@ -52,11 +52,11 @@ def test_remove_unused_children(monkeypatch) -> None:
         return {}
 
     monkeypatch.setattr(
-        "freecad.datamanager_wb.spreadsheet_datasource.getSpreadsheetAliasReferences",
+        "freecad.datamanager_wb.spreadsheets.spreadsheet_datasource.getSpreadsheetAliasReferences",
         fake_refs,
     )
     monkeypatch.setattr(
-        "freecad.datamanager_wb.spreadsheet_datasource.removeSpreadsheetAlias",
+        "freecad.datamanager_wb.spreadsheets.spreadsheet_datasource.removeSpreadsheetAlias",
         lambda sheet_name, alias_name, *, ctx=None: True,
     )
 

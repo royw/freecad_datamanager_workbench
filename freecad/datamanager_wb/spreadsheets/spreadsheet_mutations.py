@@ -6,8 +6,8 @@ alias definition.
 
 from collections.abc import Mapping
 
-from .freecad_context import FreeCadContext
-from .freecad_port import get_port
+from ..freecad_context import FreeCadContext
+from ..freecad_port import get_port
 
 
 def _iter_cell_coordinates(*, max_rows: int, max_cols: int) -> list[str]:

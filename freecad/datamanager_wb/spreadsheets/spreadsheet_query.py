@@ -7,15 +7,15 @@ searching expressions for alias references.
 import re
 from collections.abc import Iterable, Iterator, Mapping
 
-from .freecad_context import FreeCadContext
-from .freecad_helpers import (
+from ..freecad_context import FreeCadContext
+from ..freecad_helpers import (
     build_expression_key,
     get_copy_on_change_names,
     get_object_name,
     iter_document_objects,
     iter_named_expression_engine_entries,
 )
-from .freecad_port import get_port
+from ..freecad_port import get_port
 
 _CELL_RE = re.compile(r"^[A-Z]+[0-9]+$")
 
