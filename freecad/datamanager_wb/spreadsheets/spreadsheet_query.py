@@ -398,6 +398,9 @@ def getSpreadsheetAliasReferences(
     if alias_name is not None:
         _add_internal_alias_refs(sheet=sheet, alias_re=alias_re, results=results)
 
-    results.update(_collect_expression_engine_refs(doc=doc, patterns=patterns, alias_re=alias_re))
+    engine_alias_re = None if alias_name is not None else alias_re
+    results.update(
+        _collect_expression_engine_refs(doc=doc, patterns=patterns, alias_re=engine_alias_re)
+    )
 
     return results

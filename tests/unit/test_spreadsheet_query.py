@@ -30,3 +30,57 @@ def test_build_alias_search_regex_respects_word_boundaries() -> None:
     assert not spreadsheet_query._matches_expression(
         expr_text="foobar + 1", patterns=patterns, alias_re=alias_re
     )
+
+
+def test_get_spreadsheet_alias_references_does_not_match_other_spreadsheet_prefix(monkeypatch) -> None:
+    """getSpreadsheetAliasReferences should not match CopyOnChange clones like Params001 when querying Params."""
+
+    class _FakePort:
+        def __init__(self) -> None:
+            self._doc = object()
+
+        def get_active_document(self):
+            return self._doc
+
+        def get_typed_object(self, _doc, name: str, *, type_id: str):
+            _type_id = type_id
+
+            class _Sheet:
+                def __init__(self, *, sheet_name: str) -> None:
+                    self.Name = sheet_name
+                    self.Label = sheet_name
+
+            return _Sheet(sheet_name=name)
+
+    fake_port = _FakePort()
+
+    monkeypatch.setattr(
+        spreadsheet_query,
+        "get_port",
+        lambda _ctx=None: fake_port,
+    )
+    monkeypatch.setattr(
+        spreadsheet_query,
+        "_get_active_spreadsheet",
+        lambda spreadsheet_name, *, ctx=None: fake_port.get_typed_object(
+            fake_port.get_active_document(), spreadsheet_name, type_id="Spreadsheet::Sheet"
+        ),
+    )
+
+    def _fake_iter_named_expression_engine_entries(_doc):
+        yield "LinearPattern", "Occurrences", "<<Params>>.BoomSegments"
+        yield "LinearPattern013", "Occurrences", "<<Params001>>.BoomSegments"
+
+    monkeypatch.setattr(
+        spreadsheet_query,
+        "iter_named_expression_engine_entries",
+        _fake_iter_named_expression_engine_entries,
+    )
+    monkeypatch.setattr(
+        spreadsheet_query,
+        "_add_internal_alias_refs",
+        lambda *, sheet, alias_re, results: None,
+    )
+
+    refs = spreadsheet_query.getSpreadsheetAliasReferences("Params", "BoomSegments")
+    assert list(refs.keys()) == ["LinearPattern.Occurrences"]
