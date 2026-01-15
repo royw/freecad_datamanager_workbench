@@ -2,7 +2,6 @@ set(Namespace_SRCS
         freecad/datamanager_wb/__init__.py
         freecad/datamanager_wb/init_gui.py
         freecad/datamanager_wb/entrypoints/__init__.py
-        freecad/datamanager_wb/entrypoints/init_gui.py
         freecad/datamanager_wb/entrypoints/commands.py
         freecad/datamanager_wb/entrypoints/workbench.py
         freecad/datamanager_wb/ui/__init__.py
