@@ -68,17 +68,17 @@ Key entrypoints:
 - `freecad/datamanager_wb/init_gui.py`
   - FreeCAD GUI initialization hook.
   - Registers commands and adds the workbench (`Gui.addWorkbench`).
-- `freecad/datamanager_wb/workbench.py`
+- `freecad/datamanager_wb/entrypoints/workbench.py`
   - Defines `DataManagerWorkbench(Gui.Workbench)` (menus/toolbars, activation logging).
-- `freecad/datamanager_wb/commands.py`
+- `freecad/datamanager_wb/entrypoints/commands.py`
   - Defines and registers FreeCAD commands.
   - Commands open/activate the UI panel.
-- `freecad/datamanager_wb/main_panel.py`
+- `freecad/datamanager_wb/ui/main_panel.py`
   - Loads the Qt `.ui` file and implements the panel widget.
 
 Key UI layers and boundaries:
 
-- `freecad/datamanager_wb/main_panel_presenter.py`
+- `freecad/datamanager_wb/ui/main_panel_presenter.py`
   - Presenter responsible for formatting and computing UI list state.
   - Keeps the Qt widget thin.
 - Ports/adapters that isolate runtime dependencies:
@@ -102,13 +102,13 @@ The project is structured so that most logic can be tested outside FreeCAD.
 When adding new behavior, prefer placing it in the lowest layer that makes sense:
 
 - **UI wiring and rendering (Qt)**
-  - `freecad/datamanager_wb/main_panel.py`
+  - `freecad/datamanager_wb/ui/main_panel.py`
   - Keep this layer focused on widget lookup, signal wiring, and applying render state.
 - **Presenter (UI state + formatting)**
-  - `freecad/datamanager_wb/main_panel_presenter.py`
+  - `freecad/datamanager_wb/ui/main_panel_presenter.py`
   - Owns list state computation, display formatting (Name vs Label), and orchestration plans.
 - **UI-facing orchestration (FreeCAD refresh boundary)**
-  - `freecad/datamanager_wb/panel_controller.py`
+  - `freecad/datamanager_wb/ui/panel_controller.py`
   - Owns document recompute + GUI refresh through `FreeCadPort`.
 - **Reusable tab logic (domain-agnostic)**
   - `freecad/datamanager_wb/domain/tab_controller.py`
@@ -597,7 +597,7 @@ The UI state is persisted through `SettingsPort`.
 Implementation:
 
 - `freecad/datamanager_wb/ports/settings_port.py` (`SettingsPort`, `QtSettingsAdapter`)
-- `freecad/datamanager_wb/main_panel.py` (uses injected `SettingsPort`)
+- `freecad/datamanager_wb/ui/main_panel.py` (uses injected `SettingsPort`)
 
 Persisted keys:
 

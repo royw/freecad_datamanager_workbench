@@ -81,8 +81,6 @@ strict_equality = true
 # FreeCAD GUI entrypoints depend on runtime FreeCAD/Qt types; exclude from strict mypy.
 exclude = [
     '^freecad/datamanager_wb/init_gui\.py$',
-    '^freecad/datamanager_wb/main_panel\.py$',
-    '^freecad/datamanager_wb/workbench\.py$',
     '^freecad/datamanager_wb/ui/.*\.py$',
     '^freecad/datamanager_wb/entrypoints/.*\.py$',
     '^scripts/.*$',
@@ -117,8 +115,6 @@ ignore_missing_imports = true
 [[tool.mypy.overrides]]
 module = [
     "freecad.datamanager_wb.init_gui",
-    "freecad.datamanager_wb.main_panel",
-    "freecad.datamanager_wb.workbench",
     "freecad.datamanager_wb.ui.*",
     "freecad.datamanager_wb.entrypoints.*",
 ]

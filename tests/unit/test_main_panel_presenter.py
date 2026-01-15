@@ -1,7 +1,7 @@
 from __future__ import annotations
 
 from freecad.datamanager_wb.domain.expression_item import ExpressionItem
-from freecad.datamanager_wb.main_panel_presenter import MainPanelPresenter
+from freecad.datamanager_wb.ui.main_panel_presenter import MainPanelPresenter
 from freecad.datamanager_wb.domain.parent_child_ref import ParentChildRef
 
 

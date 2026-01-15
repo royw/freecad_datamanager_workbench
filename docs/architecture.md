@@ -14,15 +14,15 @@ This document describes the current architecture of the **DataManager** FreeCAD 
 
 - **FreeCAD integration / entrypoints (runtime)**
   - `freecad/datamanager_wb/init_gui.py`
-  - `freecad/datamanager_wb/workbench.py`
-  - `freecad/datamanager_wb/commands.py`
+  - `freecad/datamanager_wb/entrypoints/workbench.py`
+  - `freecad/datamanager_wb/entrypoints/commands.py`
 - **UI layer (Qt)**
-  - `freecad/datamanager_wb/main_panel.py` (Qt widget wiring + rendering)
+  - `freecad/datamanager_wb/ui/main_panel.py` (Qt widget wiring + rendering)
   - `freecad/datamanager_wb/resources/ui/main_panel.ui`
 - **Presenter layer**
-  - `freecad/datamanager_wb/main_panel_presenter.py` (list state, formatting, orchestration plans)
+  - `freecad/datamanager_wb/ui/main_panel_presenter.py` (list state, formatting, orchestration plans)
 - **Controller layer**
-  - `freecad/datamanager_wb/panel_controller.py` (UI-facing facade; owns recompute/GUI refresh)
+  - `freecad/datamanager_wb/ui/panel_controller.py` (UI-facing facade; owns recompute/GUI refresh)
   - `freecad/datamanager_wb/domain/tab_controller.py` (generic per-tab logic)
 - **Data access layer**
   - VarSets:
@@ -46,7 +46,7 @@ This document describes the current architecture of the **DataManager** FreeCAD 
   - `freecad/datamanager_wb/domain/parent_child_ref.py` (`ParentChildRef` used for list items)
   - `freecad/datamanager_wb/freecad_helpers.py` (shared FreeCAD document/query helpers)
   - `freecad/datamanager_wb/domain/expression_item.py` (`ExpressionItem` for expression list UI)
-  - `freecad/datamanager_wb/gui_selection.py` (select referenced objects from expression items)
+  - `freecad/datamanager_wb/ui/gui_selection.py` (select referenced objects from expression items)
   - `freecad/datamanager_wb/domain/parsing_helpers.py` (parsing/format helpers for display strings)
 - **Resources**
   - `freecad/datamanager_wb/resources.py` (absolute paths to icons/translations/ui)
