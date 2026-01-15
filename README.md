@@ -6,6 +6,8 @@ Manages FreeCAD VarSets and aliases.
 
 Documentation: [royw.github.io/freecad_datamanager_workbench](https://royw.github.io/freecad_datamanager_workbench/)
 
+Special thanks to OldBeard for his testing of the beta workbench and many great suggestions!
+
 ## Suggestion FreeCAD Preferences
 
 - Enable: General --> Selection --> Tree Selection Behavior --> Auto expand tree item when the corresponding object is selected in the 3D view.
