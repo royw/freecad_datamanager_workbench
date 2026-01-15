@@ -45,7 +45,6 @@ def extract_tests_from_file(file_path: Path) -> list[TestInfo]:
             for item in node.body:
                 if isinstance(item, ast.FunctionDef) and item.name.startswith("test_"):
                     docstring = ast.get_docstring(item) or "No description provided."
-                    # Clean up docstring - take first line only
                     docstring = docstring.split("\n")[0].strip()
                     tests.append(
                         TestInfo(
@@ -55,6 +54,18 @@ def extract_tests_from_file(file_path: Path) -> list[TestInfo]:
                             file_path=str(file_path.relative_to(Path.cwd())),
                         )
                     )
+
+        if isinstance(node, ast.FunctionDef) and node.name.startswith("test_"):
+            docstring = ast.get_docstring(node) or "No description provided."
+            docstring = docstring.split("\n")[0].strip()
+            tests.append(
+                TestInfo(
+                    class_name="(module)",
+                    method_name=node.name,
+                    docstring=docstring,
+                    file_path=str(file_path.relative_to(Path.cwd())),
+                )
+            )
 
     return tests
 
@@ -115,8 +126,11 @@ def main() -> None:
 
     # Collect all test files
     test_files = {
-        "E2E Tests": list((tests_dir / "e2e").glob("test_*.py")),
         "Unit Tests": list((tests_dir / "unit").glob("test_*.py")),
+        "Functional Tests": list((tests_dir / "functional").glob("test_*.py")),
+        "Integration Tests": list((tests_dir / "integration").glob("test_*.py")),
+        "E2E Tests": list((tests_dir / "e2e").glob("test_*.py")),
+        "Regression Tests": list((tests_dir / "regression").glob("test_*.py")),
     }
 
     # Extract test information
