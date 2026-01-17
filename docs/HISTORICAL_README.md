@@ -1,5 +1,7 @@
 # FreeCAD Workbench-Starterkit
 
+[https://github.com/FreeCAD/freecad.workbench_starterkit](https://github.com/FreeCAD/freecad.workbench_starterkit)
+
 ## Compatibility (important)
 
 :exclamation: **Don't use this repo if you care about py2-support and support of freecad < 0.18. If so please have a look at the traditional workbench structure.**

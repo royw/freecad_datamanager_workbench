@@ -4,6 +4,8 @@
 
 This repository was originally created from the FreeCAD Workbench-Starterkit template. The original template documentation is preserved here:
 
+- [https://github.com/FreeCAD/freecad.workbench_starterkit](https://github.com/FreeCAD/freecad.workbench_starterkit)
+
 - [HISTORICAL_README.md](HISTORICAL_README.md)
 
 ## Installing the workbench for development (symlink)
