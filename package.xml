@@ -1,0 +1,82 @@
+<?xml
+    version = '1.0'
+    encoding = 'UTF-8'
+    standalone = 'no'
+?>
+<package
+    format = '1'
+    xmlns = 'https://wiki.freecad.org/Package_Metadata'
+>
+
+    <!--[ Versions ]―――――――――――――――――――――――――――――――――――――――――――――――――――――――――-->
+
+    <freecadmin>1.0.2</freecadmin>
+    <version>1.0.0</version>
+    <date>2025-12-24</date>
+
+    <!--[ Dependencies ]―――――――――――――――――――――――――――――――――――――――――――――――――――――-->
+
+
+    <!--[ Info ]―――――――――――――――――――――――――――――――――――――――――――――――――――――――――――――-->
+
+    <description>A FreeCAD workbench for managing varsets and aliases.</description>
+    <name>Minimal</name>
+
+    <!--[ Tags ]―――――――――――――――――――――――――――――――――――――――――――――――――――――――――――――-->
+
+    <tag>DataManager</tag>
+    <tag>Varset</tag>
+    <tag>Alias</tag>
+
+    <!--[ Maintainers ]――――――――――――――――――――――――――――――――――――――――――――――――――――――-->
+
+    <maintainer
+        email = 'roy@wright.org'
+    >Roy Wright</maintainer>
+
+    <!--[ Authors ]――――――――――――――――――――――――――――――――――――――――――――――――――――――――――-->
+
+    <author
+        email = 'roy@wright.org'
+    >Roy Wright</author>
+
+    <!--[ Licenses ]―――――――――――――――――――――――――――――――――――――――――――――――――――――――――-->
+
+    <license
+        file = 'LICENSE-CODE'
+    >LGPL-3.0-or-later</license>
+
+    <license
+        file = 'LICENSE-ICON'
+    >CC-BY-SA-4.0</license>
+
+    <!--[ Icon ]―――――――――――――――――――――――――――――――――――――――――――――――――――――――――――――-->
+
+    <icon>freecad/datamanager_wb/resources/icons/Logo.svg</icon>
+
+    <!--[ Urls ]―――――――――――――――――――――――――――――――――――――――――――――――――――――――――――――-->
+
+    <url
+        type = 'documentation'
+    >https://github.com/royw/FreeCAD_Workbench_DataManager/tree/Latest/Documentation</url>
+
+    <url
+        branch = 'Latest'
+        type = 'repository'
+    >https://github.com/royw/FreeCAD_Workbench_DataManager</url>
+
+    <url
+        type = 'bugtracker'
+    >https://github.com/royw/FreeCAD_Workbench_DataManager/issues</url>
+
+    <url
+        type = 'readme'
+    >https://github.com/royw/FreeCAD_Workbench_DataManager/blob/Latest/Resources/Documents/Overview.md</url>
+
+    <!--[ Content ]――――――――――――――――――――――――――――――――――――――――――――――――――――――――――-->
+
+    <content>
+        <other/>
+    </content>
+
+</package>

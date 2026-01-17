@@ -33,7 +33,7 @@ set(Namespace_SRCS
         freecad/datamanager_wb/varsets/varset_mutations.py
         freecad/datamanager_wb/varsets/varset_query.py
         freecad/datamanager_wb/version.py
-        freecad/datamanager_wb/resources/icons/datamanager_wb.svg
+        freecad/datamanager_wb/resources/icons/Logo.svg
         freecad/datamanager_wb/resources/icons/Varsets.svg
         freecad/datamanager_wb/resources/icons/Aliases.svg
         freecad/datamanager_wb/resources/ui/main_panel.ui
