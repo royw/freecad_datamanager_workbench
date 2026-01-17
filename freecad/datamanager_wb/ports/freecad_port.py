@@ -1,3 +1,6 @@
+# SPDX-License-Identifier: LGPL-3.0-or-later
+# SPDX-FileNotice: Part of the DataManager addon.
+
 """Ports and adapters for FreeCAD runtime access.
 
 This module defines a small "port" interface that encapsulates the parts of the

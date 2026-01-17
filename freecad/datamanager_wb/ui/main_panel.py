@@ -1,3 +1,6 @@
+# SPDX-License-Identifier: LGPL-3.0-or-later
+# SPDX-FileNotice: Part of the DataManager addon.
+
 """Main Qt panel for the DataManager workbench.
 
 Loads the `.ui` file, finds widgets, wires signals, and delegates operations to

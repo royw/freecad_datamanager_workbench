@@ -1,3 +1,6 @@
+# SPDX-License-Identifier: LGPL-3.0-or-later
+# SPDX-FileNotice: Part of the DataManager addon.
+
 """Query helpers for spreadsheet aliases.
 
 Provides discovery of spreadsheet objects, enumeration of alias names, and

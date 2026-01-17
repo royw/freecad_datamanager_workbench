@@ -1,3 +1,6 @@
+# SPDX-License-Identifier: LGPL-3.0-or-later
+# SPDX-FileNotice: Part of the DataManager addon.
+
 """Tab data source protocol used by the generic tab controller.
 
 Defines the `TabDataSource` protocol along with shared dataclasses used for

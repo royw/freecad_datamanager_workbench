@@ -1,3 +1,6 @@
+# SPDX-License-Identifier: LGPL-3.0-or-later
+# SPDX-FileNotice: Part of the DataManager addon.
+
 """Runtime version checks for supported FreeCAD and Python versions.
 
 This module validates that the current FreeCAD and Python runtime meet the

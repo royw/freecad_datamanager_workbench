@@ -1,3 +1,6 @@
+# SPDX-License-Identifier: LGPL-3.0-or-later
+# SPDX-FileNotice: Part of the DataManager addon.
+
 """App port abstraction for FreeCAD-dependent behavior.
 
 This module isolates FreeCAD (App) access behind a small interface so modules can

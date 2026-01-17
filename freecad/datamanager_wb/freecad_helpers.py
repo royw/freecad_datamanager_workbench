@@ -1,3 +1,6 @@
+# SPDX-License-Identifier: LGPL-3.0-or-later
+# SPDX-FileNotice: Part of the DataManager addon.
+
 """Shared helper utilities for interacting with FreeCAD documents.
 
 These helpers centralize small FreeCAD-facing operations (document access,

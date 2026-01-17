@@ -1,3 +1,6 @@
+# SPDX-License-Identifier: LGPL-3.0-or-later
+# SPDX-FileNotice: Part of the DataManager addon.
+
 """Query helpers for FreeCAD VarSets.
 
 Provides functions to list varsets, list their variables, and find expression

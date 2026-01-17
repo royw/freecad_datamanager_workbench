@@ -1,3 +1,6 @@
+# SPDX-License-Identifier: LGPL-3.0-or-later
+# SPDX-FileNotice: Part of the DataManager addon.
+
 """Mutation helpers for spreadsheet aliases.
 
 Contains operations that modify spreadsheets, such as clearing/removing an

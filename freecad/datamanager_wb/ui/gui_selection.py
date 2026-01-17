@@ -1,3 +1,6 @@
+# SPDX-License-Identifier: LGPL-3.0-or-later
+# SPDX-FileNotice: Part of the DataManager addon.
+
 """GUI selection helpers for the DataManager workbench.
 
 This module contains small utilities for selecting FreeCAD objects referenced

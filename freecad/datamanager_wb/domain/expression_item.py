@@ -1,3 +1,6 @@
+# SPDX-License-Identifier: LGPL-3.0-or-later
+# SPDX-FileNotice: Part of the DataManager addon.
+
 """Lightweight representation of an expression binding.
 
 This module defines a small dataclass used to display and select expression

@@ -1,3 +1,6 @@
+# SPDX-License-Identifier: LGPL-3.0-or-later
+# SPDX-FileNotice: Part of the DataManager addon.
+
 """Parsing helpers for workbench UI display strings.
 
 This module centralizes small string parsers used to interpret `parent.child`

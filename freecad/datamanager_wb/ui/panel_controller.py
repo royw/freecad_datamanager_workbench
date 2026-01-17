@@ -1,3 +1,6 @@
+# SPDX-License-Identifier: LGPL-3.0-or-later
+# SPDX-FileNotice: Part of the DataManager addon.
+
 """UI-facing controller facade for the DataManager MainPanel.
 
 This module provides a higher-level API used by the GUI layer. It delegates

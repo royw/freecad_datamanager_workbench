@@ -1,3 +1,6 @@
+# SPDX-License-Identifier: LGPL-3.0-or-later
+# SPDX-FileNotice: Part of the DataManager addon.
+
 """Spreadsheet-backed `TabDataSource` for the Aliases tab.
 
 Adapts spreadsheet alias queries/mutations to the generic `TabController`.

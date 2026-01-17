@@ -1,3 +1,6 @@
+# SPDX-License-Identifier: LGPL-3.0-or-later
+# SPDX-FileNotice: Part of the DataManager addon.
+
 """FreeCAD workbench registration for DataManager.
 
 Defines the `Gui.Workbench` subclass used by FreeCAD to create menus/toolbars
@@ -29,7 +32,7 @@ if Gui is not None:
 
         MenuText = _translate("Workbench", "Data Manager")
         ToolTip = _translate("Workbench", "a simple data manager workbench")
-        Icon = os.path.join(ICONPATH, "datamanager_wb.svg")
+        Icon = os.path.join(ICONPATH, "Logo.svg")
         toolbox = [
             "DataManagerVarsetManagement",
             "DataManagerAliasManagement",

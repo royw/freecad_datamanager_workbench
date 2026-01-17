@@ -1,3 +1,6 @@
+# SPDX-License-Identifier: LGPL-3.0-or-later
+# SPDX-FileNotice: Part of the DataManager addon.
+
 """Presenter for `MainPanel`.
 
 The presenter owns UI-facing orchestration and formatting decisions while keeping

@@ -1,3 +1,6 @@
+# SPDX-License-Identifier: LGPL-3.0-or-later
+# SPDX-FileNotice: Part of the DataManager addon.
+
 """Generic tab controller shared by VarSets and Aliases.
 
 Implements filtering, only-unused logic, enable-state rules, and remove-unused

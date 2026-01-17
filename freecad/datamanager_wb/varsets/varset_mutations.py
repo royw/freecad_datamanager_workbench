@@ -1,3 +1,6 @@
+# SPDX-License-Identifier: LGPL-3.0-or-later
+# SPDX-FileNotice: Part of the DataManager addon.
+
 """Mutation helpers for FreeCAD VarSets.
 
 Contains operations that modify VarSets, such as removing a variable property.

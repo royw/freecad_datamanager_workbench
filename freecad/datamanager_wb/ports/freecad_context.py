@@ -1,3 +1,6 @@
+# SPDX-License-Identifier: LGPL-3.0-or-later
+# SPDX-FileNotice: Part of the DataManager addon.
+
 """FreeCAD runtime context abstraction.
 
 This module provides small Protocol interfaces for the parts of the FreeCAD API

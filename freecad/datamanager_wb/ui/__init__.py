@@ -1,1 +1,4 @@
+# SPDX-License-Identifier: LGPL-3.0-or-later
+# SPDX-FileNotice: Part of the DataManager addon.
+
 """Qt UI layer (widgets, presenters, and UI-facing controllers)."""

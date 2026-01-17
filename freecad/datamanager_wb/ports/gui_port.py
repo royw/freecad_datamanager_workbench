@@ -1,3 +1,6 @@
+# SPDX-License-Identifier: LGPL-3.0-or-later
+# SPDX-FileNotice: Part of the DataManager addon.
+
 """GUI port abstraction for FreeCADGui-dependent behavior.
 
 This module isolates FreeCADGui/PySideUic access behind a small interface so the

@@ -1,3 +1,6 @@
+# SPDX-License-Identifier: LGPL-3.0-or-later
+# SPDX-FileNotice: Part of the DataManager addon.
+
 """Typed parent/child references for list widget selections.
 
 The UI stores these objects in `QListWidgetItem` user data to preserve a

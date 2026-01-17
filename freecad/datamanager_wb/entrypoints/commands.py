@@ -1,3 +1,6 @@
+# SPDX-License-Identifier: LGPL-3.0-or-later
+# SPDX-FileNotice: Part of the DataManager addon.
+
 """FreeCAD command registrations for the DataManager workbench.
 
 This module defines the toolbar/menu commands and connects them to the
