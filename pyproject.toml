@@ -7,17 +7,20 @@ name = "freecad.datamanager_workbench"
 version = "1.0.0"
 description = "A FreeCAD workbench for managing varsets and aliases"
 readme = "README.md"
-license = {file = "LICENSE"}
+license = {file = "LICENSE-CODE"}
 authors = [
     { name = "Roy Wright", email = "roy@wright.org" }
 ]
 maintainers = [
     {name = "Roy Wright", email = "roy@wright.org"},
 ]
-requires-python = ">=3.12"
+requires-python = ">=3.11"
 
 
-dependencies = []
+dependencies = [
+    # 'freecad-stubs>=1.0.21' ,
+    # 'pyside6>=6.9.2'
+]
 
 [dependency-groups]
 dev = [
@@ -46,7 +49,6 @@ dev = [
     "ruff>=0.12.11",
     "taskfile-help>=0.4.1",
     "version-bumper>=0.1.2",
-
 ]
 
 [tool.hatch.build.targets.wheel]

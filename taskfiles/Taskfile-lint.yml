@@ -50,6 +50,7 @@ tasks:
       - task: fix
       - task: ruff
       - task: mypy
+      - task: spdx
       - task: markdown
       - task: emoji
       - task: deadcode
@@ -79,6 +80,35 @@ tasks:
     summary: Validates type hints and catches type errors
     cmds:
       - uv run mypy {{.CLI_ARGS | default .SRC}}
+
+  spdx:
+    desc: Verify SPDX headers exist in all Python source files
+    summary: Ensures each *.py file in the source tree contains the required SPDX header lines
+    cmds:
+      - cmd: |
+          echo "Checking SPDX headers in Python source files..."
+          MISSING=0
+
+          while IFS= read -r file; do
+            if ! head -n 10 "$file" | grep -q "SPDX-License-Identifier: LGPL-3.0-or-later"; then
+              echo "FAIL Missing SPDX-License-Identifier in $file"
+              MISSING=1
+              continue
+            fi
+            if ! head -n 10 "$file" | grep -q "SPDX-FileNotice: Part of the DataManager addon\."; then
+              echo "FAIL Missing SPDX-FileNotice in $file"
+              MISSING=1
+              continue
+            fi
+          done < <(find {{.CLI_ARGS | default .SRC}} -name "*.py" -type f)
+
+          if [ $MISSING -eq 0 ]; then
+            echo "PASS SPDX headers present"
+          else
+            echo "FAIL SPDX header check failed"
+            exit 1
+          fi
+        silent: true
 
   mypy:tests:
     desc: Run type checking with mypy
