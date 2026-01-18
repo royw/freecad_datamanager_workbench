@@ -1,10 +1,7 @@
-
 # Documentation
-
-## Usage
 
 - [User Guide][User-Guide]
 - Full Documentation: [Full-Documentation][Full-Documentation]
 
 [User-Guide]: ./Usage/User-Guide.md
-[Full-Documentation]: [royw.github.io/freecad_datamanager_workbench](https://royw.github.io/freecad_datamanager_workbench/)
+[Full-Documentation]: https://royw.github.io/freecad_datamanager_workbench/

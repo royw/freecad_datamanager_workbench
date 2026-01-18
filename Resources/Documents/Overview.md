@@ -9,6 +9,7 @@ Special thanks to OldBeard for his testing of the beta workbench and many great 
 ## Suggestion FreeCAD Preferences
 
 Enable: 
+
 - General --> Selection --> Tree 
 - Selection Behavior --> Auto expand tree item when the corresponding object is selected in the 3D view.
 
@@ -16,7 +17,10 @@ Enable:
 
 The workbench appears in the FreeCAD workbench selector as **Data Manager**.
 
-<img width = '400' src = '../Media/datamanager_wb_annotated.png' />
+### Annotated UI
+
+<br/>
+<img width = '400' src = '../Media/datamanager_wb_annotated.png' alt="DataManager workbench annotated UI"/>
 
 Annotated UI legend:
 
@@ -34,7 +38,7 @@ Annotated UI legend:
 1. Copy Selection Buttons
 1. Shows selected expression selects object in model view
 
-### VarSets tab
+#### VarSets tab
 
 - **VarSets list** (3)
 
