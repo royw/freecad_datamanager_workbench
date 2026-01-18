@@ -129,6 +129,57 @@ When adding new behavior, prefer placing it in the lowest layer that makes sense
 
 This section describes the tooling and recommended workflow.
 
+### Prerequisite: FreeCAD type stubs (freecad-stubs)
+
+Static type checking (mypy) for FreeCAD APIs requires type stubs. This project is set up to use:
+
+- [https://github.com/ostr00000/freecad-stubs](https://github.com/ostr00000/freecad-stubs)
+
+#### 1) Clone the stubs repo
+
+Clone the repository somewhere on your machine (example uses `~/src`):
+
+```sh
+git clone https://github.com/ostr00000/freecad-stubs.git
+```
+
+#### 2) Select a branch that matches your FreeCAD version
+
+The stubs repository provides version-specific branches. Pick the one closest to your FreeCAD version.
+
+Example:
+
+```sh
+git -C freecad-stubs branch -r
+git -C freecad-stubs checkout FreeCAD-0-20
+```
+
+If you are unsure, start with the newest available branch or `main` and adjust if you see type mismatches.
+
+#### 3) Point mypy at the stubs
+
+This repository uses `pyproject.toml` for mypy configuration. Ensure `tool.mypy.mypy_path` includes the stubs path.
+
+Example (adjust to where you cloned `freecad-stubs`):
+
+```toml
+[tool.mypy]
+mypy_path = "./:/path/to/freecad-stubs"
+```
+
+Then re-run:
+
+```sh
+task check
+```
+
+#### 4) (Optional) Configure your IDE
+
+If you use VS Code / Pylance, configure the stub path similarly (so the editor resolves FreeCAD imports):
+
+- Set `python.analysis.stubPath` to your `freecad-stubs` checkout path.
+- Ensure your workspace interpreter is the same one you use for `uv run ...` / `task check`.
+
 ### Taskfile
 
 The repository uses a `Taskfile.yml` to standardize common workflows. Note that the set of tasks is my python application development and includes tasks not directly related to FreeCAD Addon development, for example the release tasks.
