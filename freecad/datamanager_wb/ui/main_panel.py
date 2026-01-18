@@ -106,6 +106,8 @@ class MainPanel(QtWidgets.QDialog):
 
     def _check_active_document_changed(self) -> None:
         name = self._controller.get_active_document_name()
+        if name is None and self._active_doc_name is not None:
+            return
         if name == self._active_doc_name:
             return
         self._active_doc_name = name
