@@ -47,6 +47,18 @@ tasks:
           fi
     silent: true
 
+  addon-ready:
+    desc: Check FreeCAD Addon structure/components
+    summary: Runs scripts/addon-ready.py against the project root
+    cmds:
+      - |
+          if uv run python scripts/addon-ready.py .; then
+            echo "Project is AddOn ready"
+          else
+            exit 1
+          fi
+    silent: true
+
   install:
     desc: Install project dependencies (first-time setup) into .venv/
     summary: First-time setup - checks environment and syncs dependencies

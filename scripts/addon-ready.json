@@ -1,0 +1,165 @@
+{
+  "package.xml": {
+    "path": "package.xml",
+    "required": true,
+    "content": null,
+    "checker": "ValidXML"
+  },
+  "README.md": {
+    "path": "README.md",
+    "required": true,
+    "content": null,
+    "checker": "ContentExists"
+  },
+  "LICENSE": {
+    "path": "LICENSE*",
+    "required": true,
+    "content": null,
+    "checker": "ContentExists"
+  },
+  "LICENSE-CODE": {
+    "path": "LICENSE-CODE",
+    "required": false,
+    "content": null,
+    "checker": "FileExists"
+  },
+  "LICENSE-DOCS": {
+    "path": "LICENSE-DOCS",
+    "required": false,
+    "content": null,
+    "checker": "FileExists"
+  },
+  "LICENSE-ICON": {
+    "path": "LICENSE-ICON",
+    "required": false,
+    "content": null,
+    "checker": "FileExists"
+  },
+  "pyproject.toml": {
+    "path": "pyproject.toml",
+    "required": true,
+    "content": [
+      "project.requires-python",
+      "project.name",
+      "project.version"
+    ],
+    "checker": "TomlKeyExists"
+  },
+  "freecad/*": {
+    "path": "freecad/*",
+    "required": true,
+    "content": null,
+    "checker": "DirExists"
+  },
+  "freecad/*/[__init__.py,init_gui.py]": {
+    "path": "freecad/*",
+    "required": true,
+    "content": [
+        "__init__.py",
+        "init_gui.py"
+    ],
+    "checker": "FileExists"
+  },
+  "Resources/": {
+    "path": "Resources",
+    "required": true,
+    "content": null,
+    "checker": "DirExists"
+  },
+  "Resources/Icons/": {
+    "path": "Resources/Icons",
+    "required": true,
+    "content": null,
+    "checker": "DirExists"
+  },
+  "Resources/Icons/*.svg": {
+    "path": "Resources/Icons/*.svg",
+    "required": true,
+    "content": null,
+    "checker": "FileExists"
+  },
+  "Resources/Documents/": {
+    "path": "Resources/Documents",
+    "required": true,
+    "content": null,
+    "checker": "DirExists"
+  },
+  "Resources/Documents/Overview.md": {
+    "path": "Resources/Documents/Overview.md",
+    "required": true,
+    "content": null,
+    "checker": "FileExists"
+  },
+  "Resources markdown": {
+    "path": "Resources",
+    "required": false,
+    "content": "**/*.md",
+    "checker": "FileExists"
+  },
+  "Resources/Media/": {
+    "path": "Resources/Media",
+    "required": false,
+    "content": null,
+    "checker": "DirExists"
+  },
+  "Resources/Media/*": {
+    "path": "Resources/Media/*",
+    "required": false,
+    "content": null,
+    "checker": "FileExists"
+  },
+  "Documentation/": {
+    "path": "Documentation",
+    "required": true,
+    "content": null,
+    "checker": "DirExists"
+  },
+  "Documentation/README.md": {
+    "path": "Documentation/README.md",
+    "required": true,
+    "content": "# Documentation",
+    "checker": "ContentHas"
+  },
+  "Documentation/Usage/": {
+    "path": "Documentation/Usage",
+    "required": false,
+    "content": null,
+    "checker": "DirExists"
+  },
+  "Documentation/Usage/*.md": {
+    "path": "Documentation/Usage/*.md",
+    "required": false,
+    "content": null,
+    "checker": "FileExists"
+  },
+  "CHANGELOG.md": {
+    "path": "CHANGELOG.md",
+    "required": false,
+    "content": null,
+    "checker": "FileExists"
+  },
+  ".github/": {
+    "path": ".github",
+    "required": false,
+    "content": null,
+    "checker": "DirExists"
+  },
+  ".editorconfig": {
+    "path": ".editorconfig",
+    "required": false,
+    "content": null,
+    "checker": "FileExists"
+  },
+  ".gitignore": {
+    "path": ".gitignore",
+    "required": false,
+    "content": null,
+    "checker": "FileExists"
+  },
+  ".vscode/": {
+    "path": ".vscode",
+    "required": false,
+    "content": null,
+    "checker": "DirExists"
+  }
+}

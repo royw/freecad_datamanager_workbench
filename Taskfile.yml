@@ -91,6 +91,7 @@ tasks:
     deps:
       - env:clean:bytecodes
     cmds:
+      - task: env:addon-ready
       - task: lint:fix:emoji
       - task: format
       - task: lint
