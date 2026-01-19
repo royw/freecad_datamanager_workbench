@@ -1,0 +1,8 @@
+[
+  {
+    "path": "x",
+    "required": true,
+    "checker": "FileExists",
+    "content": null
+  }
+]

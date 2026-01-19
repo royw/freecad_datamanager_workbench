@@ -1,0 +1,8 @@
+{
+  "bad": {
+    "path": "x",
+    "required": true,
+    "checker": 123,
+    "content": null
+  }
+}

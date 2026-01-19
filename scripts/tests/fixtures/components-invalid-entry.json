@@ -1,0 +1,9 @@
+{
+  "ok": {
+    "path": "x",
+    "required": true,
+    "checker": "FileExists",
+    "content": null
+  },
+  "bad": "not-an-object"
+}

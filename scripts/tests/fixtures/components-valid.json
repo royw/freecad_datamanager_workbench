@@ -1,0 +1,40 @@
+{
+  "content-exists": {
+    "checker": "ContentExists",
+    "content": null,
+    "path": "README.md",
+    "required": true
+  },
+  "content-has": {
+    "checker": "ContentHas",
+    "content": "foo",
+    "path": "README.md",
+    "required": false
+  },
+  "dir": {
+    "checker": "DirExists",
+    "content": null,
+    "path": "freecad",
+    "required": true
+  },
+  "file": {
+    "checker": "FileExists",
+    "content": null,
+    "path": "pyproject.toml",
+    "required": true
+  },
+  "toml-keys": {
+    "checker": "TomlKeyExists",
+    "content": [
+      "project.name"
+    ],
+    "path": "pyproject.toml",
+    "required": true
+  },
+  "xml": {
+    "checker": "ValidXML",
+    "content": null,
+    "path": "package.xml",
+    "required": true
+  }
+}

@@ -1,0 +1,11 @@
+{
+  "bad": {
+    "path": "x",
+    "required": true,
+    "checker": "FileExists",
+    "content": [
+      "ok",
+      1
+    ]
+  }
+}
