@@ -1,13 +1,22 @@
 #!/usr/bin/env python3
 
-"""Project readiness checker for a FreeCAD Addon repository.
+"""Project readiness checker.
 
 This script validates that a target project contains required components and warns
 when recommended components are missing.
 
-The checklist is stored in an external JSON file (default: `scripts/addon-ready.json`).
+The checklist is stored in an external JSON file.
 
-## addon-ready.json format
+## Checklist selection
+
+You must provide the checklist JSON path via one of the following mechanisms:
+
+- `--check-list PATH`
+- Environment variable: `PROJECT_READY_CHECKLIST`
+
+If neither is provided, the script prints the CLI help/usage and exits with code `2`.
+
+## Checklist JSON format
 
 The JSON must be an object (dictionary) mapping a human-friendly component name to a
 spec object:
@@ -65,6 +74,7 @@ Exit codes:
 import argparse
 from dataclasses import dataclass
 import json
+import os
 import sys
 import tomllib
 import xml.etree.ElementTree as ET
@@ -76,6 +86,9 @@ class CheckProtocol(Protocol):
     def check(
         self, path: Path, content: str | list[str] | None = None
     ) -> tuple[bool, str | None]:
+        ...
+
+    def describe(self, path: Path, *, required: bool, content: str | list[str] | None = None) -> str:
         ...
 
 
@@ -103,6 +116,31 @@ def _expand_glob_path(path: Path) -> list[Path]:
         return []
 
 
+def _describe_prefix(*, required: bool) -> str:
+    return "Require that" if required else "Suggest that"
+
+
+def _md_code(text: str) -> str:
+    # Render text as Markdown inline code, choosing a delimiter that won't conflict.
+    # This avoids issues with underscores, asterisks, etc.
+    if "`" not in text:
+        return f"`{text}`"
+
+    # Choose a backtick run that doesn't appear in the text.
+    ticks = "``"
+    while ticks in text:
+        ticks += "`"
+    return f"{ticks}{text}{ticks}"
+
+
+def _md_path(path: Path) -> str:
+    return _md_code(path.as_posix())
+
+
+def _md_str(text: str) -> str:
+    return _md_code(text)
+
+
 class FileExists:
     def check(self, path: Path, content: str | list[str] | None = None) -> tuple[bool, str | None]:
         # Supports:
@@ -114,6 +152,7 @@ class FileExists:
         if content is None:
             if any(p.is_file() for p in expanded):
                 return True, None
+
             return False, f"missing file: {path}"
 
         dirs = [p for p in expanded if p.is_dir()]
@@ -137,6 +176,23 @@ class FileExists:
         if len(missing) == 1:
             return False, f"missing file: {path}/{missing[0]}"
         return False, f"missing files under {path}: {missing!r}"
+
+    def describe(self, path: Path, *, required: bool, content: str | list[str] | None = None) -> str:
+        prefix = _describe_prefix(required=required)
+
+        if content is None:
+            return f"{prefix} at least one file exists matching {_md_path(path)}."
+
+        if isinstance(content, str):
+            return (
+                f"{prefix} at least one file exists under {_md_path(path)} "
+                f"matching glob {_md_str(content)}."
+            )
+
+        if len(content) == 1:
+            return f"{prefix} file {_md_path(path / content[0])} exists."
+        items = ", ".join(_md_path(path / name) for name in content)
+        return f"{prefix} files exist under {_md_path(path)}: {items}."
 
 
 class ValidXML:
@@ -188,6 +244,20 @@ class ValidXML:
             return False, f"invalid XML: {file_path}: {exc}"
         return True, None
 
+    def describe(self, path: Path, *, required: bool, content: str | list[str] | None = None) -> str:
+        prefix = _describe_prefix(required=required)
+
+        if content is None:
+            return f"{prefix} XML matched by {_md_path(path)} is well-formed."
+
+        if isinstance(content, str):
+            return f"{prefix} XML file {_md_path(path / content)} is well-formed."
+
+        if len(content) == 1:
+            return f"{prefix} XML file {_md_path(path / content[0])} is well-formed."
+        items = ", ".join(_md_path(path / name) for name in content)
+        return f"{prefix} XML files are well-formed under {_md_path(path)}: {items}."
+
 
 class DirExists:
     def check(self, path: Path, _content: str | list[str] | None = None) -> tuple[bool, str | None]:
@@ -198,6 +268,11 @@ class DirExists:
         if _has_glob(path):
             return False, f"missing directory matching glob: {path}"
         return False, f"missing directory: {path}"
+
+    def describe(self, path: Path, *, required: bool, content: str | list[str] | None = None) -> str:
+        prefix = _describe_prefix(required=required)
+        _ = content
+        return f"{prefix} at least one directory exists matching {_md_path(path)}."
 
 
 class ContentExists:
@@ -240,6 +315,16 @@ class ContentExists:
             return True, None
         return False, f"expected content not found in {path}: {content!r}"
 
+    def describe(self, path: Path, *, required: bool, content: str | list[str] | None = None) -> str:
+        prefix = _describe_prefix(required=required)
+
+        if content is None:
+            return f"{prefix} at least one file exists matching {_md_path(path)} and is non-empty."
+
+        if isinstance(content, list):
+            return f"{prefix} file {_md_path(path)} is non-empty."
+        return f"{prefix} file {_md_path(path)} contains substring {_md_str(content)}."
+
 
 class ContentHas:
     def check(self, path: Path, content: str | list[str] | None = None) -> tuple[bool, str | None]:
@@ -270,6 +355,23 @@ class ContentHas:
         if len(missing) == 1:
             return False, f"missing required substring in {path}: {missing[0]!r}"
         return False, f"missing required substrings in {path}: {missing!r}"
+
+    def describe(self, path: Path, *, required: bool, content: str | list[str] | None = None) -> str:
+        prefix = _describe_prefix(required=required)
+
+        if not content:
+            return f"{prefix} file {_md_path(path)} contains required substrings."
+
+        if isinstance(content, list):
+            return f"{prefix} file {_md_path(path)} contains required substrings."
+
+        tokens = [line.strip() for line in content.splitlines() if line.strip()]
+        if not tokens:
+            return f"{prefix} file {_md_path(path)} contains required substrings."
+        if len(tokens) == 1:
+            return f"{prefix} file {_md_path(path)} contains substring {_md_str(tokens[0])}."
+        items = ", ".join(_md_str(t) for t in tokens)
+        return f"{prefix} file {_md_path(path)} contains substrings: {items}."
 
 
 class TomlKeyExists:
@@ -317,6 +419,26 @@ class TomlKeyExists:
             current = current[part]
 
         return True, None
+
+    def describe(self, path: Path, *, required: bool, content: str | list[str] | None = None) -> str:
+        prefix = _describe_prefix(required=required)
+
+        if not content:
+            return f"{prefix} TOML file {_md_path(path)} contains required keys."
+
+        raw_lines = content if isinstance(content, list) else content.splitlines()
+        keys: list[str] = []
+        for raw_line in (line.strip() for line in raw_lines):
+            if not raw_line or raw_line.startswith("#"):
+                continue
+            keys.append(raw_line.partition("=")[0].strip())
+
+        if not keys:
+            return f"{prefix} TOML file {_md_path(path)} contains required keys."
+        if len(keys) == 1:
+            return f"{prefix} TOML file {_md_path(path)} contains key {_md_str(keys[0])}."
+        items = ", ".join(_md_str(k) for k in keys)
+        return f"{prefix} TOML file {_md_path(path)} contains keys: {items}."
 
 
 @dataclass(frozen=True, slots=True)
@@ -408,10 +530,10 @@ def _load_components(path: Path) -> dict[str, ComponentSpec]:
     return out
 
 
-def _parse_args(argv: list[str]) -> argparse.Namespace:
+def _build_parser() -> argparse.ArgumentParser:
     parser = argparse.ArgumentParser(
-        prog="addon-ready",
-        description="Check a FreeCAD Addon project for required/recommended components.",
+        prog="project-ready",
+        description="Check a project for required/recommended components.",
     )
     parser.add_argument(
         "project_root",
@@ -425,11 +547,51 @@ def _parse_args(argv: list[str]) -> argparse.Namespace:
         help="Fail if recommended components are missing (default: warn only)",
     )
     parser.add_argument(
-        "--components",
-        default=None,
-        help="Path to addon-ready.json (default: scripts/addon-ready.json next to this script)",
+        "--describe",
+        action="store_true",
+        help="Print a human-readable checklist derived from the components file and exit",
     )
-    return parser.parse_args(argv)
+    parser.add_argument(
+        "--check-list",
+        dest="check_list",
+        default=None,
+        help="Path to checklist JSON (default: $PROJECT_READY_CHECKLIST)",
+    )
+    parser.add_argument(
+        "--components",
+        dest="check_list",
+        default=None,
+        help=argparse.SUPPRESS,
+    )
+    return parser
+
+
+def _parse_args(argv: list[str]) -> argparse.Namespace:
+    return _build_parser().parse_args(argv)
+
+
+def _resolve_checklist_path(args: argparse.Namespace) -> Path | None:
+    arg_path = getattr(args, "check_list", None)
+    if isinstance(arg_path, str) and arg_path.strip():
+        return Path(arg_path).expanduser().resolve()
+
+    env_path = os.environ.get("PROJECT_READY_CHECKLIST")
+    if env_path and env_path.strip():
+        return Path(env_path).expanduser().resolve()
+
+    return None
+
+
+def describe_components(components: dict[str, ComponentSpec]) -> list[str]:
+    rendered: list[tuple[str, str]] = []
+    for _name, spec in components.items():
+        checker_cls: type[CheckProtocol] = spec.checker
+        checker = checker_cls()
+        line = checker.describe(spec.path, required=spec.required, content=spec.content)
+        rendered.append((str(spec.path), line))
+
+    rendered.sort(key=lambda t: t[0])
+    return [line for _path, line in rendered]
 
 
 def run(project_root: Path, components: dict[str, ComponentSpec], *, strict: bool = False) -> int:
@@ -479,12 +641,22 @@ def main(argv: list[str]) -> int:
     args = _parse_args(argv)
     root = Path(args.project_root).expanduser().resolve()
 
-    components_path = _default_components_path() if args.components is None else Path(args.components).expanduser().resolve()
+    components_path = _resolve_checklist_path(args)
+    if components_path is None:
+        _build_parser().print_help(file=sys.stderr)
+        return 2
+
     try:
         components = _load_components(components_path)
     except RuntimeError as exc:
         print(f"error: {exc}", file=sys.stderr)
         return 2
+
+    if args.describe:
+        print(f"# {components_path} Checklist\n")
+        for line in describe_components(components):
+            print(f"- {line}")
+        return 0
 
     if not root.exists() or not root.is_dir():
         print(f"error: not a directory: {root}", file=sys.stderr)

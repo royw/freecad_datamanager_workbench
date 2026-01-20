@@ -49,10 +49,10 @@ tasks:
 
   addon-ready:
     desc: Check FreeCAD Addon structure/components
-    summary: Runs scripts/addon-ready.py against the project root
+    summary: Runs scripts/project-ready.py against the project root
     cmds:
       - |
-          if uv run python scripts/addon-ready.py .; then
+          if uv run python scripts/project-ready.py . --check-list scripts/addon-ready.json; then
             echo "Project is AddOn ready"
           else
             exit 1

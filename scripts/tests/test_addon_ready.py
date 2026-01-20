@@ -1,7 +1,6 @@
-"""Tests for scripts/addon-ready.py.
+"""Tests for scripts/project-ready.py.
 
-Note: addon-ready.py is not importable as a normal module because of the hyphen in
-its filename, so these tests load it via importlib.
+Note: the script is loaded via importlib from its file path.
 """
 
 from __future__ import annotations
@@ -14,9 +13,7 @@ import pytest
 
 
 def _load_addon_ready_module() -> object:
-    script_path = (
-        Path(__file__).resolve().parents[1] / "addon-ready.py"
-    )
+    script_path = Path(__file__).resolve().parents[1] / "project-ready.py"
     spec = importlib.util.spec_from_file_location("addon_ready", script_path)
     assert spec is not None
     assert spec.loader is not None
@@ -521,3 +518,137 @@ def test_run_recommended_failure_exit_2_strict(addon_ready: object, tmp_path: Pa
     components = addon_ready._load_components(config_path)
     rc = addon_ready.run(tmp_path, components, strict=True)
     assert rc == 2
+
+
+# --------------------------------------------------------------------------------------
+# describe_components()
+# --------------------------------------------------------------------------------------
+
+
+def test_describe_components_sorted_and_phrasing(addon_ready: object) -> None:
+    components: dict[str, object] = {
+        # Intentionally not in path order
+        "license": addon_ready.ComponentSpec(
+            path=Path("LICENSE*"),
+            required=True,
+            content=None,
+            checker=addon_ready.ContentExists,
+        ),
+        "docs": addon_ready.ComponentSpec(
+            path=Path("docs"),
+            required=False,
+            content=None,
+            checker=addon_ready.DirExists,
+        ),
+        "pyproject": addon_ready.ComponentSpec(
+            path=Path("pyproject.toml"),
+            required=True,
+            content=["project.name"],
+            checker=addon_ready.TomlKeyExists,
+        ),
+    }
+
+    lines = addon_ready.describe_components(components)  # type: ignore[arg-type]
+
+    # Sorted by path string: LICENSE* < docs < pyproject.toml
+    assert lines[0].startswith("Require that")
+    assert "LICENSE*" in lines[0]
+    assert "non-empty" in lines[0]
+
+    assert lines[1].startswith("Suggest that")
+    assert "`docs`" in lines[1]
+
+    assert lines[2].startswith("Require that")
+    assert "`pyproject.toml`" in lines[2]
+
+    # Single-line output preferred
+    assert all("\n" not in line for line in lines)
+
+
+def test_describe_components_does_not_expose_checker_names(addon_ready: object) -> None:
+    components: dict[str, object] = {
+        "x": addon_ready.ComponentSpec(
+            path=Path("LICENSE*"),
+            required=True,
+            content=None,
+            checker=addon_ready.ContentExists,
+        )
+    }
+
+    (line,) = addon_ready.describe_components(components)  # type: ignore[arg-type]
+    assert "ContentExists" not in line
+    assert "FileExists" not in line
+    assert "DirExists" not in line
+    assert "TomlKeyExists" not in line
+    assert "ValidXML" not in line
+
+
+# --------------------------------------------------------------------------------------
+# checklist selection (--check-list / PROJECT_READY_CHECKLIST)
+# --------------------------------------------------------------------------------------
+
+
+def test_check_list_arg_wins_over_env(addon_ready: object, tmp_path: Path, monkeypatch: pytest.MonkeyPatch) -> None:
+    # Create two different checklists.
+    arg_list = tmp_path / "arg.json"
+    env_list = tmp_path / "env.json"
+
+    _write_json(
+        arg_list,
+        {
+            "ok": {
+                "path": "a.txt",
+                "required": True,
+                "checker": "FileExists",
+                "content": None,
+            }
+        },
+    )
+    _write_json(
+        env_list,
+        {
+            "bad": {
+                "path": "b.txt",
+                "required": True,
+                "checker": "FileExists",
+                "content": None,
+            }
+        },
+    )
+
+    monkeypatch.setenv("PROJECT_READY_CHECKLIST", str(env_list))
+
+    args = addon_ready._parse_args([".", "--check-list", str(arg_list)])
+    resolved = addon_ready._resolve_checklist_path(args)
+    assert resolved == arg_list.resolve()
+
+
+def test_check_list_env_used_when_no_arg(addon_ready: object, tmp_path: Path, monkeypatch: pytest.MonkeyPatch) -> None:
+    env_list = tmp_path / "env.json"
+    _write_json(
+        env_list,
+        {
+            "ok": {
+                "path": "a.txt",
+                "required": True,
+                "checker": "FileExists",
+                "content": None,
+            }
+        },
+    )
+
+    monkeypatch.setenv("PROJECT_READY_CHECKLIST", str(env_list))
+    args = addon_ready._parse_args(["."])
+    resolved = addon_ready._resolve_checklist_path(args)
+    assert resolved == env_list.resolve()
+
+
+def test_main_without_checklist_prints_help_and_exits_2(addon_ready: object, monkeypatch: pytest.MonkeyPatch, capsys: pytest.CaptureFixture[str]) -> None:
+    monkeypatch.delenv("PROJECT_READY_CHECKLIST", raising=False)
+
+    rc = addon_ready.main(["."])
+    assert rc == 2
+
+    captured = capsys.readouterr()
+    # Help text printed to stderr.
+    assert "usage:" in captured.err.lower()
