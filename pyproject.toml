@@ -46,6 +46,7 @@ dev = [
     "ruff>=0.12.11",
     "taskfile-help>=0.4.1",
     "version-bumper>=0.1.2",
+    "freecad-stubs>=1.0.21"
 ]
 
 [tool.hatch.build.targets.wheel]
