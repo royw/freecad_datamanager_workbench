@@ -1,7 +1,7 @@
-# About translating datamanager_wb Workbench
+# About translating DataManager Workbench
 
 > [!NOTE]
-> All commands **must** be run in `./freecad/datamanager_wb/resources/translations/` directory.
+> All commands **must** be run in `./freecad/DataManager/resources/translations/` directory.
 >
 > [!IMPORTANT]
 > If you want to update/release the files you need to have installed
@@ -17,13 +17,13 @@ To update the template file from source files you should use this command:
 ```
 
 Once done you can commit the changes and upload the new file to CrowdIn platform
-at <https://crowdin.com/project/freecad-addons> webpage and find the **datamanager_wb** project.
+at <https://crowdin.com/project/freecad-addons> webpage and find the **DataManager** project.
 
 ## Creating file for missing locale
 
 ### Using script
 
-To create a file for a new language with all **datamanager_wb** translatable strings execute
+To create a file for a new language with all **DataManager** translatable strings execute
 the script with `-u` flag plus your locale:
 
 ```shell
@@ -32,7 +32,7 @@ the script with `-u` flag plus your locale:
 
 ### Renaming file
 
-Also you can rename new `datamanager_wb.ts` file by appending the locale code,
+Also you can rename new `DataManager.ts` file by appending the locale code,
 for example, `FreeGrid_ja.ts` for Japanese and change
 
 ```xml
@@ -71,7 +71,7 @@ package or in a text editor like `xed`, `mousepad`, `gedit`, `nano`, `vim`/`nvim
 
 Alternatively you can visit the **FreeCAD-addons** project on CrowdIn platform
 at <https://crowdin.com/project/freecad-addons> webpage and find your language,
-once done, look for the **datamanager_wb** project.
+once done, look for the **DataManager** project.
 
 ## Compiling translations
 
@@ -92,7 +92,7 @@ This will update the `.qm` file for your language (Japanese in this case).
 
 ## Sending translations
 
-Now you can contribute your translated `.ts` file to **datamanager_wb** repository,
+Now you can contribute your translated `.ts` file to **DataManager** repository,
 also include the `.qm` file.
 
 <https://github.com/royw/freecad_datamanager_workbench>

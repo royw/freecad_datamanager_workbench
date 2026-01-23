@@ -5,8 +5,8 @@ These tests mock the FreeCAD-facing query functions so they can run without Free
 
 from __future__ import annotations
 
-from freecad.datamanager_wb.domain.parent_child_ref import ParentChildRef
-from freecad.datamanager_wb.varsets.varset_datasource import VarsetDataSource
+from freecad.DataManager.domain.parent_child_ref import ParentChildRef
+from freecad.DataManager.varsets.varset_datasource import VarsetDataSource
 
 
 def test_get_child_refs_for_virtual_varset_filters_by_group(monkeypatch) -> None:
@@ -17,13 +17,13 @@ def test_get_child_refs_for_virtual_varset_filters_by_group(monkeypatch) -> None
         assert varset_name == "VS"
         return {"a": "Base", "b": "Group1"}
 
-    monkeypatch.setattr("freecad.datamanager_wb.varsets.varset_datasource.getVarsetVariableGroups", fake_groups)
+    monkeypatch.setattr("freecad.DataManager.varsets.varset_datasource.getVarsetVariableGroups", fake_groups)
     monkeypatch.setattr(
-        "freecad.datamanager_wb.varsets.varset_datasource.getVarsetVariableNamesForGroup",
+        "freecad.DataManager.varsets.varset_datasource.getVarsetVariableNamesForGroup",
         lambda varset_name, group, *, ctx=None: ["x"] if group == "Group1" else ["base_only"],
     )
     monkeypatch.setattr(
-        "freecad.datamanager_wb.varsets.varset_datasource.getVarsetVariableNames",
+        "freecad.DataManager.varsets.varset_datasource.getVarsetVariableNames",
         lambda varset_name, *, ctx=None: ["x", "y"],
     )
 
@@ -36,11 +36,11 @@ def test_get_child_refs_for_non_virtual_parent_includes_all(monkeypatch) -> None
     ds = VarsetDataSource()
 
     monkeypatch.setattr(
-        "freecad.datamanager_wb.varsets.varset_datasource.getVarsetVariableGroups",
+        "freecad.DataManager.varsets.varset_datasource.getVarsetVariableGroups",
         lambda varset_name, *, ctx=None: {"a": "Base", "b": "Group1"},
     )
     monkeypatch.setattr(
-        "freecad.datamanager_wb.varsets.varset_datasource.getVarsetVariableNames",
+        "freecad.DataManager.varsets.varset_datasource.getVarsetVariableNames",
         lambda varset_name, *, ctx=None: ["b", "a"],
     )
 
@@ -53,11 +53,11 @@ def test_virtual_parent_with_unknown_group_falls_back_to_normal(monkeypatch) -> 
     ds = VarsetDataSource()
 
     monkeypatch.setattr(
-        "freecad.datamanager_wb.varsets.varset_datasource.getVarsetVariableGroups",
+        "freecad.DataManager.varsets.varset_datasource.getVarsetVariableGroups",
         lambda varset_name, *, ctx=None: {"a": "Base", "b": "Group1"},
     )
     monkeypatch.setattr(
-        "freecad.datamanager_wb.varsets.varset_datasource.getVarsetVariableNames",
+        "freecad.DataManager.varsets.varset_datasource.getVarsetVariableNames",
         lambda varset_name, *, ctx=None: ["x"],
     )
 

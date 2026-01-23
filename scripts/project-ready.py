@@ -1,4 +1,6 @@
 #!/usr/bin/env python3
+# SPDX-License-Identifier: LGPL-3.0-or-later
+# SPDX-FileNotice: Part of the DataManager addon.
 
 """Project readiness checker.
 
@@ -99,7 +101,7 @@ def _has_glob(path: Path) -> bool:
 
 def _expand_glob_path(path: Path) -> list[Path]:
     # Expand a path that may contain glob metacharacters in any segment.
-    # Example: freecad/*/resources -> [freecad/datamanager_wb/resources, ...]
+    # Example: freecad/*/resources -> [freecad/DataManager/resources, ...]
     if not _has_glob(path):
         return [path]
 

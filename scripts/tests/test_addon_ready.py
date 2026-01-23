@@ -1,3 +1,6 @@
+# SPDX-License-Identifier: LGPL-3.0-or-later
+# SPDX-FileNotice: Part of the DataManager addon.
+
 """Tests for scripts/project-ready.py.
 
 Note: the script is loaded via importlib from its file path.

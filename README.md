@@ -22,7 +22,7 @@ Add instructions for installing via the Addon Manager.
 
 The workbench appears in the FreeCAD workbench selector as **Data Manager**.
 
-![DataManager workbench annotated UI](docs/images/datamanager_wb_annotated.png)
+![DataManager workbench annotated UI](docs/images/DataManager_annotated.png)
 
 Annotated UI legend:
 

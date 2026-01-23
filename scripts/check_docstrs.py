@@ -1,4 +1,6 @@
 #!/usr/bin/env python3
+# SPDX-License-Identifier: LGPL-3.0-or-later
+# SPDX-FileNotice: Part of the DataManager addon.
 
 """Docstring checker for this repository.
 

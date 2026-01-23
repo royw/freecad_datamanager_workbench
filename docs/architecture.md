@@ -13,45 +13,45 @@ This document describes the current architecture of the **DataManager** FreeCAD 
 ## High-level structure
 
 - **FreeCAD integration / entrypoints (runtime)**
-  - `freecad/datamanager_wb/init_gui.py`
-  - `freecad/datamanager_wb/entrypoints/workbench.py`
-  - `freecad/datamanager_wb/entrypoints/commands.py`
+  - `freecad/DataManager/init_gui.py`
+  - `freecad/DataManager/entrypoints/workbench.py`
+  - `freecad/DataManager/entrypoints/commands.py`
 - **UI layer (Qt)**
-  - `freecad/datamanager_wb/ui/main_panel.py` (Qt widget wiring + rendering)
-  - `freecad/datamanager_wb/resources/ui/main_panel.ui`
+  - `freecad/DataManager/ui/main_panel.py` (Qt widget wiring + rendering)
+  - `freecad/DataManager/resources/ui/main_panel.ui`
 - **Presenter layer**
-  - `freecad/datamanager_wb/ui/main_panel_presenter.py` (list state, formatting, orchestration plans)
+  - `freecad/DataManager/ui/main_panel_presenter.py` (list state, formatting, orchestration plans)
 - **Controller layer**
-  - `freecad/datamanager_wb/ui/panel_controller.py` (UI-facing facade; owns recompute/GUI refresh)
-  - `freecad/datamanager_wb/domain/tab_controller.py` (generic per-tab logic)
+  - `freecad/DataManager/ui/panel_controller.py` (UI-facing facade; owns recompute/GUI refresh)
+  - `freecad/DataManager/domain/tab_controller.py` (generic per-tab logic)
 - **Data access layer**
   - VarSets:
-    - `freecad/datamanager_wb/varsets/varset_query.py` (low-level FreeCAD VarSet queries)
-    - `freecad/datamanager_wb/varsets/varset_mutations.py` (low-level FreeCAD VarSet mutations)
-    - `freecad/datamanager_wb/varsets/varset_datasource.py` (adapts varset APIs to generic tab API)
+    - `freecad/DataManager/varsets/varset_query.py` (low-level FreeCAD VarSet queries)
+    - `freecad/DataManager/varsets/varset_mutations.py` (low-level FreeCAD VarSet mutations)
+    - `freecad/DataManager/varsets/varset_datasource.py` (adapts varset APIs to generic tab API)
   - Spreadsheet Aliases:
-    - `freecad/datamanager_wb/spreadsheets/spreadsheet_query.py`
-    - `freecad/datamanager_wb/spreadsheets/spreadsheet_mutations.py`
-    - `freecad/datamanager_wb/spreadsheets/spreadsheet_datasource.py` (adapts spreadsheet APIs to generic tab API)
+    - `freecad/DataManager/spreadsheets/spreadsheet_query.py`
+    - `freecad/DataManager/spreadsheets/spreadsheet_mutations.py`
+    - `freecad/DataManager/spreadsheets/spreadsheet_datasource.py` (adapts spreadsheet APIs to generic tab API)
 - **Ports & adapters (FreeCAD/GUI boundaries)**
   - FreeCAD runtime:
-    - `freecad/datamanager_wb/ports/freecad_context.py` (`FreeCadContext` + `get_runtime_context()`)
-    - `freecad/datamanager_wb/ports/freecad_port.py` (`FreeCadPort` + adapter + `get_port(ctx)`)
+    - `freecad/DataManager/ports/freecad_context.py` (`FreeCadContext` + `get_runtime_context()`)
+    - `freecad/DataManager/ports/freecad_port.py` (`FreeCadPort` + adapter + `get_port(ctx)`)
   - UI runtime boundaries:
-    - `freecad/datamanager_wb/ports/app_port.py` (`AppPort` for translation)
-    - `freecad/datamanager_wb/ports/gui_port.py` (`GuiPort` for FreeCADGui/PySideUic + MDI integration)
-    - `freecad/datamanager_wb/ports/settings_port.py` (`SettingsPort` for persisted UI settings)
+    - `freecad/DataManager/ports/app_port.py` (`AppPort` for translation)
+    - `freecad/DataManager/ports/gui_port.py` (`GuiPort` for FreeCADGui/PySideUic + MDI integration)
+    - `freecad/DataManager/ports/settings_port.py` (`SettingsPort` for persisted UI settings)
 - **Shared types/helpers**
-  - `freecad/datamanager_wb/domain/tab_datasource.py` (`TabDataSource` protocol + shared result types)
-  - `freecad/datamanager_wb/domain/parent_child_ref.py` (`ParentChildRef` used for list items)
-  - `freecad/datamanager_wb/freecad_helpers.py` (shared FreeCAD document/query helpers)
-  - `freecad/datamanager_wb/domain/expression_item.py` (`ExpressionItem` for expression list UI)
-  - `freecad/datamanager_wb/ui/gui_selection.py` (select referenced objects from expression items)
-  - `freecad/datamanager_wb/domain/parsing_helpers.py` (parsing/format helpers for display strings)
+  - `freecad/DataManager/domain/tab_datasource.py` (`TabDataSource` protocol + shared result types)
+  - `freecad/DataManager/domain/parent_child_ref.py` (`ParentChildRef` used for list items)
+  - `freecad/DataManager/freecad_helpers.py` (shared FreeCAD document/query helpers)
+  - `freecad/DataManager/domain/expression_item.py` (`ExpressionItem` for expression list UI)
+  - `freecad/DataManager/ui/gui_selection.py` (select referenced objects from expression items)
+  - `freecad/DataManager/domain/parsing_helpers.py` (parsing/format helpers for display strings)
 - **Resources**
-  - `freecad/datamanager_wb/resources.py` (absolute paths to icons/translations/ui)
-  - `freecad/datamanager_wb/resources/icons/*`
-  - `freecad/datamanager_wb/resources/translations/*`
+  - `freecad/DataManager/resources.py` (absolute paths to icons/translations/ui)
+  - `freecad/DataManager/resources/icons/*`
+  - `freecad/DataManager/resources/translations/*`
 
 ## Architectural principles
 
@@ -328,8 +328,8 @@ sequenceDiagram
 
 ## Resources and packaging
 
-- Runtime resource access goes through `resources.py`, which computes paths relative to the `freecad/datamanager_wb` package directory.
-- `MANIFEST.in` includes `freecad/datamanager_wb/resources/*` so UI/icons/translations are shipped.
+- Runtime resource access goes through `resources.py`, which computes paths relative to the `freecad/DataManager` package directory.
+- `MANIFEST.in` includes `freecad/DataManager/resources/*` so UI/icons/translations are shipped.
 
 ## Notes / constraints
 

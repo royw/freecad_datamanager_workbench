@@ -2,7 +2,7 @@
 
 from __future__ import annotations
 
-from freecad.datamanager_wb.spreadsheets import spreadsheet_query
+from freecad.DataManager.spreadsheets import spreadsheet_query
 
 
 def test_normalize_alias_map_inverts_when_keys_are_cells() -> None:

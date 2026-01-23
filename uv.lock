@@ -305,7 +305,7 @@ wheels = [
 
 [[package]]
 name = "freecad-datamanager-workbench"
-version = "1.0.0"
+version = "1.0.1"
 source = { editable = "." }
 
 [package.dev-dependencies]
@@ -313,6 +313,7 @@ dev = [
     { name = "clang" },
     { name = "deadcode" },
     { name = "decorator" },
+    { name = "freecad-stubs" },
     { name = "joblib" },
     { name = "mkdocs" },
     { name = "mkdocs-gen-files" },
@@ -344,6 +345,7 @@ dev = [
     { name = "clang", specifier = ">=21.1.7" },
     { name = "deadcode", specifier = ">=2.4.0" },
     { name = "decorator", specifier = ">=5.2.1" },
+    { name = "freecad-stubs", specifier = ">=1.0.21" },
     { name = "joblib", specifier = ">=1.5.3" },
     { name = "mkdocs", specifier = ">=1.6.1" },
     { name = "mkdocs-gen-files", specifier = ">=0.5.0" },
@@ -366,6 +368,18 @@ dev = [
     { name = "ruff", specifier = ">=0.12.11" },
     { name = "taskfile-help", specifier = ">=0.4.1" },
     { name = "version-bumper", specifier = ">=0.1.2" },
+]
+
+[[package]]
+name = "freecad-stubs"
+version = "1.0.21"
+source = { registry = "https://pypi.org/simple" }
+dependencies = [
+    { name = "qtpy" },
+]
+sdist = { url = "https://files.pythonhosted.org/packages/b9/52/efd3cb97dad75cc5f922d5081b16f866cfcbbcbf948d404db298f9b21e0d/freecad_stubs-1.0.21.tar.gz", hash = "sha256:816b2ca663a44e75189482ab970f90278a112ff2b99f64edd216c13d553b52f5", size = 208363, upload-time = "2025-07-21T23:58:37.615Z" }
+wheels = [
+    { url = "https://files.pythonhosted.org/packages/99/bc/cdfb911f753b4b4f8e400d66d805e5718e32632837507b574a573b3efa24/freecad_stubs-1.0.21-py3-none-any.whl", hash = "sha256:fa96244b1a05e5130b0f96b3eb4ef9aca0f0aa437fff8000cb0750bdbb4edccc", size = 218416, upload-time = "2025-07-21T23:58:36.052Z" },
 ]
 
 [[package]]
@@ -1194,6 +1208,18 @@ dependencies = [
 sdist = { url = "https://files.pythonhosted.org/packages/eb/2e/79c822141bfd05a853236b504869ebc6b70159afc570e1d5a20641782eaa/pyyaml_env_tag-1.1.tar.gz", hash = "sha256:2eb38b75a2d21ee0475d6d97ec19c63287a7e140231e4214969d0eac923cd7ff", size = 5737, upload-time = "2025-05-13T15:24:01.64Z" }
 wheels = [
     { url = "https://files.pythonhosted.org/packages/04/11/432f32f8097b03e3cd5fe57e88efb685d964e2e5178a48ed61e841f7fdce/pyyaml_env_tag-1.1-py3-none-any.whl", hash = "sha256:17109e1a528561e32f026364712fee1264bc2ea6715120891174ed1b980d2e04", size = 4722, upload-time = "2025-05-13T15:23:59.629Z" },
+]
+
+[[package]]
+name = "qtpy"
+version = "2.4.3"
+source = { registry = "https://pypi.org/simple" }
+dependencies = [
+    { name = "packaging" },
+]
+sdist = { url = "https://files.pythonhosted.org/packages/70/01/392eba83c8e47b946b929d7c46e0f04b35e9671f8bb6fc36b6f7945b4de8/qtpy-2.4.3.tar.gz", hash = "sha256:db744f7832e6d3da90568ba6ccbca3ee2b3b4a890c3d6fbbc63142f6e4cdf5bb", size = 66982, upload-time = "2025-02-11T15:09:25.759Z" }
+wheels = [
+    { url = "https://files.pythonhosted.org/packages/69/76/37c0ccd5ab968a6a438f9c623aeecc84c202ab2fabc6a8fd927580c15b5a/QtPy-2.4.3-py3-none-any.whl", hash = "sha256:72095afe13673e017946cc258b8d5da43314197b741ed2890e563cf384b51aa1", size = 95045, upload-time = "2025-02-11T15:09:24.162Z" },
 ]
 
 [[package]]
