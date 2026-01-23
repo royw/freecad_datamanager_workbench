@@ -79,5 +79,5 @@ def register_commands(get_main_panel: GetMainPanel) -> None:
     """
     import FreeCADGui as Gui  # pylint: disable=import-error
 
-    Gui.addCommand("DataManagerVarsetManagement", _VarsetManagementCommand(get_main_panel))
-    Gui.addCommand("DataManagerAliasManagement", _AliasManagementCommand(get_main_panel))
+    Gui.addCommand("DataManager_Varsets", _VarsetManagementCommand(get_main_panel))
+    Gui.addCommand("DataManager_Aliases", _AliasManagementCommand(get_main_panel))

@@ -34,8 +34,8 @@ if Gui is not None:
         ToolTip = _translate("Workbench", "a simple data manager workbench")
         Icon = os.path.join(ICONPATH, "Logo.svg")
         toolbox = [
-            "DataManagerVarsetManagement",
-            "DataManagerAliasManagement",
+            "DataManager_Varsets",
+            "DataManager_Aliases",
         ]
 
         def GetClassName(self):
