@@ -45,13 +45,14 @@ class FreeCadGuiAdapter:
 
     def load_ui(self, ui_path: str) -> object:  # noqa: ANN401
         """Load a Qt Designer .ui file via FreeCADGui."""
-        import FreeCADGui as Gui  # pylint: disable=import-error
+
+        from FreeCAD import Gui
 
         return Gui.PySideUic.loadUi(ui_path)
 
     def get_main_window(self) -> object:  # noqa: ANN401
         """Return the FreeCAD main window via FreeCADGui."""
-        import FreeCADGui as Gui  # pylint: disable=import-error
+        from FreeCAD import Gui  # pylint: disable=import-error
 
         return Gui.getMainWindow()
 

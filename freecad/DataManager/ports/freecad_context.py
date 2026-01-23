@@ -15,6 +15,9 @@ from __future__ import annotations
 from dataclasses import dataclass
 from typing import Protocol
 
+from FreeCAD import Gui
+import FreeCAD as App
+
 
 class QtLike(Protocol):
     """Minimal Protocol for FreeCAD's translation API (App.Qt)."""
@@ -70,11 +73,5 @@ class FreeCadContext:
 
 def get_runtime_context() -> FreeCadContext:
     """Return a context wired to the real FreeCAD runtime modules."""
-    import FreeCAD as App
-
-    try:
-        import FreeCADGui as Gui
-    except Exception:  # pylint: disable=broad-exception-caught
-        Gui = None
 
     return FreeCadContext(app=App, gui=Gui)
