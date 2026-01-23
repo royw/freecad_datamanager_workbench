@@ -45,7 +45,7 @@ class Colors:
 class MetricsConfig:
     """Configuration for metrics script."""
 
-    src_paths: list[Path] = field(default_factory=list)  # [Path("freecad/datamanager_wb")]
+    src_paths: list[Path] = field(default_factory=list)  # [Path("freecad/DataManager")]
     tests_paths: list[Path] = field(default_factory=list)  # [Path("tests")]
     radon_list: list[str] = field(default_factory=list)  # ["radon"]
     pylint_list: list[str] = field(default_factory=list)  # ["pylint"]
@@ -155,7 +155,7 @@ def detect_package_name(src_paths: list[Path]) -> str:
     Strategy:
     1. If exactly one package directory (containing __init__.py) exists in src_path, use it
     2. Otherwise, use snake_case of project.name from pyproject.toml
-    3. Fallback to "datamanager_wb"
+    3. Fallback to "DataManager"
     """
     # Look for package directories (containing __init__.py) in src_path
     packages = []
@@ -1020,16 +1020,16 @@ def parse_arguments() -> tuple[MetricsConfig, bool]:
         + dedent("""
 
             Examples:
-            
+
             # Run with defaults from pyproject.toml:
             dev-metrics.py
 
             # Show resolved configuration without running:
             dev-metrics.py --show
-            
+
             # Override source paths:
             dev-metrics.py --src src lib --tests tests
-            
+
             # Specify custom test pattern:
             dev-metrics.py --test-pattern 'test_*.py' --test-type unit integration
          """),

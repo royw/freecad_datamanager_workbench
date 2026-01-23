@@ -152,4 +152,4 @@ hooks:
   - docs/version_hook.py
 
 watch:
-  - freecad/datamanager_wb
+  - freecad/DataManager

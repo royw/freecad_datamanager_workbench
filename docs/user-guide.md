@@ -11,7 +11,7 @@ This document intentionally does **not** include installation instructions.
 
 ## Annotated UI overview
 
-![DataManager workbench annotated UI](images/datamanager_wb_annotated.png)
+![DataManager workbench annotated UI](images/DataManager_annotated.png)
 
 Annotated UI legend:
 

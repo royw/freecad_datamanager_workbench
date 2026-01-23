@@ -1,7 +1,7 @@
 # SPDX-License-Identifier: LGPL-3.0-or-later
 # SPDX-FileNotice: Part of the DataManager addon.
 
-"""Package version for `freecad.datamanager_wb`."""
+"""Package version for `freecad.DataManager`."""
 
 from __future__ import annotations
 

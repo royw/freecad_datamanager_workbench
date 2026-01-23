@@ -40,7 +40,7 @@ From your FreeCAD user `Mod/` directory:
 
 ```sh
 cd ~/.local/share/FreeCAD/v1-2/Mod
-ln -s {path to project} datamanager_wb
+ln -s {path to project} DataManager
 ```
 
 After creating the symlink, restart FreeCAD. The workbench should appear in the workbench selector.
@@ -51,8 +51,8 @@ For iterative development, the normal procedure is to restart FreeCAD. However, 
 
 ```py
 import importlib
-import freecad.datamanager_wb
-importlib.reload(freecad.datamanager_wb)
+import freecad.DataManager
+importlib.reload(freecad.DataManager)
 ```
 
 Notes:
@@ -67,30 +67,30 @@ This project is distributed primarily as a FreeCAD Addon (installed into `Mod/`)
 
 Key entrypoints:
 
-- `freecad/datamanager_wb/init_gui.py`
+- `freecad/DataManager/init_gui.py`
   - FreeCAD GUI initialization hook.
   - Registers commands and adds the workbench (`Gui.addWorkbench`).
-- `freecad/datamanager_wb/entrypoints/workbench.py`
+- `freecad/DataManager/entrypoints/workbench.py`
   - Defines `DataManagerWorkbench(Gui.Workbench)` (menus/toolbars, activation logging).
-- `freecad/datamanager_wb/entrypoints/commands.py`
+- `freecad/DataManager/entrypoints/commands.py`
   - Defines and registers FreeCAD commands.
   - Commands open/activate the UI panel.
-- `freecad/datamanager_wb/ui/main_panel.py`
+- `freecad/DataManager/ui/main_panel.py`
   - Loads the Qt `.ui` file and implements the panel widget.
 
 Key UI layers and boundaries:
 
-- `freecad/datamanager_wb/ui/main_panel_presenter.py`
+- `freecad/DataManager/ui/main_panel_presenter.py`
   - Presenter responsible for formatting and computing UI list state.
   - Keeps the Qt widget thin.
 - Ports/adapters that isolate runtime dependencies:
-  - `freecad/datamanager_wb/ports/freecad_context.py` / `freecad/datamanager_wb/ports/freecad_port.py`
+  - `freecad/DataManager/ports/freecad_context.py` / `freecad/DataManager/ports/freecad_port.py`
     - FreeCAD runtime access (`FreeCadContext`, `FreeCadPort`, `get_port(ctx)`).
-  - `freecad/datamanager_wb/ports/app_port.py`
+  - `freecad/DataManager/ports/app_port.py`
     - Translation boundary (`App.Qt.translate`).
-  - `freecad/datamanager_wb/ports/gui_port.py`
+  - `freecad/DataManager/ports/gui_port.py`
     - FreeCADGui boundary (UI loading, MDI integration).
-  - `freecad/datamanager_wb/ports/settings_port.py`
+  - `freecad/DataManager/ports/settings_port.py`
     - Settings persistence boundary (wraps Qt settings).
 
 Implementation note:
@@ -104,26 +104,26 @@ The project is structured so that most logic can be tested outside FreeCAD.
 When adding new behavior, prefer placing it in the lowest layer that makes sense:
 
 - **UI wiring and rendering (Qt)**
-  - `freecad/datamanager_wb/ui/main_panel.py`
+  - `freecad/DataManager/ui/main_panel.py`
   - Keep this layer focused on widget lookup, signal wiring, and applying render state.
 - **Presenter (UI state + formatting)**
-  - `freecad/datamanager_wb/ui/main_panel_presenter.py`
+  - `freecad/DataManager/ui/main_panel_presenter.py`
   - Owns list state computation, display formatting (Name vs Label), and orchestration plans.
 - **UI-facing orchestration (FreeCAD refresh boundary)**
-  - `freecad/datamanager_wb/ui/panel_controller.py`
+  - `freecad/DataManager/ui/panel_controller.py`
   - Owns document recompute + GUI refresh through `FreeCadPort`.
 - **Reusable tab logic (domain-agnostic)**
-  - `freecad/datamanager_wb/domain/tab_controller.py`
+  - `freecad/DataManager/domain/tab_controller.py`
   - Filtering, only-unused logic, selection rules.
 - **Domain adapters (VarSets / Spreadsheets)**
-  - `freecad/datamanager_wb/varsets/varset_datasource.py`
-  - `freecad/datamanager_wb/spreadsheets/spreadsheet_datasource.py`
+  - `freecad/DataManager/varsets/varset_datasource.py`
+  - `freecad/DataManager/spreadsheets/spreadsheet_datasource.py`
 - **Low-level queries/mutations**
-  - `freecad/datamanager_wb/varsets/varset_query.py`, `freecad/datamanager_wb/varsets/varset_mutations.py`
-  - `freecad/datamanager_wb/spreadsheets/spreadsheet_query.py`, `freecad/datamanager_wb/spreadsheets/spreadsheet_mutations.py`
+  - `freecad/DataManager/varsets/varset_query.py`, `freecad/DataManager/varsets/varset_mutations.py`
+  - `freecad/DataManager/spreadsheets/spreadsheet_query.py`, `freecad/DataManager/spreadsheets/spreadsheet_mutations.py`
 - **Runtime boundaries (ports/adapters)**
-  - `freecad/datamanager_wb/ports/freecad_context.py`, `freecad/datamanager_wb/ports/freecad_port.py`
-  - `freecad/datamanager_wb/ports/app_port.py`, `freecad/datamanager_wb/ports/gui_port.py`, `freecad/datamanager_wb/ports/settings_port.py`
+  - `freecad/DataManager/ports/freecad_context.py`, `freecad/DataManager/ports/freecad_port.py`
+  - `freecad/DataManager/ports/app_port.py`, `freecad/DataManager/ports/gui_port.py`, `freecad/DataManager/ports/settings_port.py`
 
 ## Developer tooling
 
@@ -257,12 +257,12 @@ Run: `uv sync` or `task env:install` to install dependencies and setup the virtu
 
 The panel UI is defined in:
 
-- `freecad/datamanager_wb/resources/ui/main_panel.ui`
+- `freecad/DataManager/resources/ui/main_panel.ui`
 
 Notes:
 
 - Use `designer6` (Qt Designer) to edit the `.ui` file.
-- Keep widget `objectName` values stable. `freecad/datamanager_wb/ui/main_panel.py` expects specific names at runtime.
+- Keep widget `objectName` values stable. `freecad/DataManager/ui/main_panel.py` expects specific names at runtime.
 - After editing:
   - Run `task check`.
   - Launch FreeCAD and open the panel to verify the UI loads and widgets are found.
@@ -415,7 +415,7 @@ To do both at the same time, run `task docs`.
 
 ### Warnings
 
-When running `task docs`, you will see some INFO messages from MERMAID2 and a warning about an unrecognized relative link 'reference/datamanager_wb/'. These are expected and can be ignored:
+When running `task docs`, you will see some INFO messages from MERMAID2 and a warning about an unrecognized relative link 'reference/DataManager/'. These are expected and can be ignored:
 
 - **MERMAID2 INFO messages**
   - These are emitted by the `mermaid2` MkDocs plugin when it initializes.
@@ -435,8 +435,8 @@ INFO    -  MERMAID2  - Using javascript library (10.4.0):
               https://unpkg.com/mermaid@10.4.0/dist/mermaid.esm.min.mjs
 INFO    -  Cleaning site directory
 INFO    -  Building documentation to directory: /home/royw/src/FreeCAD_Workbench_DataManager/site
-INFO    -  Doc file 'index.md' contains an unrecognized relative link 'reference/datamanager_wb/', it was left as is. Did you mean
-           'reference/datamanager_wb/index.md'?
+INFO    -  Doc file 'index.md' contains an unrecognized relative link 'reference/DataManager/', it was left as is. Did you mean
+           'reference/DataManager/index.md'?
 INFO    -  MERMAID2  - Found superfences config: {'custom_fences': [{'name': 'mermaid', 'class': 'mermaid', 'format': <function fence_code_format at
            0x7f4db7e2a3e0>}]}
 INFO    -  Documentation built in 1.45 seconds
@@ -447,8 +447,8 @@ INFO    -  MERMAID2  - Initialization arguments: {}
 INFO    -  MERMAID2  - Using javascript library (10.4.0):
               https://unpkg.com/mermaid@10.4.0/dist/mermaid.esm.min.mjs
 INFO    -  Cleaning site directory
-INFO    -  Doc file 'index.md' contains an unrecognized relative link 'reference/datamanager_wb/', it was left as is. Did you mean
-           'reference/datamanager_wb/index.md'?
+INFO    -  Doc file 'index.md' contains an unrecognized relative link 'reference/DataManager/', it was left as is. Did you mean
+           'reference/DataManager/index.md'?
 INFO    -  MERMAID2  - Found superfences config: {'custom_fences': [{'name': 'mermaid', 'class': 'mermaid', 'format': <function fence_code_format at
            0x7fdccc04c540>}]}
 INFO    -  Documentation built in 1.33 seconds
@@ -465,7 +465,7 @@ Notes:
 
 - The Addon install mechanism typically places the repository (or a ZIP snapshot) under the user `Mod/` directory.
 - Because of this, relative paths and packaged resources must work directly from the source tree.
-- UI/resources live under `freecad/datamanager_wb/resources/`.
+- UI/resources live under `freecad/DataManager/resources/`.
 
 TBD:
 
@@ -494,7 +494,7 @@ Add an entry like this (sorted among existing submodules):
 
 ```ini
 [submodule "DataManager"]
-    path = datamanager_wb
+    path = DataManager
     url = https://github.com/royw/freecad_datamanager_workbench
     branch = master
 ```
@@ -502,7 +502,7 @@ Add an entry like this (sorted among existing submodules):
 In practice you typically create it via:
 
 ```sh
-git submodule add -b master https://github.com/royw/freecad_datamanager_workbench datamanager_wb
+git submodule add -b master https://github.com/royw/freecad_datamanager_workbench DataManager
 ```
 
 ### Addon catalog entry (`AddonCatalog.json`)
@@ -572,8 +572,8 @@ The workbench discovers VarSets by scanning the active document (`App.ActiveDocu
 
 Implementation:
 
-- `freecad/datamanager_wb/varsets/varset_query.py:getVarsets`
-- `freecad/datamanager_wb/freecad_helpers.py:iter_document_objects`
+- `freecad/DataManager/varsets/varset_query.py:getVarsets`
+- `freecad/DataManager/freecad_helpers.py:iter_document_objects`
 
 ### How variables are discovered
 
@@ -581,7 +581,7 @@ Variables are discovered from each selected VarSet’s properties.
 
 Implementation:
 
-- `freecad/datamanager_wb/varsets/varset_query.py:getVarsetVariableNames`
+- `freecad/DataManager/varsets/varset_query.py:getVarsetVariableNames`
 
 Details:
 
@@ -595,13 +595,13 @@ Expressions are discovered by scanning every document object’s `ExpressionEngi
 
 Implementation:
 
-- `freecad/datamanager_wb/freecad_helpers.py:iter_named_expression_engine_entries`
+- `freecad/DataManager/freecad_helpers.py:iter_named_expression_engine_entries`
 
 Details:
 
 - The workbench iterates `doc.Objects` and reads each object’s `ExpressionEngine` iterable.
 - Each entry is expected to be sequence-like (`(lhs, rhs, ...)`), where `lhs` is a property (like `"Length"` or `".Constraints.Constraint1"`) and `rhs` is the expression text.
-- Expression rows are keyed as `ObjectName.Property` using `freecad/datamanager_wb/freecad_helpers.py:build_expression_key`.
+- Expression rows are keyed as `ObjectName.Property` using `freecad/DataManager/freecad_helpers.py:build_expression_key`.
 
 ### How aliases are discovered
 
@@ -609,7 +609,7 @@ Aliases are spreadsheet cell aliases.
 
 Implementation:
 
-- `freecad/datamanager_wb/spreadsheets/spreadsheet_query.py:getAliases`
+- `freecad/DataManager/spreadsheets/spreadsheet_query.py:getAliases`
 
 Details:
 
@@ -622,7 +622,7 @@ The workbench discovers spreadsheets by scanning the active document and selecti
 
 Implementation:
 
-- `freecad/datamanager_wb/spreadsheets/spreadsheet_query.py:getSpreadsheets`
+- `freecad/DataManager/spreadsheets/spreadsheet_query.py:getSpreadsheets`
 
 ### How alias references are discovered
 
@@ -633,7 +633,7 @@ Alias references are discovered in two places:
 
 Implementation:
 
-- `freecad/datamanager_wb/spreadsheets/spreadsheet_query.py:getAliasReferences`
+- `freecad/DataManager/spreadsheets/spreadsheet_query.py:getAliasReferences`
 
 Details:
 
@@ -646,9 +646,9 @@ Parent and child filters in the UI use glob matching. If you type no glob charac
 
 Implementation:
 
-- `freecad/datamanager_wb/domain/tab_controller.py:_normalize_glob_pattern`
-- `freecad/datamanager_wb/domain/tab_controller.py:get_filtered_parents`
-- `freecad/datamanager_wb/domain/tab_controller.py:get_filtered_child_items`
+- `freecad/DataManager/domain/tab_controller.py:_normalize_glob_pattern`
+- `freecad/DataManager/domain/tab_controller.py:get_filtered_parents`
+- `freecad/DataManager/domain/tab_controller.py:get_filtered_child_items`
 
 ### Name normalization
 
@@ -675,8 +675,8 @@ The workbench’s “exclude copy-on-change” filters are implemented by:
 
 Implementation:
 
-- `freecad/datamanager_wb/freecad_helpers.py:get_copy_on_change_groups`
-- `freecad/datamanager_wb/freecad_helpers.py:get_copy_on_change_names`
+- `freecad/DataManager/freecad_helpers.py:get_copy_on_change_groups`
+- `freecad/DataManager/freecad_helpers.py:get_copy_on_change_names`
 
 #### VarSets and copy-on-change
 
@@ -716,8 +716,8 @@ The UI state is persisted through `SettingsPort`.
 
 Implementation:
 
-- `freecad/datamanager_wb/ports/settings_port.py` (`SettingsPort`, `QtSettingsAdapter`)
-- `freecad/datamanager_wb/ui/main_panel.py` (uses injected `SettingsPort`)
+- `freecad/DataManager/ports/settings_port.py` (`SettingsPort`, `QtSettingsAdapter`)
+- `freecad/DataManager/ui/main_panel.py` (uses injected `SettingsPort`)
 
 Persisted keys:
 
@@ -749,7 +749,7 @@ Navigation Style/Orbit Style/Rotation Mode: CAD/Rounded Arcball/Window center
 Stylesheet/Theme/QtStyle: FreeCAD.qss/FreeCAD Dark/
 Logical DPI/Physical DPI/Pixel Ratio: 96/40.64/1.5
 Installed mods:
-  * datamanager_wb
+  * DataManager
   * OpenTheme 2025.5.20
 ```
 
@@ -764,5 +764,5 @@ Python 3.11.13, Qt 5.15.15, Coin 4.0.3, Vtk 9.3.0, OCC 7.8.1
 Locale: C/Default (C)
 Stylesheet/Theme/QtStyle: FreeCAD Dark.qss/FreeCAD Dark/Fusion
 Installed mods:
-  * datamanager_wb
+  * DataManager
 ```

@@ -62,13 +62,13 @@ Link the repository’s directory into your FreeCAD user `Mod/` directory.
 #### Linux (symlink)
 
 ```sh
-ln -s /path/to/FreeCAD_Workbench_DataManager ~/.local/share/FreeCAD/<version>/Mod/datamanager_wb
+ln -s /path/to/FreeCAD_Workbench_DataManager ~/.local/share/FreeCAD/<version>/Mod/DataManager
 ```
 
 #### macOS (symlink)
 
 ```sh
-ln -s /path/to/FreeCAD_Workbench_DataManager "$HOME/Library/Application Support/FreeCAD/<version>/Mod/datamanager_wb"
+ln -s /path/to/FreeCAD_Workbench_DataManager "$HOME/Library/Application Support/FreeCAD/<version>/Mod/DataManager"
 ```
 
 #### Windows (PowerShell junction)
@@ -76,5 +76,5 @@ ln -s /path/to/FreeCAD_Workbench_DataManager "$HOME/Library/Application Support/
 Use a directory junction:
 
 ```powershell
-New-Item -ItemType Junction -Path "$env:APPDATA\\FreeCAD\\<version>\\Mod\\datamanager_wb" -Target "C:\\path\\to\\FreeCAD_Workbench_DataManager"
+New-Item -ItemType Junction -Path "$env:APPDATA\\FreeCAD\\<version>\\Mod\\DataManager" -Target "C:\\path\\to\\FreeCAD_Workbench_DataManager"
 ```

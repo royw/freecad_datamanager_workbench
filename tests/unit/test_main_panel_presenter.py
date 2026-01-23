@@ -5,9 +5,9 @@ Includes a small fake controller to drive presenter behavior without FreeCAD.
 
 from __future__ import annotations
 
-from freecad.datamanager_wb.domain.expression_item import ExpressionItem
-from freecad.datamanager_wb.ui.main_panel_presenter import MainPanelPresenter
-from freecad.datamanager_wb.domain.parent_child_ref import ParentChildRef
+from freecad.DataManager.domain.expression_item import ExpressionItem
+from freecad.DataManager.ui.main_panel_presenter import MainPanelPresenter
+from freecad.DataManager.domain.parent_child_ref import ParentChildRef
 
 
 class FakeController:

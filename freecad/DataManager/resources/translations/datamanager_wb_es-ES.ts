@@ -5,8 +5,8 @@
     <name>Log</name>
     <message>
         <location filename="../../init_gui.py" line="30"/>
-        <source>Switching to datamanager_wb</source>
-        <translation>Cambiando a entorno de trabajo datamanager_wb</translation>
+        <source>Switching to DataManager</source>
+        <translation>Cambiando a entorno de trabajo DataManager</translation>
     </message>
     <message>
         <location filename="../../init_gui.py" line="32"/>

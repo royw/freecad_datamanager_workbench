@@ -12,7 +12,7 @@ This document intentionally does **not** include installation instructions.
 ## Annotated UI overview
 
 <br/>
-<img width = '400' src = '../../Resources/Media/datamanager_wb_annotated.png' />
+<img width = '400' src = '../../Resources/Media/DataManager_annotated.png' />
 
 Annotated UI legend:
 

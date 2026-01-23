@@ -2,12 +2,12 @@
 
 from __future__ import annotations
 
-from freecad.datamanager_wb.domain.parent_child_ref import (
+from freecad.DataManager.domain.parent_child_ref import (
     ParentChildRef,
     normalize_parent_child_items,
     parse_parent_child_ref,
 )
-from freecad.datamanager_wb.domain.parsing_helpers import (
+from freecad.DataManager.domain.parsing_helpers import (
     parse_expression_item_object_name,
     parse_varset_variable_item,
 )

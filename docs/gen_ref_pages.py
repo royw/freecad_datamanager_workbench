@@ -7,7 +7,7 @@ import mkdocs_gen_files
 nav = mkdocs_gen_files.Nav()
 
 src = Path(__file__).parent.parent / "freecad"
-package_dir = src / "datamanager_wb"
+package_dir = src / "DataManager"
 
 for path in sorted(package_dir.rglob("*.py")):
     module_path = path.relative_to(src).with_suffix("")

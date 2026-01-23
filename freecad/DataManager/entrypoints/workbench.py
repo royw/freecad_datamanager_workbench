@@ -52,7 +52,7 @@ if Gui is not None:
 
             import FreeCAD as App  # pylint: disable=import-error
 
-            get_port().message(_translate("Log", "Switching to datamanager_wb") + "\n")
+            get_port().message(_translate("Log", "Switching to DataManager") + "\n")
 
             qt_translate_noop = App.Qt.QT_TRANSLATE_NOOP
 
@@ -64,10 +64,10 @@ if Gui is not None:
             """
             code which should be computed when a user switch to this workbench
             """
-            get_port().message(_translate("Log", "Workbench datamanager_wb activated. ;-)") + "\n")
+            get_port().message(_translate("Log", "Workbench DataManager activated. ;-)") + "\n")
 
         def Deactivated(self):
             """
             code which should be computed when this workbench is deactivated
             """
-            get_port().message(_translate("Log", "Workbench datamanager_wb de-activated.") + "\n")
+            get_port().message(_translate("Log", "Workbench DataManager de-activated.") + "\n")

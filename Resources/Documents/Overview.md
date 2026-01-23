@@ -20,7 +20,7 @@ The workbench appears in the FreeCAD workbench selector as **Data Manager**.
 ### Annotated UI
 
 <br/>
-<img width = '400' src = '../Media/datamanager_wb_annotated.png' alt="DataManager workbench annotated UI"/>
+<img width = '400' src = '../Media/DataManager_annotated.png' alt="DataManager workbench annotated UI"/>
 
 Annotated UI legend:
 

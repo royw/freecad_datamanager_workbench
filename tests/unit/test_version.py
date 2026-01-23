@@ -7,7 +7,7 @@ from __future__ import annotations
 
 from typing import Any
 
-import freecad.datamanager_wb.version as version
+import freecad.DataManager.version as version
 
 
 def test_get_project_version_valid() -> None:
