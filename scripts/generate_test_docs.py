@@ -1,4 +1,7 @@
 #!/usr/bin/env python3
+# SPDX-License-Identifier: LGPL-3.0-or-later
+# SPDX-FileNotice: Part of the DataManager addon.
+
 """Generate test documentation from test docstrings.
 
 This script extracts test information from test files and generates a markdown
